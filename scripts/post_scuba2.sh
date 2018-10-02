@@ -7,6 +7,11 @@ PARAMETER_FILE=""
 RMS=n
 
 
+set -e
+
+
+##-- Functions ---------------------------------------------------------
+
 
 help(){
     echo "Opcions:"
@@ -16,10 +21,11 @@ help(){
     echo " -h         help"
     echo " -i FILE    input file (without .sdf extension)"
     echo " -l FILE    list of files to process (for coadd)"
-    echo " -o PFX     output file (without .sdf extension)"
+    echo " -o FILE    output file (without .sdf extension)"
     echo " -p FILE    parameter file"
     echo " -r         calculate rms of map (default:n)"
-    }
+}
+
 
 
 picard () 
@@ -30,8 +36,6 @@ picard ()
 
 
 
-#set -e
-
 calibrate()
 {
     DATA_FILE=${REDUCED_DIR}/$INFILE.sdf
@@ -39,8 +43,6 @@ calibrate()
     picard -log sf $OPT_PARAM CALIBRATE_SCUBA2_DATA $DATA_FILE |tee -a $LOGFILE
 
     mv ${REDUCED_DIR}/${INFILE}_uncal_cal.sdf ${REDUCED_DIR}/${INFILE}_cal.sdf 
-    
- 
 }
 
 
@@ -74,7 +76,6 @@ crop(){
     then
 	${KAPPA_DIR}/stats $OUTFILE comp=err order |tee -a $LOGFILE
     fi
-
 }
 
 
@@ -83,6 +84,7 @@ filter_match()
 {
     echo "do something"
 }
+
 
 
 make_snr_map()
@@ -96,8 +98,6 @@ make_snr_map()
 
 ##-- End of functions --------------------------------------------------
 
-
-OPTIND=0
 
 while getopts "a:d:hi:l:o:p:r" options
 do

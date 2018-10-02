@@ -7,6 +7,8 @@ picard ()
 
 set -e
 
+LOGFILE=${RES_DIR}/checkcal.log
+
 
 while getopts "d:i:" options
 do
@@ -19,15 +21,16 @@ do
 	i) INDATA=$OPTARG
 	   ;;
 	*) echo "ERROR: wrong option"
-	   return 1
+	   exit 1
 	   ;;
     esac
 done
 
+touch $LOGFILE
 
 infile=${RES_DIR}/$INDATA
 echo $infile
 
 export ORAC_DATA_OUT=${RES_DIR}
 
-picard -log sf -nodisplay SCUBA2_CHECK_CAL $infile
+picard -log sf -nodisplay SCUBA2_CHECK_CAL $infile | tee -a $LOGFILE

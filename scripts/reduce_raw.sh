@@ -68,6 +68,15 @@ oracdr  -files $LIST_FILE  -loop file  -nodisplay  \
     |tee ${ORAC_DATA_OUT}/oracdr.log
 
 
+
+if [[ -n ${ORAC_DATA_OUT}/${REDUCED_FILE} && \
+	  -n ${ORAC_DATA_OUT}/${OUTPUT_FILE} ]]
+then
+    echo "Copying to $OUTPUT_FILE"
+    mv ${ORAC_DATA_OUT}/${REDUCED_FILE} ${ORAC_DATA_OUT}/${OUTPUT_FILE}
+fi
+
+
 reducbl=${ORAC_DATA_OUT}/reduced_blocks
 if [[ ! -d  $reducbl ]]
 then
@@ -76,9 +85,9 @@ fi
 
 echo;echo "   moving data to reduced_blocs..."
 cd ${ORAC_DATA_OUT}
-mv s*sdf s*_1024.png reduced_blocks/
 rm *256.png *64.png
+mv s*.sdf s*.png  reduced_blocks/
 mv log* reduced_blocks/
+mv gs*.sdf gs*.png  gs*.FIT reduced_blocks/
 echo "   ... done";echo
-
 
