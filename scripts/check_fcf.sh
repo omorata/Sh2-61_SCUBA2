@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+
 picard () 
 { 
     ${ORAC_DIR}/etc/picard_start.sh ${1+"$@"}
@@ -7,12 +9,12 @@ picard ()
 
 set -e
 
-LOGFILE=${RES_DIR}/checkcal.log
 
-
-while getopts "d:i:" options
+while getopts "c:d:i:" options
 do
     case $options in
+	c) CONF_FILE=$OPTARG
+	   ;;
 	d) RES_DIR=$OPTARG
 	   ;;
 	h) help
@@ -26,11 +28,29 @@ do
     esac
 done
 
+LOGFILE=${RES_DIR}/checkcal.log
+CHECK_DIR=${RES_DIR}/calcheck
+
+
+source $CONF_FILE
+
 touch $LOGFILE
 
-infile=${RES_DIR}/$INDATA
-echo $infile
+if [[ -n $INDATA ]]
+then
+    infile=${RES_DIR}/$INDATA
+    echo $infile
+elif [[ -n ${CALIB_FILE} ]]
+then
+    infile=${RES_DIR}/${CALIB_FILE}
+fi
 
-export ORAC_DATA_OUT=${RES_DIR}
+
+if [[ ! -d ${CHECK_DIR} ]]
+then
+    mkdir ${CHECK_DIR}
+fi
+
+export ORAC_DATA_OUT=${CHECK_DIR}
 
 picard -log sf -nodisplay SCUBA2_CHECK_CAL $infile | tee -a $LOGFILE
