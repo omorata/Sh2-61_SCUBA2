@@ -38,15 +38,19 @@ define Days_Template
 
 reduce-$(1)-$(2) : $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf
 
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf: $(CFG_DIR)/run-$(1)-$(2)
-	. $(BIN)/reduce_raw.sh $(CFG_DIR)/run-$(1)-$(2)
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf: $(CFG_DIR)/run-$(1)-$(2).cfg
+	. $(BIN)/reduce_raw.sh $(CFG_DIR)/run-$(1)-$(2).cfg
 
 
 cal-$(1)-$(2): $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc_cal.sdf
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc_cal.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf
 	$(BIN)/post_scuba2.sh  -a cal  -d $(RES_DIR)/$(1)/ \
-		-p $(CFG_DIR)/par$(1)-$(2).lis  -i $(SNAME)-$(1)-$(2)-reduc
+		-p $(CFG_DIR)/par$(1)-$(2).cfg  -i $(SNAME)-$(1)-$(2)-reduc
+
+
+checkcal-$(1)-$(2):
+	. $(BIN)/check_fcf.sh -d $(RES_DIR)/$(1) -c $(CFG_DIR)/run-$(1)-$(2).cfg
 
 endef
 
@@ -76,13 +80,13 @@ reduce-$(1)-days: $(reduce_$(1)_list)
 
 cal-$(1)-days: $(cal_$(1)_list)
 
-checkcal-$(1): $(checkcal-$(1)_list)
+checkcal-$(1): $(checkcal_$(1)_list)
 
 coadd-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd.sdf
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd.sdf:  $(jfiles_$(1)_list)  $(CFG_DIR)/$(1)-mosaic.list
 	$(BIN)/post_scuba2.sh  -a add  -d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/par850_process.lis \
+		-p $(CFG_DIR)/par$(1).cfg \
 		-l $(CFG_DIR)/$(1)-mosaic.list  -o $(SNAME)-$(1)-coadd
 
 
@@ -97,16 +101,9 @@ crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd_crop.sdf
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd_crop.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd.sdf
 	$(BIN)/post_scuba2.sh  -a crop  -d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/par850_process.lis  -i $(SNAME)-$(1)-coadd
+		-p $(CFG_DIR)/par$(1).cfg  -i $(SNAME)-$(1)-coadd
 
 
-checkcal-$(1)-0424:
-	. $(BIN)/check_fcf.sh -d $(RES_DIR)/$(1)/ \
-	    -i reduced_blocks/gs20150424_16_850_reduced.sdf
-
-checkcal-$(1)-0425:
-	. $(BIN)/check_fcf.sh -d $(RES_DIR)/$(1)/ \
-	    -i reduced_blocks/gs20150425_63_850_reduced.sdf
 
 endef
 
