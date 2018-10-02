@@ -56,23 +56,6 @@ endef
 
 
 
-#define Join_Template
-#reduce-$(1)-days: reduce-$(1)-0424 reduce-$(1)-0425
-
-#cal-$(1)-days: cal-$(1)-0424 cal-$(1)-0425
-
-#$(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd.sdf:  $(RES_DIR)/$(1)/$(SNAME)-$(1)-0424-reduc_cal.sdf $(RES_DIR)/$(1)/$(SNAME)-$(1)-0425-reduc_cal.sdf   $(CFG_DIR)/$(1)-mosaic.list
-#	$(BIN)/post_scuba2.sh  -a add  -d $(RES_DIR)/$(1) \
-#		-p $(CFG_DIR)/par850_process.lis \
-#		-l $(CFG_DIR)/$(1)-mosaic.list  -o $(SNAME)-$(1)-coadd
-
-
-#checkcal-$(1): checkcal-$(1)-0424 checkcal-$(1)-0425
-
-#endef
-
-
-
 # Template to run the rest of the steps of the defined run
 #
 define Tag_Template
