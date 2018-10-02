@@ -110,9 +110,7 @@ endef
 
 ##-- End of template definition ----------------------------------------
 
-
-850_r0: reduce-850_r0-days cal-850_r0-days coadd-850_r0 snr-850_r0 crop-850_r0
-
+##-- Generate lists ----------------------------------------------------
 
 # loop to generate the lists needed for the rules that join data from more
 # than one day
@@ -129,6 +127,11 @@ $(foreach run, $(reducedmaps),\
         $(eval jfiles_$(run)_list += $(RES_DIR)/$(run)/$(SNAME)-$(run)-$(day)-reduc_cal.sdf) \
 ))
 
+##-- Enf of lists ------------------------------------------------------
+
+
+850_r0: reduce-850_r0-days cal-850_r0-days coadd-850_r0 snr-850_r0 crop-850_r0
+
 
 $(foreach run, $(reducedmaps),\
     $(foreach day, $(days), \
@@ -138,69 +141,4 @@ $(foreach run, $(reducedmaps),\
 $(foreach run, $(reducedmaps),\
     $(eval $(call Tag_Template,$(run)))\
 )
-
-#    $(eval $(call Join_Template,$(run))) \
-
-
-
-
-#reduce-850_r0-days: reduce-850_r0-0424 reduce-850_r0-0425
-
-#reduce-850_r0-0424: $(RES_DIR)/850_r0/Sh2_61-850_r0-0424-reduc.sdf
-
-#reduce-850_r0-0425: $(RES_DIR)/850_r0/Sh2_61-850_r0-0425-reduc.sdf
-
-#$(RES_DIR)/850_r0/Sh2_61-850_r0-0424-reduc.sdf: $(CFG_DIR)/run-850_r0-0424
-#	. $(BIN)/reduce_raw.sh $(CFG_DIR)/run-850_r0-0424
-
-#$(RES_DIR)/850_r0/Sh2_61-850_r0-0425-reduc.sdf: $(CFG_DIR)/run-850_r0-0425
-#	. $(BIN)/reduce_raw.sh $(CFG_DIR)/run-850_r0-0425
-
-
-#cal-850_r0-days: cal-850_r0-0424 cal-850_r0-0425
-
-#cal-850_r0-0424: $(RES_DIR)/850_r0/Sh2_61-850_r0-0424-reduc_cal.sdf
-
-#cal-850_r0-0425: $(RES_DIR)/850_r0/Sh2_61-850_r0-0425-reduc_cal.sdf
-
-#$(RES_DIR)/850_r0/Sh2_61-850_r0-0424-reduc_cal.sdf: $(RES_DIR)/850_r0/Sh2_61-850_r0-0424-reduc.sdf
-#	$(BIN)/post_scuba2.sh  -a cal  -d $(RES_DIR)/850_r0/ \
-#		-p $(CFG_DIR)/par850_r0-0424.lis  -i Sh2_61-850_r0-0424-reduc
-
-#$(RES_DIR)/850_r0/Sh2_61-850_r0-0425-reduc_cal.sdf: $(RES_DIR)/850_r0/Sh2_61-850_r0-0425-reduc.sdf
-#	$(BIN)/post_scuba2.sh -a cal  -d $(RES_DIR)/850_r0/ \
-#		-p $(CFG_DIR)/par850_r0-0425.lis  -i Sh2_61-850_r0-0425-reduc
-
-
-#coadd-850_r0: $(RES_DIR)/850_r0/Sh2_61-850_r0-coadd.sdf
-
-#$(RES_DIR)/850_r0/Sh2_61-850_r0-coadd.sdf:  $(RES_DIR)/850_r0/Sh2_61-850_r0-0424-reduc_cal.sdf  $(RES_DIR)/850_r0/Sh2_61-850_r0-0425-reduc_cal.sdf  $(CFG_DIR)/850_r0-mosaic.list
-#	$(BIN)/post_scuba2.sh  -a add  -d $(RES_DIR)/850_r0 \
-#		-p $(CFG_DIR)/par850_process.lis \
-#		-l $(CFG_DIR)/850_r0-mosaic.list  -o Sh2_61-850_r0-coadd
-
-
-#snr-850_ro: $(RES_DIR)/850_r0/Sh2_61-850_r0-coadd_snr.sdf
-
-#$(RES_DIR)/850_r0/Sh2_61-850_r0-coadd_snr.sdf: $(RES_DIR)/850_r0/Sh2_61-850_r0-coadd.sdf
-#	$(BIN)/post_scuba2.sh -a snr  -d $(RES_DIR)/850_r0  \
-#		-i Sh2_61-850_r0-coadd
-
-
-#crop-850_ro: $(RES_DIR)/850_r0/Sh2_61-850_r0-coadd_crop.sdf
-
-#$(RES_DIR)/850_r0/Sh2_61-850_r0-coadd_crop.sdf: $(RES_DIR)/850_r0/Sh2_61-850_r0-coadd.sdf
-#	$(BIN)/post_scuba2.sh  -a crop  -d $(RES_DIR)/850_r0 \
-#		-p $(CFG_DIR)/par850_process.lis  -i Sh2_61-850_r0-coadd
-
-
-#checkcal-850_r0: checkcal-850_r0-0424 checkcal-850_r0-0425
-
-#checkcal-850_r0-0424:
-#	. $(BIN)/check_fcf.sh -d $(RES_DIR)/850_r0/ \
-#	    -i reduced_blocks/gs20150424_16_850_reduced.sdf
-
-#checkcal-850_r0-0425:
-#	. $(BIN)/check_fcf.sh -d $(RES_DIR)/850_r0/ \
-#	    -i reduced_blocks/gs20150425_63_850_reduced.sdf
 
