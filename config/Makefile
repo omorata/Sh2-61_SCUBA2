@@ -10,7 +10,6 @@ HOME_DIR=/data/omorata/JCMT/SCUBA2/Sh2-61
 SNAME=Sh2_61
 
 dayruns = 850_r0 850_r1 450_r0 450_r1 850_r1mf 450_r1mf
-mfdayruns = 850_r1mf 450_r1mf
 days = 0424 0425
 
 jointruns = j850_r0 j850_r1 j450_r0 j450_r1
