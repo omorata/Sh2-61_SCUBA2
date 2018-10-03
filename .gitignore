@@ -1,0 +1,4 @@
+config/file_lists/safe
+config/file_lists/*short*list
+config/old_files
+scripts/old
