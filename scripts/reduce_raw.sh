@@ -63,9 +63,11 @@ then
     mkdir -p ${ORAC_DATA_OUT}
 fi
 
+LOGFILE=${ORAC_DATA_OUT}/oracdr.log
+
 oracdr  -files $LIST_FILE  -loop file  -nodisplay  \
 	-log sf  -verbose $RECIPE  -recpars $PARAMS \
-    |tee ${ORAC_DATA_OUT}/oracdr.log
+    |tee -a $LOGFILE
 
 
 
@@ -73,7 +75,8 @@ if [[ -n ${ORAC_DATA_OUT}/${REDUCED_FILE} && \
 	  -n ${ORAC_DATA_OUT}/${OUTPUT_FILE} ]]
 then
     echo "Copying to $OUTPUT_FILE"
-    mv ${ORAC_DATA_OUT}/${REDUCED_FILE} ${ORAC_DATA_OUT}/${OUTPUT_FILE}
+    mv ${ORAC_DATA_OUT}/${REDUCED_FILE} ${ORAC_DATA_OUT}/${OUTPUT_FILE} |
+       tee -a $LOGFILE
 fi
 
 
