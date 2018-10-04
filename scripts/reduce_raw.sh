@@ -1,18 +1,17 @@
 #!/bin/bash
 ##
 ## reduc_script.sh
+##
 ##  Oscar Morata 2018
 ##
 ##  Generic script to reduce the SCUBA2 observations in the Sh2-61 region
 ##
-#
-
 HOME_DIR=${HOME_DIR:-.}
 RES_DIR=${RES_DIR:-results}
 CFG_DIR=${CFG_DIR:-config}
 BIN_DIR=${BIN_DIR:-scripts}
 
-# flags for match filter and reference reduction
+# flags for match filtering and reference reduction
 #
 MF=
 REFERENCE=
@@ -74,7 +73,6 @@ echo
 #
 if [[ -z $REFERENCE ]]
 then
-
     oracdr -files $LIST_FILE -loop file -nodisplay -log sf -verbose $RECIPE \
 	   -recpars $PARAMS |tee -a $LOGFILE
 
@@ -114,20 +112,29 @@ else
 fi
 
 
-if [[ $MF == y ]]
+# To use match filtering, the run configuration file has to contain the
+# variables:
+#   MF=y
+#   PSF_FILE=filename  (pointing to the file where the filter is)
+#
+#  and add the desired values to the params file
+#
+if [[ $MF == "y" ]]
 then
     echo;echo;echo " ... applying match filter";echo |tee -a $LOGFILE
     
     OLDFILE=${RESULT_FILE/.sdf/-original.sdf}
+
+    cp ${RESULT_FILE} $OLDFILE
     
-    ${BIN_DIR}/make_match_filter.sh ${RESULT_FILE} ${RESULT_FILE} \
-	      ${BEAM_FILE} |tee -a $LOGFILE
+    ${BIN_DIR}/convolve_beam.sh ${RESULT_FILE} ${PSF_FILE} ${RESULT_FILE} \
+	| tee -a $LOGFILE
 
     if [[ -n ${CALIB_FILE} ]]
     then
 	CALIB_REDUC=${ORAC_DATA_OUT}/${CALIB_FILE}
-	${BIN_DIR}/make_match_filter.sh ${CALIB_REDUC} ${CALIB_REDUC} \
-		  ${BEAM_FILE} |tee -a $LOGFILE
+	${BIN_DIR}/convolve_beam.sh ${CALIB_REDUC} ${PSF_FILE} \
+		  ${CALIB_REDUC} | tee -a $LOGFILE
     fi
     
 fi
