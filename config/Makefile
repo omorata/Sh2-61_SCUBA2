@@ -9,10 +9,10 @@
 HOME_DIR=/data/omorata/JCMT/SCUBA2/Sh2-61
 SNAME=Sh2_61
 
-dayruns = 850_r0 850_r1 450_r0 450_r1 850_r1mf 450_r1mf
+dayruns = 850_r0
 days = 0424 0425
 
-jointruns = j850_r0 j850_r1 j450_r0 j450_r1
+jointruns = j850_r0 j850_r1 j450_r0 j450_r1 j850_r0mf j850_r1mf j450_r0mf j450_r1mf
 
 #
 ##-- End info ----------------------------------------------------------
@@ -110,21 +110,21 @@ $(1): reduce-$(1) snr-$(1) crop-$(1)
 
 reduce-$(1) : $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf
 
-snr-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-snr.sdf
+snr-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf
 
-crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-crop.sdf
+crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf: $(CFG_DIR)/run-$(1).cfg
 	. $(BIN)/reduce_raw.sh $(CFG_DIR)/run-$(1).cfg
 
 
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-snr.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf
 	$(BIN)/post_scuba2.sh -a snr  -d $(RES_DIR)/$(1)  \
 		-i $(SNAME)-$(1)-reduc
 
 
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-crop.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf
 	$(BIN)/post_scuba2.sh  -a crop  -d $(RES_DIR)/$(1) \
 		-p $(CFG_DIR)/par$(1).cfg  -i $(SNAME)-$(1)-reduc
 
