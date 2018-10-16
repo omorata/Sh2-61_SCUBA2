@@ -6,13 +6,15 @@
 ##
 
 ##-- Info --------------------------------------------------------------
-HOME_DIR=/data/omorata/JCMT/SCUBA2/Sh2-61
+HOME_DIR=/data/omorata/JCMT/Sh2-61/SCUBA2
 SNAME=Sh2_61
 
 dayruns = 850_r0
 days = 0424 0425
 
-jointruns = j850_r0 j850_r1 j450_r0 j450_r1 j850_r0mf j850_r1mf j450_r0mf j450_r1mf
+jointruns = j850_r0 j850_r1 j450_r0 j450_r1
+jointruns += j850_r0mf j850_r1mf j450_r0mf j450_r1mf
+jointruns += j850_r0_contamination
 
 #
 ##-- End info ----------------------------------------------------------
@@ -153,6 +155,13 @@ $(foreach run, $(dayruns),\
 ##-- Enf of lists ------------------------------------------------------
 
 
+# define rules for joint runs
+#
+$(foreach run, $(jointruns),\
+    $(eval $(call Joint_Template,$(run)))\
+)
+
+
 850_r0: reduce-850_r0-days cal-850_r0-days coadd-850_r0 snr-850_r0 crop-850_r0
 850_r1: reduce-850_r1-days cal-850_r1-days coadd-850_r1 snr-850_r1 crop-850_r1
 
@@ -174,9 +183,4 @@ $(foreach run, $(dayruns),\
 )
 
 
-# define rules for joint runs
-#
-$(foreach run, $(jointruns),\
-    $(eval $(call Joint_Template,$(run)))\
-)
 
