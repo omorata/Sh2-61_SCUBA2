@@ -44,6 +44,12 @@ source $inconf
 ORAC_DATA_OUT=${RES_DIR}/${ORAC_DATA_OUT}
 LIST_FILE=${HOME_DIR}/${LIST_FILE}
 
+
+# check if a fakemap has been defined
+#
+FAKEMAP=${FAKEMAP:-}
+
+
 export ORAC_DATA_IN
 export ORAC_DATA_OUT
 
@@ -63,6 +69,14 @@ echo "  + data directory:" $ORAC_DATA_IN |tee -a $LOGFILE
 echo "  + results directory:" $ORAC_DATA_OUT  |tee -a $LOGFILE
 echo "  + reduction recipe:" $RECIPE  |tee -a $LOGFILE
 echo "  + parameters:" $PARAMS  |tee -a $LOGFILE
+
+if [[ -n $FAKEMAP ]]
+then
+    FAKEMAP=${HOME_DIR}/$FAKEMAP
+    echo "  + fakemap:" $FAKEMAP  |tee -a $LOGFILE
+    ln -sf $FAKEMAP ${ORAC_DATA_OUT}/fake.sdf
+fi
+
 echo
 
 
@@ -95,9 +109,9 @@ then
     echo;echo "   moving data to reduced_blocks..."
     cd ${ORAC_DATA_OUT}
     rm *256.png *64.png
-    mv s*.sdf s*.png  reduced_blocks/
-    mv log* reduced_blocks/
-    mv gs*.sdf gs*.png  gs*.FIT reduced_blocks/
+    mv -f s*.sdf s*.png  reduced_blocks/
+    mv -f log* reduced_blocks/
+    mv -f gs*.sdf gs*.png  gs*.FIT reduced_blocks/
     echo "   ... done";echo
 
 else

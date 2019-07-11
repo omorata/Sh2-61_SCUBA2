@@ -28,6 +28,8 @@ help(){
 
 
 
+# redefine picard function
+#
 picard () 
 { 
     ${ORAC_DIR}/etc/picard_start.sh ${1+"$@"}
@@ -47,6 +49,8 @@ calibrate()
 
 
 
+# co-add maps
+#
 coadd()
 {
     
@@ -64,6 +68,8 @@ coadd()
 
 
 
+# crop map
+#
 crop(){
     DATA_FILE=${REDUCED_DIR}/$INFILE.sdf
     picard -log sf $OPT_PARAM CROP_SCUBA2_IMAGES $DATA_FILE |tee -a $LOGFILE
@@ -87,6 +93,8 @@ filter_match()
 
 
 
+# make signal-to-noise map
+#
 make_snr_map()
 {
     DATA_FILE=${REDUCED_DIR}/$INFILE.sdf
