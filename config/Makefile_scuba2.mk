@@ -14,7 +14,7 @@ days = 0424 0425
 
 jointruns = j850_r0 j850_r1 j450_r0 j450_r1
 jointruns += j850_r0mf j850_r1mf j450_r0mf j450_r1mf
-jointruns += j850_r0_contamination
+jointruns += j850_r0_contamination j850_r1_contamination
 
 #
 ##-- End info ----------------------------------------------------------

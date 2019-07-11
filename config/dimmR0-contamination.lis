@@ -16,4 +16,4 @@ ast.zero_snr = 5
 ast.zero_snrlo = 3
 #itermap=-1
 #
-fakemap=Sh2-61-CO_fakemap_aligned.sdf
+fakemap=fake.sdf
