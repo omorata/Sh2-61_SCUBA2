@@ -2,11 +2,11 @@
 ##  Makefile to run scripts to reduce the JCMT SCUBA2 data of Sh2-61
 ##
 ##  O. Morata
-##  2018
+##  2018-19
 ##
 
 ##-- Info --------------------------------------------------------------
-HOME_DIR=/data/omorata/JCMT/Sh2-61/SCUBA2
+HOME_DIR=/lustre/opsw/work/omoratac/Sh2-61/SCUBA2
 SNAME=Sh2_61
 
 dayruns = 850_r0
@@ -107,26 +107,27 @@ define Joint_Template
 
 .PHONY: $(1) reduce-$(1) snr-$(1) crop-$(1)
 
+$(eval reduc_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf)
 
 $(1): reduce-$(1) snr-$(1) crop-$(1)
 
-reduce-$(1) : $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf
+reduce-$(1) : $(reduc_file)
 
 snr-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf
 
 crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
 
 
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf: $(CFG_DIR)/run-$(1).cfg
+$(reduc_file): $(CFG_DIR)/run-$(1).cfg
 	. $(BIN)/reduce_raw.sh $(CFG_DIR)/run-$(1).cfg
 
 
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf: $(reduc_file) 
 	$(BIN)/post_scuba2.sh -a snr  -d $(RES_DIR)/$(1)  \
 		-i $(SNAME)-$(1)-reduc
 
 
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf: $(reduc_file)
 	$(BIN)/post_scuba2.sh  -a crop  -d $(RES_DIR)/$(1) \
 		-p $(CFG_DIR)/par$(1).cfg  -i $(SNAME)-$(1)-reduc
 
@@ -182,5 +183,29 @@ $(foreach run, $(dayruns),\
     $(eval $(call Tag_Template,$(run)))\
 )
 
+.PHONY: ratios
+.PHONY: ratio-j450_r0mf_j850_r0mf ratio-j450_r0mf_j850_r1mf
+
+
+ratios: ratio-j450_r0mf_j850_r0mf ratio-j450_r0mf_j850_r1mf
+
+$(eval rj450r0mfj850r0mf := $(RES_DIR)/ratios/ratio-j450_r0mf_j850_r0mf.sdf)
+
+ratio-j450_r0mf_j850_r0mf: $(rj450r0mfj850r0mf)
+
+$(rj450r0mfj850r0mf): $(CFG_DIR)/ratio-j450_r0mf_j850_r0mf.cfg $(RES_DIR)/j450_r0mf/$(SNAME)-j450_r0mf-reduc.sdf $(RES_DIR)/j850_r0mf/$(SNAME)-j850_r0mf-reduc.sdf
+	sh $(BIN)/mkratios.sh \
+		-c $(CFG_DIR)/ratio-j450_r0mf_j850_r0mf.cfg \
+		-d $(RES_DIR)/ratios
+
+
+$(eval rj450r0mfj850r1mf := $(RES_DIR)/ratios/ratio-j450_r0mf_j850_r1mf.sdf)
+
+ratio-j450_r0mf_j850_r1mf: $(rj450r0mfj850r1mf)
+
+$(rj450r0mfj850r1mf): $(CFG_DIR)/ratio-j450_r0mf_j850_r1mf.cfg $(RES_DIR)/j450_r0mf/$(SNAME)-j450_r0mf-reduc.sdf $(RES_DIR)/j850_r1mf/$(SNAME)-j850_r1mf-reduc.sdf
+	sh $(BIN)/mkratios.sh \
+		-c $(CFG_DIR)/ratio-j450_r0mf_j850_r1mf.cfg \
+		-d $(RES_DIR)/ratios
 
 
