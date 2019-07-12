@@ -140,9 +140,11 @@ then
     OLDFILE=${RESULT_FILE/.sdf/-original.sdf}
 
     cp ${RESULT_FILE} $OLDFILE
+
+    SCALE=${FLUX_SCALE:-1}
     
-    ${BIN_DIR}/convolve_beam.sh ${RESULT_FILE} ${PSF_FILE} ${RESULT_FILE} \
-	| tee -a $LOGFILE
+    ${BIN_DIR}/convolve_beam.sh ${RESULT_FILE} ${PSF_FILE} $SCALE \
+	      ${RESULT_FILE} | tee -a $LOGFILE
 
     if [[ -n ${CALIB_FILE} ]]
     then
