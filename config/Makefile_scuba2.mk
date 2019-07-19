@@ -9,8 +9,8 @@
 HOME_DIR=/lustre/opsw/work/omoratac/Sh2-61/SCUBA2
 SNAME=Sh2_61
 
-dayruns = 850_r0
-days = 0424 0425
+#dayruns = 850_r0
+#days = 0424 0425
 
 jointruns = j850_r0 j850_r1 j450_r0 j450_r1
 jointruns += j850_r0mf j850_r1mf j450_r0mf j450_r1mf
@@ -22,7 +22,7 @@ jointruns += j850_r0_contamination j850_r1_contamination
 # names of directories
 #
 BIN=$(HOME_DIR)/scripts
-CFG_DIR=$(HOME_DIR)/config
+CFG_DIR=$(HOME_DIR)/config/reduction
 DATA_DIR=$(HOME_DIR)/data
 RES_DIR=$(HOME_DIR)/results
 
@@ -50,12 +50,17 @@ $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf: $(CFG_DIR)/run-$(1)-$(2).cfg
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc_cal.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf
-	$(BIN)/post_scuba2.sh  -a cal  -d $(RES_DIR)/$(1)/ \
-		-p $(CFG_DIR)/par$(1)-$(2).cfg  -i $(SNAME)-$(1)-$(2)-reduc
+	$(BIN)/post_scuba2.sh  \
+		-a cal  \
+		-d $(RES_DIR)/$(1)/ \
+		-p $(CFG_DIR)/par$(1)-$(2).cfg  \
+		-i $(SNAME)-$(1)-$(2)-reduc
 
 
 checkcal-$(1)-$(2):
-	. $(BIN)/check_fcf.sh -d $(RES_DIR)/$(1) -c $(CFG_DIR)/run-$(1)-$(2).cfg
+	. $(BIN)/check_fcf.sh \
+		-d $(RES_DIR)/$(1)  \
+		-c $(CFG_DIR)/run-$(1)-$(2).cfg
 
 endef
 
@@ -83,19 +88,27 @@ crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd_crop.sdf
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd.sdf:  $(jfiles_$(1)_list)  $(CFG_DIR)/$(1)-mosaic.list
-	$(BIN)/post_scuba2.sh  -a add  -d $(RES_DIR)/$(1) \
+	$(BIN)/post_scuba2.sh  \
+		-a add  \
+		-d $(RES_DIR)/$(1) \
 		-p $(CFG_DIR)/par$(1).cfg \
-		-l $(CFG_DIR)/$(1)-mosaic.list  -o $(SNAME)-$(1)-coadd
+		-l $(CFG_DIR)/$(1)-mosaic.list  \
+		-o $(SNAME)-$(1)-coadd
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd_snr.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd.sdf
-	$(BIN)/post_scuba2.sh -a snr  -d $(RES_DIR)/$(1)  \
+	$(BIN)/post_scuba2.sh \
+		-a snr  \
+		-d $(RES_DIR)/$(1)  \
 		-i $(SNAME)-$(1)-coadd
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd_crop.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd.sdf
-	$(BIN)/post_scuba2.sh  -a crop  -d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/par$(1).cfg  -i $(SNAME)-$(1)-coadd
+	$(BIN)/post_scuba2.sh  \
+		-a crop  \
+		-d $(RES_DIR)/$(1) \
+		-p $(CFG_DIR)/par$(1).cfg  \
+		-i $(SNAME)-$(1)-coadd
 
 endef
 
@@ -109,7 +122,9 @@ define Joint_Template
 
 $(eval reduc_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf)
 
+
 $(1): reduce-$(1) snr-$(1) crop-$(1)
+
 
 reduce-$(1) : $(reduc_file)
 
@@ -119,17 +134,22 @@ crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
 
 
 $(reduc_file): $(CFG_DIR)/run-$(1).cfg
-	. $(BIN)/reduce_raw.sh $(CFG_DIR)/run-$(1).cfg
+	source $(BIN)/reduce_raw.sh $(CFG_DIR)/run-$(1).cfg
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf: $(reduc_file) 
-	$(BIN)/post_scuba2.sh -a snr  -d $(RES_DIR)/$(1)  \
+	$(BIN)/post_scuba2.sh \
+		-a snr  \
+		-d $(RES_DIR)/$(1)  \
 		-i $(SNAME)-$(1)-reduc
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf: $(reduc_file)
-	$(BIN)/post_scuba2.sh  -a crop  -d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/par$(1).cfg  -i $(SNAME)-$(1)-reduc
+	$(BIN)/post_scuba2.sh  \
+		-a crop  \
+		-d $(RES_DIR)/$(1) \
+		-p $(CFG_DIR)/par$(1).cfg  \
+		-i $(SNAME)-$(1)-reduc
 
 endef
 
@@ -163,13 +183,13 @@ $(foreach run, $(jointruns),\
 )
 
 
-850_r0: reduce-850_r0-days cal-850_r0-days coadd-850_r0 snr-850_r0 crop-850_r0
-850_r1: reduce-850_r1-days cal-850_r1-days coadd-850_r1 snr-850_r1 crop-850_r1
+#850_r0: reduce-850_r0-days cal-850_r0-days coadd-850_r0 snr-850_r0 crop-850_r0
+#850_r1: reduce-850_r1-days cal-850_r1-days coadd-850_r1 snr-850_r1 crop-850_r1
 
-450_r0: reduce-450_r0-days cal-450_r0-days coadd-450_r0 snr-450_r0 crop-450_r0
-450_r1: reduce-450_r1-days cal-450_r1-days coadd-450_r1 snr-450_r1 crop-450_r1
+#450_r0: reduce-450_r0-days cal-450_r0-days coadd-450_r0 snr-450_r0 crop-450_r0
+#450_r1: reduce-450_r1-days cal-450_r1-days coadd-450_r1 snr-450_r1 crop-450_r1
 
-850_r1mf: reduce-850_r1mf-days cal-850_r1mf-days coadd-850_r1mf snr-850_r1mf crop-850_r1mf mf-850_r1mf-days
+#850_r1mf: reduce-850_r1mf-days cal-850_r1mf-days coadd-850_r1mf snr-850_r1mf crop-850_r1mf mf-850_r1mf-days
 
 
 # define rules for day runs
