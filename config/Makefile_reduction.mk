@@ -15,6 +15,7 @@ SNAME=Sh2_61
 jointruns = j850_r0 j850_r1 j450_r0 j450_r1
 jointruns += j850_r0mf j850_r1mf j450_r0mf j450_r1mf
 jointruns += j850_r0_contamination j850_r1_contamination
+jointruns += j850_r0_contamination_mf
 
 #
 ##-- End info ----------------------------------------------------------
@@ -134,7 +135,7 @@ crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
 
 
 $(reduc_file): $(CFG_DIR)/run-$(1).cfg
-	source $(BIN)/reduce_raw.sh $(CFG_DIR)/run-$(1).cfg
+	. $(BIN)/reduce_raw.sh $(CFG_DIR)/run-$(1).cfg
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf: $(reduc_file) 
@@ -207,7 +208,7 @@ $(foreach run, $(dayruns),\
 .PHONY: ratio-j450_r0mf_j850_r0mf ratio-j450_r0mf_j850_r1mf
 
 
-ratios: ratio-j450_r0mf_j850_r0mf ratio-j450_r0mf_j850_r1mf
+ratios: ratio-j450_r0mf_j850_r0mf ratio-j450_r0mf_j850_r1mf ratio-j450_r0mf_j850_r0_contamination_mf
 
 $(eval rj450r0mfj850r0mf := $(RES_DIR)/ratios/ratio-j450_r0mf_j850_r0mf.sdf)
 
@@ -226,6 +227,15 @@ ratio-j450_r0mf_j850_r1mf: $(rj450r0mfj850r1mf)
 $(rj450r0mfj850r1mf): $(CFG_DIR)/ratio-j450_r0mf_j850_r1mf.cfg $(RES_DIR)/j450_r0mf/$(SNAME)-j450_r0mf-reduc.sdf $(RES_DIR)/j850_r1mf/$(SNAME)-j850_r1mf-reduc.sdf
 	sh $(BIN)/mkratios.sh \
 		-c $(CFG_DIR)/ratio-j450_r0mf_j850_r1mf.cfg \
+		-d $(RES_DIR)/ratios
+
+$(eval rj450r0mfj850r0contmf := $(RES_DIR)/ratios/ratio-j450_r0mf_j850_r0_contamination_mf.sdf)
+
+ratio-j450_r0mf_j850_r0_contamination_mf: $(rj450r0mfj850r0contmf)
+
+$(rj450r0mfj850r0contmf): $(CFG_DIR)/ratio-j450_r0mf_j850_r0_contamination_mf.cfg $(RES_DIR)/j450_r0mf/$(SNAME)-j450_r0mf-reduc.sdf $(RES_DIR)/j850_r0_contamination_mf/$(SNAME)-j850_r0_contamination_mf-reduc.sdf
+	sh $(BIN)/mkratios.sh \
+		-c $(CFG_DIR)/ratio-j450_r0mf_j850_r0_contamination_mf.cfg \
 		-d $(RES_DIR)/ratios
 
 
