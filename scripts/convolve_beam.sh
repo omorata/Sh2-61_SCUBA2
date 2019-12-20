@@ -7,7 +7,7 @@
 ## script to convolve JCMT SCUBA2 observations with the beam of the
 ## alternative frequency
 ##
-## it multiplies by given scale (to get the right values in Jy/beam)
+## it multiplies by given scale (to get the right values in (m)Jy/beam)
 ##
 
 set -o errexit

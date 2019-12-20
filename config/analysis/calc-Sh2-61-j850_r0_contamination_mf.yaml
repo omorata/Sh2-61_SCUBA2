@@ -1,0 +1,28 @@
+infiles :
+  data850: analysis_maps/Sh2_61-j850_r0_contamination_mf.fits
+  snr850: analysis_maps/Sh2_61-j850_r0_contamination_mf-snr.fits
+  clumpdef: findclumps/Sh2-61-j850_r0_contamination_mf-fw-snr6-extr.FITS
+  data450: analysis_maps/Sh2_61-j450_r0mf.fits
+  snr450: analysis_maps/Sh2_61-j450_r0mf-snr.fits
+#
+phys_params:
+  beta : 1.8
+  beam : 17.5461
+  pixsize: 3
+  distance : 2700
+  dtogas: 100
+
+data_params:
+  snr_450 : 4.0
+  ini_temp : 4.0
+  #
+  flux_factor : 0.001
+  #
+  cut_varTemp : 
+  cut_varMass :
+  cut_snrTemp :
+  cut_snrMass :
+#
+outfiles:
+  outfile : analysis_maps/Sh2-61-j850_r0_contamination_mf-calculations.fits
+  outtable: analysis_maps/Sh2-61-j850_r0_contamination_mf-clump_table.fits
