@@ -216,6 +216,23 @@ def show_values(msk_arr, txt):
     print(txt, msk_arr.count())
 
 
+
+def read_inputfiles(fn_data, fn_snr, txt):
+    """ read input data and snr files
+    """
+    print(" >> reading",txt,"data...")
+    
+    hdu_data = fits.open(fn_data)
+    data = hdu_data[0].data
+    var = hdu_data[1].data
+    #w1 = wcs.WCS(hdu_data850[0].header)
+
+    hdu_snr = fits.open(fn_snr) 
+    snr = hdu_snr[0].data
+
+    return data, var, snr
+
+
 ##-- End of functions --------------------------------------------------
 
 
@@ -261,22 +278,15 @@ pre = (850. / 450.)**(3.+ beta)
 # file names
 #
 fname_850 = 'analysis_maps/Sh2_61-j850_r0_contamination_mf.fits'
-fname_snr850 = 'analysis_maps/Sh2_61-j850_r0_contamination_mf-snr.fits'
 fname_450 = 'analysis_maps/Sh2_61-j450_r0mf.fits'
+fname_snr850 = 'analysis_maps/Sh2_61-j850_r0_contamination_mf-snr.fits'
 fname_snr450 = 'analysis_maps/Sh2_61-j450_r0mf-snr.fits'
+
 fname_clumps = 'findclumps/Sh2-61-j850_r0_contamination_mf-fw-snr6-extr.FITS'
 
 
-print(" >> reading 850 micron data...")
-
-hdu_data850 = fits.open(fname_850)
-data850 = hdu_data850[0].data
-var850 = hdu_data850[1].data
-#w1 = wcs.WCS(hdu_data850[0].header)
-
-hdu_snr850 = fits.open(fname_snr850) 
-snr850 = hdu_snr850[0].data
-
+data850, var850, snr850 = read_inputfiles(fname_850, fname_snr850, "850micron")
+data450, var450, snr450 = read_inputfiles(fname_450, fname_snr450, "450micron")
 
 
 print(" >> reading clump mask...")
@@ -286,17 +296,6 @@ clump_mask = hdumask[0].data
 n_clumps = np.int(np.nanmax(clump_mask))
 
 clump_ma = clump_mask.view(ma.MaskedArray)
-
-
-
-print(" >> reading 450 micron data...")
-hdu_data450 = fits.open(fname_450)
-data450 = hdu_data450[0].data
-var450 = hdu_data450[1].data
-
-hdu_snr450 = fits.open(fname_snr450)
-snr450 = hdu_snr450[0].data
-
 
 
 # to avoid complains about NaNs
