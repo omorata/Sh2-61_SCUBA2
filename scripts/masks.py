@@ -292,10 +292,10 @@ data450, var450, snr450 = read_inputfiles(fname_450, fname_snr450, "450micron")
 print(" >> reading clump mask...")
 
 hdumask = fits.open(fname_clumps)
-clump_mask = hdumask[0].data
-n_clumps = np.int(np.nanmax(clump_mask))
+clump_def = hdumask[0].data
+n_clumps = np.int(np.nanmax(clump_def))
 
-clump_ma = clump_mask.view(ma.MaskedArray)
+clump_mask = clump_def.view(ma.MaskedArray)
 
 
 # to avoid complains about NaNs
@@ -305,7 +305,7 @@ with np.errstate(invalid='ignore'):
 
 show_values(low450,"low_450")
 # mask out invalid values in clump mask
-tt = ma.masked_invalid(clump_ma)
+tt = ma.masked_invalid(clump_mask)
 show_values(tt,"tt")
 
 # mask out pixels not in any clump
@@ -404,7 +404,7 @@ varMsnr = filter_mass(thin_mass, var_thin_mass, 2.)
 print(" >> clump masses")
 totpix = 0
 for clump in range(1, n_clumps+1):
-    mskcl = ma.masked_not_equal(clump_ma, clump)
+    mskcl = ma.masked_not_equal(clump_mask, clump)
     npix = mskcl.count()
 
     masscl = np.ma.masked_where(np.ma.getmask(mass), mskcl)
