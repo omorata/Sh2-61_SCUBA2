@@ -207,29 +207,47 @@ def filter_mass(mass, var_mass, cut):
     return filtermass
 
 
+
+def show_values(msk_arr, txt):
+    """ auxiliar function to show some values of the msk_arr array
+    """
+    print("values for" , txt)
+    print(msk_arr[325,300:325])
+    print(txt, msk_arr.count())
+
+
 ##-- End of functions --------------------------------------------------
 
 
-distance = 2500. * u.pc
-dtogas = 160.
-
+# parameters
+#
 mH = 1.6733e-27 * u.kg
 mu = 2.8
+
+l450 = 450e-6 * u.m
+l850 = 850e-6 * u.m
+
+distance = 2500. * u.pc
+dtogas = 160.
 
 beta = 1.8
 
 beam = 17.5461 * u.arcsec
 pixsize = 3. * u.arcsec
 
+# default initial temperature estimate
+#
+ini_Testimate = 3.
+
+
+# calculate some constants
+#
 pixelsbeam = np.pi / 4. / np.log(2.) * beam * beam / pixsize / pixsize
 
 pixsize_rad = pixsize.to(u.radian)
 pixsolangle = pixsize_rad * pixsize_rad
 
 hk = const.h * const.c / const.k_B
-
-l450 = 450e-6 * u.m
-l850 = 850e-6 * u.m
 
 f850 = const.c / l850
 
@@ -240,21 +258,30 @@ hk450 = hk / l450 / u.K
 pre = (850. / 450.)**(3.+ beta)
 
 
+# file names
+#
+fname_850 = 'analysis_maps/Sh2_61-j850_r0_contamination_mf.fits'
+fname_snr850 = 'analysis_maps/Sh2_61-j850_r0_contamination_mf-snr.fits'
+fname_450 = 'analysis_maps/Sh2_61-j450_r0mf.fits'
+fname_snr450 = 'analysis_maps/Sh2_61-j450_r0mf-snr.fits'
+fname_clumps = 'findclumps/Sh2-61-j850_r0_contamination_mf-fw-snr6-extr.FITS'
+
+
 print(" >> reading 850 micron data...")
 
-hdu_data850 = fits.open('analysis_maps/Sh2_61-j850_r0_contamination_mf.fits')
+hdu_data850 = fits.open(fname_850)
 data850 = hdu_data850[0].data
 var850 = hdu_data850[1].data
 #w1 = wcs.WCS(hdu_data850[0].header)
 
-hdu_snr850 = fits.open('analysis_maps/Sh2_61-j850_r0_contamination_mf-snr.fits') 
+hdu_snr850 = fits.open(fname_snr850) 
 snr850 = hdu_snr850[0].data
 
 
 
 print(" >> reading clump mask...")
 
-hdumask = fits.open('findclumps/Sh2-61-j850_r0_contamination_mf-fw-snr6-extr.FITS')
+hdumask = fits.open(fname_clumps)
 clump_mask = hdumask[0].data
 n_clumps = np.int(np.nanmax(clump_mask))
 
@@ -263,11 +290,11 @@ clump_ma = clump_mask.view(ma.MaskedArray)
 
 
 print(" >> reading 450 micron data...")
-hdu_data450 = fits.open('analysis_maps/Sh2_61-j450_r0mf.fits')
+hdu_data450 = fits.open(fname_450)
 data450 = hdu_data450[0].data
 var450 = hdu_data450[1].data
 
-hdu_snr450 = fits.open('analysis_maps/Sh2_61-j450_r0mf-snr.fits')
+hdu_snr450 = fits.open(fname_snr450)
 snr450 = hdu_snr450[0].data
 
 
@@ -277,18 +304,27 @@ snr450 = hdu_snr450[0].data
 with np.errstate(invalid='ignore'):
     low450 = np.ma.masked_where(snr450 < 4., snr450)
 
-
+show_values(low450,"low_450")
+# mask out invalid values in clump mask
 tt = ma.masked_invalid(clump_ma)
+show_values(tt,"tt")
+
+# mask out pixels not in any clump
 inclumps = ma.masked_less(tt, 1)
+show_values(inclumps,"inclumps")
+
+
 
 
 low450_clumps = np.ma.masked_where(np.ma.getmask(low450), inclumps)
-
+show_values(low450_clumps, "low450_clumps")
 good450 = np.ma.masked_where(np.ma.getmask(low450_clumps), data450)
-
+show_values(good450, " good450")
 clumps850 = np.ma.masked_where(np.ma.getmask(inclumps), data850)
+show_values(clumps850, " clumps850")
 
 good850 = np.ma.masked_where(np.ma.getmask(low450_clumps), data850)
+show_values(good850, " good850")
 
 
 print(" >> calculating flux ratio...")
@@ -297,12 +333,15 @@ ratio = good450 / good850
 var_ratio = (ratio * ratio) * (var850 / good850 / good850 +
                                var450 / good450 / good450)
 
+#show_values(ratio, "ratio")
+#show_values(var_ratio, "var_ratio")
 print("  ...done")
 
 
-print("good850", good850.count())
+#print("good850", good850.count())
 
 bad850 = np.ma.masked_where(~np.ma.getmask(ratio), inclumps)
+show_values(bad850, "bad850")
 
 #dbad = np.ma.masked_where(np.ma.getmask(bad850), data850)
 #print("bad850", bad850.count())
@@ -316,19 +355,16 @@ bad850 = np.ma.masked_where(~np.ma.getmask(ratio), inclumps)
 #print(t.count())
 
 pre_ratio = ratio / pre
-#print("pre", pre_ratio.count())
-#print(np.shape(pre_ratio))
-#print(pre_ratio[325,300:325])
 
 t1 = np.ma.asarray(ratio)
-ini_array = t1 / t1 * 3.
+ini_array = t1 / t1 * ini_Testimate
 
 with np.errstate(invalid='ignore'):
     t_array = get_temperature(pre_ratio, ini_array, (hk850, hk450))
 
 var_temp = get_temp_variance_K(t_array, var_ratio, hk850, hk450, pre)
 
-varT_filter = filter_temperature(t_array, var_temp, "snr", 5.)
+varT_filter = filter_temperature(t_array, var_temp, "snr", 3.)
 
 
 print("temp", t_array.count())
