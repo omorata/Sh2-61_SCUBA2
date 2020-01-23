@@ -29,7 +29,7 @@ def get_temperature(ratio, ini_value, vargs):
 
     mask_root = np.ma.masked_where(np.ma.getmask(ratio), root)
 
-    t = 1. / np.log(mask_root)
+    t = np.ma.divide(1., np.ma.log(mask_root))
     
     return t
 
@@ -40,14 +40,17 @@ def get_temp_variance_K(temp, ratio_var, trmA, trmB, pre_fct):
         the flux ratio
     """
     r_var = ratio_var / pre_fct / pre_fct
-    expA = np.exp(trmA / temp)
-    expB = np.exp(trmB / temp)
+
+    expA = np.ma.exp(np.ma.divide(trmA, temp))
+    expB = np.ma.exp(np.ma.divide(trmB, temp))
+
     
     num = temp * temp * (expB - 1) * (expB - 1)
     den = expA * expB * (trmB-trmA) + trmA * expA - trmB * expB
-    fct = (num / den)**2
+    fct = (np.ma.divide(num,den))**2
     
     t_var = fct * r_var
+
     return t_var
 
 
@@ -256,6 +259,7 @@ pixsize = 3. * u.arcsec
 #
 ini_Testimate = 3.
 
+sigma_cut450 = 4.
 
 # calculate some constants
 #
@@ -297,20 +301,22 @@ n_clumps = np.int(np.nanmax(clump_def))
 
 clump_mask = clump_def.view(ma.MaskedArray)
 
+# mask out invalid values in clump mask and pixels not in any clump
+#
+clump_mask_invalid = ma.masked_invalid(clump_mask)
+inclumps = ma.masked_less(clump_mask_invalid, 1)
+
+show_values(clump_mask_invalid, "clump_mask_invalid")
+show_values(inclumps,"inclumps")
+
 
 # to avoid complains about NaNs
 #
 with np.errstate(invalid='ignore'):
-    low450 = np.ma.masked_where(snr450 < 4., snr450)
+    low450 = np.ma.masked_where(snr450 < sigma_cut450, snr450)
 
 show_values(low450,"low_450")
-# mask out invalid values in clump mask
-tt = ma.masked_invalid(clump_mask)
-show_values(tt,"tt")
 
-# mask out pixels not in any clump
-inclumps = ma.masked_less(tt, 1)
-show_values(inclumps,"inclumps")
 
 
 
@@ -422,4 +428,3 @@ for clump in range(1, n_clumps+1):
 
       
 print("total pixels:", totpix)
-
