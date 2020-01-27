@@ -215,7 +215,7 @@ def show_values(msk_arr, txt):
     """ auxiliar function to show some values of the msk_arr array
     """
     print("values for" , txt)
-    print(msk_arr[325,300:325])
+    print(msk_arr[324:326,300:325])
     print(txt, msk_arr.count())
 
 
@@ -234,6 +234,16 @@ def read_inputfiles(fn_data, fn_snr, txt):
     snr = hdu_snr[0].data
 
     return data, var, snr
+
+
+
+def merge_masked_arrays(a, b) :
+    """ merges two masked arrays a and b
+    """
+    merged = a.copy()
+
+    merged[merged.mask] = b[merged.mask]
+    return merged
 
 
 ##-- End of functions --------------------------------------------------
@@ -259,7 +269,9 @@ pixsize = 3. * u.arcsec
 #
 ini_Testimate = 3.
 
-sigma_cut450 = 4.
+sigma_cut450 = 3.
+sigma_cutT = 3.
+sigma_cutM = 2.
 
 # calculate some constants
 #
@@ -299,65 +311,65 @@ hdumask = fits.open(fname_clumps)
 clump_def = hdumask[0].data
 n_clumps = np.int(np.nanmax(clump_def))
 
-clump_mask = clump_def.view(ma.MaskedArray)
+clump_idxs = clump_def.view(ma.MaskedArray)
 
 # mask out invalid values in clump mask and pixels not in any clump
 #
-clump_mask_invalid = ma.masked_invalid(clump_mask)
-inclumps = ma.masked_less(clump_mask_invalid, 1)
+clump_idxs_invalid = ma.masked_invalid(clump_idxs)
+inclumps = ma.masked_less(clump_idxs_invalid, 1)
 
-show_values(clump_mask_invalid, "clump_mask_invalid")
-show_values(inclumps,"inclumps")
+#show_values(clump_idxs_invalid, "clump_idxs_invalid")
+#show_values(inclumps,"inclumps")
 
 
 # to avoid complains about NaNs
 #
 with np.errstate(invalid='ignore'):
-    low450 = np.ma.masked_where(snr450 < sigma_cut450, snr450)
-
-show_values(low450,"low_450")
+    high450 = np.ma.masked_where(snr450 < sigma_cut450, snr450)
 
 
 
+high450_idx = np.ma.masked_where(np.ma.getmask(high450), inclumps)
+
+clumps_hi450 = np.ma.masked_where(np.ma.getmask(high450_idx), data450)
+
+clumps_hi850 = np.ma.masked_where(np.ma.getmask(inclumps), data850)
+
+doublef_cl850 = np.ma.masked_where(np.ma.getmask(high450_idx), data850)
+
+singlef_cl850_idx = np.ma.masked_where(~np.ma.getmask(doublef_cl850), inclumps)
+
+singlef_cl850 = np.ma.masked_where(np.ma.getmask(singlef_cl850_idx), data850) 
 
 
-low450_clumps = np.ma.masked_where(np.ma.getmask(low450), inclumps)
-show_values(low450_clumps, "low450_clumps")
-good450 = np.ma.masked_where(np.ma.getmask(low450_clumps), data450)
-show_values(good450, " good450")
-clumps850 = np.ma.masked_where(np.ma.getmask(inclumps), data850)
-show_values(clumps850, " clumps850")
 
-good850 = np.ma.masked_where(np.ma.getmask(low450_clumps), data850)
-show_values(good850, " good850")
+joint_array = merge_masked_arrays(doublef_cl850, singlef_cl850)
+
+
+
+#show_values(high450,"low_450")
+#show_values(high450_idx, "high450_idx")
+#show_values(clumps_hi450, " clumps_hi450")
+#show_values(clumps_hi850, " clumps_hi850")
+#show_values(doublef_cl850, " doublef_cl850")
+#show_values(singlef_cl850_idx, "singlef_cl850_idx")
+#show_values(singlef_cl850, "singlef_cl850")
+#show_values(joint_array, "joint")
 
 
 print(" >> calculating flux ratio...")
-ratio = good450 / good850
+ratio = np.ma.divide(clumps_hi450, doublef_cl850)
 
-var_ratio = (ratio * ratio) * (var850 / good850 / good850 +
-                               var450 / good450 / good450)
+var_ratio = (ratio * ratio) * (var850 / doublef_cl850 / doublef_cl850 +
+                               var450 / clumps_hi450 / clumps_hi450)
 
 #show_values(ratio, "ratio")
 #show_values(var_ratio, "var_ratio")
 print("  ...done")
 
 
-#print("good850", good850.count())
 
-bad850 = np.ma.masked_where(~np.ma.getmask(ratio), inclumps)
-show_values(bad850, "bad850")
 
-#dbad = np.ma.masked_where(np.ma.getmask(bad850), data850)
-#print("bad850", bad850.count())
-
-#tot = ~np.ma.mask_or(dbad,good850)
-#print(tot[325,300:325])
-
-#t1 = np.ma.masked_where(np.ma.getmask(tot), data850)
-#t = np.ma.masked_where(np.ma.getmask(inclumps),t1)
-#print(t[325,300:325])
-#print(t.count())
 
 pre_ratio = ratio / pre
 
@@ -369,13 +381,16 @@ with np.errstate(invalid='ignore'):
 
 var_temp = get_temp_variance_K(t_array, var_ratio, hk850, hk450, pre)
 
-varT_filter = filter_temperature(t_array, var_temp, "snr", 3.)
 
+varT_filter = filter_temperature(t_array, var_temp, "snr", sigma_cutT)
 
-print("temp", t_array.count())
-print("var_ratio", var_ratio.count())
-print("varT", var_temp.count())
-print("varTfilter", varT_filter.count())
+show_values(t_array, "temp")
+show_values(var_temp, "temp")
+show_values(varT_filter, "temp")
+#print("temp", t_array.count())
+#print("var_ratio", var_ratio.count())
+#print("varT", var_temp.count())
+#print("varTfilter", varT_filter.count())
 
 
 #high_var = np.ma.masked_where(~np.ma.getmask(varTsnr), var_temp)
@@ -385,11 +400,12 @@ print("varTfilter", varT_filter.count())
 #
 # flux was in mJy, all still in SI
 #
-print(" convert flux to SI...")
+print(" >> convert flux to SI...")
 flux_factor = 1e-26 / pixelsbeam / 1000.
-S_850 = good850 *  flux_factor
+S_850 = doublef_cl850 *  flux_factor
 varS_850 = var850 * flux_factor * flux_factor
 print("... Done!")
+
 
 print(" >> calculating masses...")
 mass, thin_mass, var_thin_mass = calc_mass(S_850, varS_850,
@@ -401,7 +417,7 @@ print(" ...Done!")
 print("thin_mass", thin_mass.count())
 print("var_thin_mass", var_thin_mass.count())
 
-varMsnr = filter_mass(thin_mass, var_thin_mass, 2.)
+varMsnr = filter_mass(thin_mass, var_thin_mass, sigma_cutM)
 
 #print("varMsnr", varMsnr.count())
 
@@ -410,7 +426,7 @@ varMsnr = filter_mass(thin_mass, var_thin_mass, 2.)
 print(" >> clump masses")
 totpix = 0
 for clump in range(1, n_clumps+1):
-    mskcl = ma.masked_not_equal(clump_mask, clump)
+    mskcl = ma.masked_not_equal(clump_idxs, clump)
     npix = mskcl.count()
 
     masscl = np.ma.masked_where(np.ma.getmask(mass), mskcl)
