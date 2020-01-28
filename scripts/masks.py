@@ -177,37 +177,27 @@ def mass_h2_thin(flux, d, k, Bnu) :
 
 
 
-def filter_temperature(temp, vartemp, type_filter, cut):
-    """ filter pixels using the temperature variance
+def filter_parameter(value, variance, type_filter, cut):
+    """ filter pixels using the variance of the parameter.
+        It returns the array witht the filtered variance
     """
     if type_filter == "variance" :
-        varfilter = np.ma.masked_where(vartemp > cut, vartemp)
+        varfilter = np.ma.masked_where(variance > cut, variance)
 
     elif type_filter == "snr" :
-        snrT = temp / np.sqrt(vartemp)
+        snr = value / np.sqrt(variance)
 
-        varTsnr = np.ma.masked_where(snrT < cut, snrT)
-        varfilter = np.ma.masked_where(np.ma.getmask(varTsnr), vartemp)
+        snr_cut = np.ma.masked_where(snr < cut, snr)
+        varfilter = np.ma.masked_where(np.ma.getmask(snr_cut), variance)
 
     elif type_filter == "None":
-        varfilter = np.ma.asarray(vartemp)
+        varfilter = np.ma.asarray(variance)
         
     else :
-        print(" ++ ERROR: unknown filter temperature option")
+        print(" ++ ERROR: unknown filter option")
         sys.exit(1)
         
     return varfilter
-
-
-
-def filter_mass(mass, var_mass, cut):
-    """filter pixel dependeing on mass SNR
-    """
-    snrM = mass / np.sqrt(var_mass)
-
-    filtermass = np.ma.masked_where(snrM < cut, snrM)
-
-    return filtermass
 
 
 
@@ -269,7 +259,7 @@ pixsize = 3. * u.arcsec
 #
 ini_Testimate = 3.
 
-sigma_cut450 = 3.
+sigma_cut450 = 4.
 sigma_cutT = 3.
 sigma_cutM = 2.
 
@@ -368,8 +358,7 @@ var_ratio = (ratio * ratio) * (var850 / doublef_cl850 / doublef_cl850 +
 print("  ...done")
 
 
-
-
+print(" >> calculating temperatures...")
 
 pre_ratio = ratio / pre
 
@@ -381,16 +370,29 @@ with np.errstate(invalid='ignore'):
 
 var_temp = get_temp_variance_K(t_array, var_ratio, hk850, hk450, pre)
 
+# The temperature array must have well defined temperatures and variance
+# of the temperature. The pixels that do not match that go into the notemp
+# array
+#
+temp = np.ma.masked_where(np.ma.getmask(var_temp), t_array)
+notemp = np.ma.masked_where(~np.ma.getmask(temp), ratio)
 
-varT_filter = filter_temperature(t_array, var_temp, "snr", sigma_cutT)
+varT_filter = filter_parameter(temp, var_temp, "snr", sigma_cutT)
 
-show_values(t_array, "temp")
-show_values(var_temp, "temp")
-show_values(varT_filter, "temp")
+lowT = np.ma.masked_where(~np.ma.getmask(varT_filter), temp)
+
+
+#show_values(t_array, "temp")
+#show_values(var_temp, "var_temp")
+#show_values(temp, "temp defined")
+#show_values(notemp, "no temp")
+#show_values(varT_filter, "varT_filter")
+#show_values(lowT, " low T")
 #print("temp", t_array.count())
 #print("var_ratio", var_ratio.count())
 #print("varT", var_temp.count())
 #print("varTfilter", varT_filter.count())
+print("  ...done")
 
 
 #high_var = np.ma.masked_where(~np.ma.getmask(varTsnr), var_temp)
@@ -409,7 +411,7 @@ print("... Done!")
 
 print(" >> calculating masses...")
 mass, thin_mass, var_thin_mass = calc_mass(S_850, varS_850,
-                                           t_array, varT_filter,
+                                           temp, varT_filter,
                                            distance, dtogas, mH, mu,
                                            pixsolangle, f850, beta, hk850)
 print(" ...Done!")
@@ -417,9 +419,11 @@ print(" ...Done!")
 print("thin_mass", thin_mass.count())
 print("var_thin_mass", var_thin_mass.count())
 
-varMsnr = filter_mass(thin_mass, var_thin_mass, sigma_cutM)
 
-#print("varMsnr", varMsnr.count())
+varMsnr = filter_parameter(thin_mass, var_thin_mass, "snr", sigma_cutM)
+
+lowM = np.ma.masked_where(~np.ma.getmask(varMsnr), thin_mass)
+#show_values(lowM," low M")
 
 
 
