@@ -15,6 +15,7 @@ from scipy import optimize
 
 import math
 
+from datetime import datetime
 
 ##-- Functions ---------------------------------------------------------
 
@@ -226,14 +227,9 @@ def read_fitsfile(fn_data, txt):
     print(" >> reading",txt,"data...")
     
     with fits.open(fn_data) as hdu_data:
-        #data = hdu_data[0].data
-        #var = hdu_data[1].data
-
         data_info = [hdu_data[0].data, hdu_data[1].data]
-        # reads header information
-        #
         header_info = [hdu_data[0].header, hdu_data[1].header]
-    
+
     return data_info, header_info
 
 
@@ -325,6 +321,79 @@ def columndensity(mass, var_mass, area, d, mu, mH ) :
     return col, var_col
 
 
+
+def save_fitsfile(data, var, outfile='out.fits', oldheader='', append=False,
+                  overwrite=False, hdr_type=''):
+
+    if oldheader :
+        header = modify_header(oldheader, hdr_type)
+    else :
+        return 3
+
+    
+    print(" >> saving", outfile, "...")
+
+    data = data.filled(np.nan)
+    var = var.filled(np.nan)
+
+    hdu_data = fits.PrimaryHDU(data, header=header[0])
+    hdu_variance = fits.ImageHDU(var, header=header[1])
+
+    hdulist = fits.HDUList([hdu_data, hdu_variance])
+    hdulist.writeto(outfile, overwrite=overwrite)
+
+    return 0
+
+
+
+def modify_header(old, htype) :
+    """ modify a FITS header according to predefined types."""
+
+    # get current time
+    #
+    timenow = str(datetime.utcnow()).split('.')[0]
+    timenow = timenow.replace(' ','T')
+    
+    if htype == "fluxratio" :
+        old[0]['LABEL'] = 'Flux ratio'
+        old[0]['BUNIT'] = ''
+        old[0]['history'] = 'flux ratio Sh2-61'
+        
+        old[1]['LABEL'] = 'Flux ratio variance'
+        old[1]['BUNIT'] = ''
+
+    elif htype == "tdust" :
+        old[0]['LABEL'] = 'Tdust'
+        old[0]['BUNIT'] = 'K'
+        old[0]['history'] = 'dust temperature Sh2-61'
+        
+        old[1]['LABEL'] = 'Tdust variance'
+        old[1]['BUNIT'] = 'K^2'
+
+    elif htype == "mass" :
+        old[0]['LABEL'] = 'Mass H_2'
+        old[0]['BUNIT'] = 'M_sol'
+        old[0]['history'] = 'H_2 mass Sh2-61'
+        
+        old[1]['LABEL'] = 'Mass H_2 variance'
+        old[1]['BUNIT'] = '(M_sol)^2'
+
+    elif htype == "column" :
+        old[0]['LABEL'] = 'N(H_2)'
+        old[0]['BUNIT'] = 'cm^-2'
+        old[0]['history'] = 'H_2 column density Sh2-61'
+        
+        old[1]['LABEL'] = 'N(H_2) variance'
+        old[1]['BUNIT'] = 'cm^-4'
+
+
+    for h in range(2) :
+        old[h]['DATE'] = timenow
+        old[h]['ORIGIN'] = 'masks.py'
+        
+    
+    return old
+
 ##-- End of functions --------------------------------------------------
 
 
@@ -370,7 +439,7 @@ cut_Td = 3.
 type_cutM = "snr"
 sigma_cutM = 2.
 
-manual_Tdust = 15.
+manual_Tdust = 20.
 ##
 ## End of parameters
 
@@ -420,8 +489,9 @@ snr450 = snr[0]
 
 print(" >> reading clump mask...")
 
-hdumask = fits.open(fname_clumps)
-clump_def = hdumask[0].data
+with fits.open(fname_clumps) as hdumask:
+    clump_def = hdumask[0].data
+
 n_clumps = np.int(np.nanmax(clump_def))
 
 clump_idxs = clump_def.view(ma.MaskedArray)
@@ -463,6 +533,10 @@ ratio = np.ma.divide(clumps_hi450, doublef_cl850)
 var_ratio = get_variance_ratio(ratio, doublef_cl850, clumps_hi450, var850,
                                var450)
 
+ok = save_fitsfile(ratio, var_ratio, outfile='test_ratio.fits',
+                   hdr_type='fluxratio', oldheader=header850, append=False,
+                   overwrite=True)
+
 print("  ...done")
 
 
@@ -492,12 +566,17 @@ var_temp = get_temp_variance(t_array, var_ratio, hk850, hk450, pre)
 temp = np.ma.masked_where(np.ma.getmask(var_temp), t_array)
 
 
+
 novartemp = np.ma.masked_where(~np.ma.getmask(var_temp), t_array)
 manual_temp = merge_masked_arrays(manual_temp, novartemp)
 
 
 varT_filter = filter_parameter(temp, var_temp, type_cutTd, cut_Td)
 temp_filter = np.ma.masked_where(np.ma.getmask(varT_filter), temp)
+
+ok = save_fitsfile(temp_filter, varT_filter, outfile='test_Tdust.fits',
+                   hdr_type='tdust', oldheader=header850, append=False,
+                   overwrite=True)
 
 novarfilter = np.ma.masked_where(~np.ma.getmask(varT_filter), temp)
 manual_temp = merge_masked_arrays(manual_temp, novarfilter)
@@ -575,6 +654,14 @@ mass_th_total = merge_masked_arrays(mass_th_total, thin_mass_notemp)
 
 varM_th_total = np.ma.copy(varMsnr)
 varM_th_total = merge_masked_arrays(varMsnr, var_thin_mass_notemp)
+
+ok = save_fitsfile(mass_th_total, varM_th_total, outfile='test_Mass.fits',
+                   hdr_type='mass', oldheader=header850, append=False,
+                   overwrite=True)
+
+#
+# get column density arrays
+#
 
 print("   ...done")
 
