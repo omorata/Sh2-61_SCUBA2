@@ -288,7 +288,8 @@ def clump_weighted_avg(array, weights, clump_mask) :
     cl_w = np.ma.masked_where(np.ma.getmask(clump_mask), weights)
         
     return np.nansum(cl_a * cl_w) / np.nansum(cl_w)
-     
+
+
 
 def get_size(n, pixsize, beamsize) :
     """Calculate some geometrical parameters of the clump."""
@@ -299,6 +300,29 @@ def get_size(n, pixsize, beamsize) :
                     (np.pi / 4. / np.log(2.) )* beamsize * beamsize) * 0.5
     
     return area, ef_rad, dec_r
+
+
+
+def columndensity(mass, var_mass, area, d, mu, mH ) :
+    """Calculate column density from a mass and an area
+
+    mass in solar masses, area in arcsec^2, d in pc.
+    Returns the column density in cm^-2 and the variance of the column
+    density in cm^-4
+    """
+
+    arad = area.to(u.radian * u.radian)
+    dcm = d.to(u.cm)
+
+    solangle = 2. * np.pi * (1. - np.cos(2. * np.sqrt(arad/np.pi)))
+
+    fact = const.M_sun / mu / mH / dcm / dcm / solangle
+    
+    col = mass * fact
+    var_col = var_mass * fact * fact
+
+    return col, var_col
+
 
 ##-- End of functions --------------------------------------------------
 
@@ -354,6 +378,8 @@ manual_Tdust = 15.
 #
 pixelsbeam = np.pi / 4. / np.log(2.) * beam * beam / pixsize / pixsize
 
+pixarea = pixsize * pixsize
+
 # input fluxes in mJy/beam
 #
 flux_factor = 1e-26 / pixelsbeam / 1000.
@@ -363,11 +389,11 @@ pixsolangle = pixsize_rad * pixsize_rad
 
 hk = const.h * const.c / const.k_B
 
+
 f850 = const.c / l850
 
 hk850 = hk / l850 / u.K
 hk450 = hk / l450 / u.K
-
 
 pre = (850. / 450.)**(3.+ beta)
 
@@ -403,6 +429,8 @@ with np.errstate(invalid='ignore'):
 
 high450_idx = np.ma.masked_where(np.ma.getmask(high450), inclumps)
 clumps_hi450 = np.ma.masked_where(np.ma.getmask(high450_idx), data450)
+
+clumps_450 = np.ma.masked_where(np.ma.getmask(inclumps), data450)
 
 clumps_hi850 = np.ma.masked_where(np.ma.getmask(inclumps), data850)
 
@@ -565,7 +593,18 @@ for clump in range(1, n_clumps+1):
     cl_flux = np.nansum(cl_S850) / 1.e-26
 
     str_out = ' {0} {1:7.3f}'.format(str_out, cl_flux)
-    
+
+    cl_f450hi = np.ma.masked_where(np.ma.getmask(mskcl), clumps_hi450)
+    cl_S450hi = cl_f450hi * flux_factor
+    cl_flux450hi = np.nansum(cl_S450hi) / 1.e-26
+    str_out = ' {0} {1:7.3f}'.format(str_out, cl_flux450hi)
+
+    cl_f450 = np.ma.masked_where(np.ma.getmask(mskcl), clumps_450)
+    cl_S450 = cl_f450 * flux_factor
+    cl_flux450 = np.nansum(cl_S450) / 1.e-26
+    str_out = ' {0} {1:7.3f}'.format(str_out, cl_flux450)
+
+     
     #masscl = np.ma.masked_where(np.ma.getmask(mass), mskcl)
 
     cl_td_idx = np.ma.masked_where(np.ma.getmask(temp_filtermass), mskcl)
@@ -573,19 +612,23 @@ for clump in range(1, n_clumps+1):
     cl_td = np.ma.masked_where(np.ma.getmask(cl_td_idx), temp_filtermass)
         
     cl_thin_mass_idx = np.ma.masked_where(np.ma.getmask(mass_850), mskcl)
-    cl_tot_mass_idx =  np.ma.masked_where(np.ma.getmask(mass_th_total), mskcl)
     
     cl_thin_mass = np.ma.masked_where(np.ma.getmask(cl_thin_mass_idx),
                                       mass_850) 
     cl_var_thin_mass = np.ma.masked_where(np.ma.getmask(cl_thin_mass_idx),
                                           varMsnr)
 
+    cl_N_th, cl_var_N_th = columndensity(cl_thin_mass, cl_var_thin_mass,
+                                         pixarea, distance, mu, mH)
+
+    #show_values(cl_N_th, "coldens")
     str_out = '{0} {1:4d}'.format(str_out, cl_thin_mass.count())
     str_out = '{0} {1:8.2f} ({2:6.2f})'.format(str_out,
                                         np.nansum(cl_thin_mass),
                                         np.ma.sqrt(np.nansum(cl_var_thin_mass)))
 
     
+    cl_tot_mass_idx =  np.ma.masked_where(np.ma.getmask(mass_th_total), mskcl)
     cl_tot_mass = np.ma.masked_where(np.ma.getmask(cl_tot_mass_idx),
                                      mass_th_total) 
     cl_var_tot_mass = np.ma.masked_where(np.ma.getmask(cl_tot_mass_idx),
@@ -594,6 +637,15 @@ for clump in range(1, n_clumps+1):
     str_out = '{0} {1:8.2f} ({2:6.2f})'.format(str_out, np.nansum(cl_tot_mass),
                                     np.ma.sqrt(np.nansum(cl_var_tot_mass)))
 
+    cl_N_tot, cl_var_N_tot = columndensity(cl_tot_mass, cl_var_tot_mass,
+                                         pixarea, distance, mu, mH)
+    
+    clump_N, clump_varN = columndensity(np.nansum(cl_tot_mass),
+                                        np.nansum(cl_var_tot_mass),
+                                        area, distance, mu, mH)
+    
+    str_out = '{0} {1:9.3e} {2:9.3e}'.format(str_out, clump_N,
+                                             np.sqrt(clump_varN))
     
     if cl_td.count() > 0 :
 
@@ -601,6 +653,7 @@ for clump in range(1, n_clumps+1):
         minT = np.nanmin(cl_td)
         SavgT = clump_weighted_avg(temp_filtermass, clumps_hi450, cl_td_idx)
 
+        SavgT = calc_perc(cl_td, 25)
         str_t = '///{0:6.1f} {1:6.1f} {2:6.1f}'.format(maxT, minT, SavgT)
         
     else :
