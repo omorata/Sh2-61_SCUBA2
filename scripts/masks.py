@@ -220,8 +220,8 @@ def show_values(msk_arr, txt):
 
 
 
-def read_inputfiles(fn_data, fn_snr, txt):
-    """Read input data and snr files."""
+def read_fitsfile(fn_data, txt):
+    """Read input data and header from a FITS file."""
     
     print(" >> reading",txt,"data...")
     
@@ -234,10 +234,7 @@ def read_inputfiles(fn_data, fn_snr, txt):
         #
         header_info = [hdu_data[0].header, hdu_data[1].header]
     
-    with fits.open(fn_snr) as hdu_snr :
-        snr = hdu_snr[0].data
-
-    return data_info, header_info, snr
+    return data_info, header_info
 
 
 
@@ -406,15 +403,20 @@ pre = (850. / 450.)**(3.+ beta)
 print(" ++ Start")
 print(" >> reading input files...")
 
-data, header850, snr850 = read_inputfiles(fname_850, fname_snr850, "850micron")
+data, header850 = read_fitsfile(fname_850, "850micron")
+snr, header_snr = read_fitsfile(fname_snr850, "SNR 850micron")
 
 data850 = data[0]  
 var850 = data[1]
+snr850 = snr[0]
 
-data, header450, snr450 = read_inputfiles(fname_450, fname_snr450, "450micron")
+data, header450 = read_fitsfile(fname_450, "450micron")
+snr, header_snr = read_fitsfile(fname_snr450, "SNR 450micron")
 
 data450 = data[0]  
 var450 = data[1]
+snr450 = snr[0]
+
 
 print(" >> reading clump mask...")
 
