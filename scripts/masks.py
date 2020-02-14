@@ -225,15 +225,19 @@ def read_inputfiles(fn_data, fn_snr, txt):
     
     print(" >> reading",txt,"data...")
     
-    hdu_data = fits.open(fn_data)
-    data = hdu_data[0].data
-    var = hdu_data[1].data
-    #w1 = wcs.WCS(hdu_data850[0].header)
+    with fits.open(fn_data) as hdu_data:
+        #data = hdu_data[0].data
+        #var = hdu_data[1].data
 
-    hdu_snr = fits.open(fn_snr) 
-    snr = hdu_snr[0].data
+        data_info = [hdu_data[0].data, hdu_data[1].data]
+        # reads header information
+        #
+        header_info = [hdu_data[0].header, hdu_data[1].header]
+    
+    with fits.open(fn_snr) as hdu_snr :
+        snr = hdu_snr[0].data
 
-    return data, var, snr
+    return data_info, header_info, snr
 
 
 
@@ -402,9 +406,15 @@ pre = (850. / 450.)**(3.+ beta)
 print(" ++ Start")
 print(" >> reading input files...")
 
-data850, var850, snr850 = read_inputfiles(fname_850, fname_snr850, "850micron")
-data450, var450, snr450 = read_inputfiles(fname_450, fname_snr450, "450micron")
+data, header850, snr850 = read_inputfiles(fname_850, fname_snr850, "850micron")
 
+data850 = data[0]  
+var850 = data[1]
+
+data, header450, snr450 = read_inputfiles(fname_450, fname_snr450, "450micron")
+
+data450 = data[0]  
+var450 = data[1]
 
 print(" >> reading clump mask...")
 
