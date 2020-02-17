@@ -3,7 +3,7 @@
 ## ClumpClass.py
 ## O. Morata 2020
 ##
-""" ClumpClass
+""" ClumpClass.py
 
     Definition of the class Clump 
 
@@ -59,7 +59,7 @@ class Clump (object):
     
         
     def make_table(self) :
-        """Builds the catalogue table."""
+        """Builds the catalogue table in the rec structured array."""
 
         for clump in range(1, self.n_clumps+1):
             mskcl = ma.masked_not_equal(self.idxs, clump)
@@ -77,8 +77,8 @@ class Clump (object):
             self.rec[clump-1]['eff_radius'] = eff_radius / u.arcsec
             self.rec[clump-1]['deconv_radius'] = deconv_r / u.arcsec
 
+            
             numflux = np.shape(self.fluxes)[0]
-
             for flx in range(numflux):
                 f = np.ma.masked_where(np.ma.getmask(mskcl), self.fluxes[flx])
                 S = f * self.params.flux_factor
@@ -88,7 +88,6 @@ class Clump (object):
 
 
             numasses = np.shape(self.mass)[0]
-
             for mss in range(numasses) :
 
                 cl_m_idx = np.ma.masked_where(
@@ -116,6 +115,7 @@ class Clump (object):
                     self.rec[clump-1]['N'] = clump_N
                     self.rec[clump-1]['varN'] = clump_varN
 
+                    
             numtemps = np.shape(self.temps)[0]
             for t in range(numtemps) :
                 cl_td_idx = ma.masked_where(ma.getmask(self.temps[t]),
@@ -130,13 +130,12 @@ class Clump (object):
                     self.rec[clump-1]['maxT'] = -99
                     self.rec[clump-1]['minT'] = -99
 
-
         return 0
 
         
                     
     def print_table(self):
-        """Prints catalogue table."""
+        """Prints catalogue table stored in the rec structured array."""
         
         for i in range(np.shape(self.rec)[0]) :
 
@@ -181,11 +180,13 @@ class Clump (object):
 
 
     def save_fitstable(self, fname, overwrite=False) :
-        """Test of saving a fits table."""
+        """Save a fits table with the clump parameters."""
 
         print(" >>> Saving fits table ", fname," ...")
+        
         t = fits.BinTableHDU.from_columns(self.rec)
         t.writeto(fname, overwrite=overwrite)
+
         print(" >>> ...done")
     
         
@@ -195,11 +196,13 @@ class Clump (object):
     def get_size(n, pixsize, beamsize) :
         """Calculate some geometrical parameters of the clump."""
 
-        area = n* pixsize * pixsize
+        area = n * pixsize * pixsize
         ef_rad = np.sqrt(area / np.pi)
         dec_r = np.sqrt(4 * ef_rad * ef_rad -
                         (np.pi / 4. / np.log(2.) )* beamsize * beamsize) * 0.5
-    
+
+        dec_a = np.pi * dec_r * dec_r
+        
         return area, ef_rad, dec_r
 
 
@@ -212,6 +215,7 @@ class Clump (object):
         Returns the column density in cm^-2 and the variance of the column
         density in cm^-4
         """
+
         arad = area.to(u.radian * u.radian)
         dcm = d.to(u.cm)
 
