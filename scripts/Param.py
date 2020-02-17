@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+#
+##  Param.py
+##  O. Morata 2020
+##
+""" Definition of the class Param that contains several constants of the
+    environment of the calculations.
+"""
+
 
 import numpy as np
 from astropy import units as u
@@ -13,10 +21,13 @@ class Param(object):
 
         self.mu = mu
         self.mH = 1.6733e-27 * u.kg
+        self.dtogas = dtogas
         self.d = d
-        self.pixsize = pixsize
+        self.beta = beta
+        self.l450 = l450
+        self.l850 = l850
         self.beam = beam
-        
+        self.pixsize = pixsize
         
         self.pixarea = pixsize * pixsize
 
