@@ -10,7 +10,7 @@
 
 import numpy as np
 from astropy import units as u
-
+from astropy import constants as const
 
 
 class Param(object):
@@ -34,3 +34,8 @@ class Param(object):
         pixelsbeam = np.pi / 4. / np.log(2.) * beam * beam / pixsize / pixsize
 
         self.flux_factor = 1e-26 / pixelsbeam / 1000.
+
+        hk = const.h * const.c / const.k_B
+        self.hk850 = hk / l850 / u.K
+        self.hk450 = hk / l450 / u.K
+
