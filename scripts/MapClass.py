@@ -168,22 +168,13 @@ class Map (object):
         new = Map.empty()
 
         new.data[0] = ma.masked_less(self.data[0], val)
-        new.data[1] = ma.masked_less(self.data[1], val)
+
+        new.data[1] = ma.masked_where(ma.getmask(new.data[0]), self.data[1])
 
         return new
 
 
 
-    def masked_greater(self, val):
-        new = Map.empty()
-
-        new.data[0] = ma.masked_greater(self.data[0], val)
-        new.data[1] = ma.masked_greater(self.data[1], val)
-
-        return new
-
-
-    
     def getmask(self) :
         mask = ma.getmask(self.data[0])
         return mask
@@ -241,3 +232,17 @@ def get_variance_ratio(r, den, num, var_den, var_num):
     
     var_r = (r * r) * (var_den / den / den + var_num / num / num)
     return var_r
+
+
+
+def merge_maps(a, b) :
+    """Merge two masked maps a and b."""
+    
+    merged = a.copy()
+
+    for i in range(2):
+        mm = merged.data[i]
+        bb = b.data[i]
+        mm[mm.mask] = bb[mm.mask]
+
+    return merged
