@@ -246,3 +246,17 @@ def merge_maps(a, b) :
         mm[mm.mask] = bb[mm.mask]
 
     return merged
+
+
+
+def full_like(model, inival=(0,0)):
+    new = Map.empty()
+
+    new.data[0] = np.full_like(model.data[0], inival[0])
+    new.data[1] = np.full_like(model.data[1], inival[1])
+
+    return new
+
+    
+
+    
