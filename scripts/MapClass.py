@@ -210,7 +210,7 @@ class Map (object):
         return new
 
 
-    def mult(self, factor):
+    def cmult(self, factor):
 
         new = Map.empty()
         new.data[0] = self.data[0] * factor

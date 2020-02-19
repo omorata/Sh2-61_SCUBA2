@@ -440,24 +440,7 @@ def modify_header(old, htype) :
     return old
 
 
-def test_condition(cond, arr):
-    with np.errstate(invalid='ignore'):
-
-        xx = np.ma.masked_where(eval(cond), arr)
-
-    return xx
-
-
-
-def fill_likearray(value, model) :
-    """Fill array like model with value."""
-
-    t1 = ma.copy(model)
-    return ma.divide(t1, t1) * value
-
-
 ##-- End of functions --------------------------------------------------
-
 
 
 # constants
@@ -680,6 +663,8 @@ varT_filter = filter_parameter(temp, var_temp, type_cutTd, cut_Td)
 temp_filter = np.ma.masked_where(np.ma.getmask(varT_filter), temp)
 
 
+##
+##
 maptemp_filter = filtermap(maptemp, type_cutTd, cut_Td)
 
 
@@ -707,7 +692,7 @@ print(" >> convert flux to SI...")
 S_850 = doublef_cl850 *  flux_factor
 varS_850 = var850 * flux_factor * flux_factor
 
-mapS_850 = mapdblf_cl850.mult(flux_factor)
+mapS_850 = mapdblf_cl850.cmult(flux_factor)
 print("   ...done")
 
 
