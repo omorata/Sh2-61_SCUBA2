@@ -537,6 +537,7 @@ type_cutM = "snr"
 sigma_cutM = 2.
 
 manual_Tdust = 20.
+manual_varTdust = 30.
 ##
 ## End of parameters
 
@@ -644,7 +645,7 @@ singlef_cl850 = ma.masked_where(ma.getmask(singlef_cl850_idx), data850)
 sf_cl850_idx = ma.masked_where(~mapdblf_cl850.getmask(), inclumps)
 mapsf_cl850 = map850.masked_where(ma.getmask(sf_cl850_idx))
 
-
+print("single:", singlef_cl850.count())
 
 # definition of array to hold pixels where WE fix Tdust
 #
@@ -765,9 +766,6 @@ mass, thin_mass, var_thin_mass = calc_mass(S_850, varS_850,
 ##
 mapmass = calc_mapmass(mapS_850, maptemp_filter, pr)
 
-print("mass", thin_mass.count(), var_thin_mass.count())
-print("mapmass", mapmass.data[0].count(), mapmass.data[1].count())
-
 
 print("   ...done")
 
@@ -779,9 +777,6 @@ mass_850 = ma.masked_where(ma.getmask(varMsnr), thin_mass)
 ##
 ##
 mapmass_filter = filtermap(mapmass, type_cutM, sigma_cutM)
-print("massfilter", mass_850.count(), varMsnr.count())
-print("mapmass_filter", mapmass_filter.data[0].count(),
-      mapmass_filter.data[1].count())
 
 
 lowM = ma.masked_where(~ma.getmask(varMsnr), thin_mass)
@@ -794,23 +789,23 @@ temp_filtermass = ma.masked_where(ma.getmask(varMsnr), temp_filter)
 ##
 maptemp_filtermass = maptemp_filter.masked_where(mapmass_filter.getmask())
 
-mapnotemp_filtermass = maptemp_filter.masked_where(~maptemp_filtermass.getmask())
-mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnotemp_filtermass)
+mapnot_filtermass = maptemp_filter.masked_where(~maptemp_filtermass.getmask())
+mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnot_filtermass)
 
-print("temp_filtermass:", temp_filtermass.count(), lowM.count(),
-      manual_temp.count())
-print("maptemp_filtermass:", maptemp_filtermass.data[0].count(),
-      maptemp_filtermass.data[1].count(),
-      mapmanual_temp.data[0].count(), mapmanual_temp.data[1].count())
 
 
 print("  >>\n  >> processing fixed dust temperature pixels...")
 
 f850_notemp = ma.masked_where(ma.getmask(manual_temp), clumps_hi850)
 var850_notemp = ma.masked_where(ma.getmask(manual_temp), var850)
-var450_notemp = ma.masked_where(ma.getmask(manual_temp), var450)
 
+# to delete
+var450_notemp = ma.masked_where(ma.getmask(manual_temp), var450)
 new_f450 = flux450(f850_notemp, manual_Tdust, hk850, hk450, pre)
+
+mapf850_notemp = mapclumpshi850.masked_where(mapmanual_temp.getmask())
+
+
 
 #nt_ratio = ma.divide(new_f450, f850_notemp)
 
@@ -818,15 +813,25 @@ new_f450 = flux450(f850_notemp, manual_Tdust, hk850, hk450, pre)
 #                                 var850_notemp, var450_notemp)
 
 #varT_notemp = get_temp_variance(manual_temp, var_ntratio, hk850, hk450, pre)
+# to delete
 x = ma.copy(new_f450)
 varT_notemp = ma.divide(x, x) * 30.
 
 
 #snrnotemp = manual_Tdust / ma.sqrt(var_ntratio)
 
+#manual_dust = np.full_like(mapf850_notemp.getmask(), manual_Tdust)
+#manual_vardust = np.full_like(mapf850_notemp.getmask(), manual_varTdust)
+
+mapmanual_Tdust = maps.full_like(mapf850_notemp,
+                                 (manual_Tdust, manual_varTdust))
+
 
 S850_notemp = f850_notemp * flux_factor
 varS_850notemp = var850_notemp * flux_factor * flux_factor
+
+mapS850_notemp = mapf850_notemp.cmult(flux_factor)
+
 
 mass_notemp, thin_mass_notemp, var_thin_mass_notemp = calc_mass(S850_notemp,
                                                     varS_850notemp,
@@ -836,9 +841,19 @@ mass_notemp, thin_mass_notemp, var_thin_mass_notemp = calc_mass(S850_notemp,
                                                     pixsolangle, f850,
                                                     beta, hk850)
 
+mapmass_notemp = calc_mapmass(mapS850_notemp, mapmanual_Tdust, pr)
+
+
 print(np.nansum(thin_mass_notemp), "+-",
       ma.sqrt(np.nansum(var_thin_mass_notemp)))
 print(np.nansum(mass_850), "+-", ma.sqrt(np.nansum(varMsnr)))
+
+
+print(np.nansum(mapmass_notemp.data[0]), "+-",
+      ma.sqrt(np.nansum(mapmass_notemp.data[1])) )
+
+print(np.nansum(mapmass_filter.data[0]), "+-",
+      ma.sqrt(np.nansum(mapmass_filter.data[1])) )
 
 
 mass_th_total = ma.copy(mass_850)
@@ -850,6 +865,14 @@ varM_th_total = merge_masked_arrays(varMsnr, var_thin_mass_notemp)
 ok = save_fitsfile(mass_th_total, varM_th_total, outfile='test_Mass.fits',
                    hdr_type='mass', oldheader=header850, append=False,
                    overwrite=True)
+
+
+mapmass_total = maps.merge_maps(mapmass_filter, mapmass_notemp)
+
+ok = mapmass_total.save_fitsfile(fname='test_Mass2.fits',
+                                  hdr_type='mass', oldheader=header850,
+                                  append=False, overwrite=True)
+
 
 #maptest = maps.Map(name="thin mass", filename='test_Mass.fits',
 #                   data=[mass_th_total, varM_th_total])
@@ -872,11 +895,18 @@ mass_tott = maps.Map(name="tot mass", filename='mtot',
 
 
 
+#clumpcat = cl.Clump(idxs=clump_idxs,
+#                 fluxes=[clumps_hi850,clumps_hi450,clumps_450],
+#                 temps=[temp_filtermass],
+#                 mass=[mass_th, mass_tott],
+#                 params=pr)
+
 clumpcat = cl.Clump(idxs=clump_idxs,
                  fluxes=[clumps_hi850,clumps_hi450,clumps_450],
                  temps=[temp_filtermass],
                  mass=[mass_th, mass_tott],
                  params=pr)
+
 
 
 print("  >> clump masses")
