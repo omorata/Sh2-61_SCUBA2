@@ -20,7 +20,10 @@ class Clump (object):
 
     def __init__(self, idxs='', fluxes='', temps='', mass='',params='',
                  names='') :
-        """Initialization of the Clump object."""
+        """Initialization of the Clump object.
+
+        The fluxes, temps and mass are suposed to be type Maps() objects
+        """
 
         self.n_clumps = np.int(np.nanmax(idxs))
         self.idxs = idxs
@@ -33,17 +36,17 @@ class Clump (object):
         self.params = params
 
         self.rec = Clump.createRec(self)
-        self.fluxfields = ['flux850', 'flux450hi', 'flux450'] 
-        self.massfields = ['th_mass', 'varth_mass', 'totmass', 'vartotmass']
+        self.fluxflds = ['flux850', 'flux450hi', 'flux450'] 
+        self.massflds = ['mass', 'var_mass', 'masstot', 'var_masstot']
         
-        
+
         
     def createRec(self):
         """Creates an empty structured array."""
         
         list_names = ['id', 'npix', 'ngpix', 'area', 'eff_radius',
                       'deconv_radius', 'flux850', 'flux450hi', 'flux450',
-                      'th_mass', 'varth_mass', 'totmass', 'vartotmass',
+                      'mass', 'var_mass', 'masstot', 'var_masstot',
                       'N', 'varN', 'maxT', 'minT']
 
         list_formats = ['i4', 'i4' , 'i4', 'f4', 'f4', 'f4', 'f4', 'f4', 'f4',
@@ -80,37 +83,33 @@ class Clump (object):
             
             numflux = np.shape(self.fluxes)[0]
             for flx in range(numflux):
-                f = np.ma.masked_where(np.ma.getmask(mskcl), self.fluxes[flx])
-                S = f * self.params.flux_factor
-                S = S.filled(np.nan)
-                field = self.fluxfields[flx]
-                self.rec[clump-1][field] = np.nansum(S) / 1e-26
+                f = self.fluxes[flx].masked_where(ma.getmask(mskcl))
 
+                S = f.cmult(self.params.flux_factor)
+                S = S.filled(np.nan)
+
+                field = self.fluxflds[flx]
+                self.rec[clump-1][field] = np.nansum(S.data[0]) / 1e-26
+                
 
             numasses = np.shape(self.mass)[0]
             for mss in range(numasses) :
 
-                cl_m_idx = np.ma.masked_where(
-                    np.ma.getmask(self.mass[mss].data[0]),mskcl)
-                
-                cl_m = np.ma.masked_where(np.ma.getmask(cl_m_idx),
-                                          self.mass[mss].data[0])
+
+                cl_m = self.mass[mss].masked_where(ma.getmask(mskcl))
                 cl_m = cl_m.filled(np.nan)
-                
-                cl_varm = np.ma.masked_where(np.ma.getmask(cl_m_idx),
-                                              self.mass[mss].data[1])
-                cl_varm = cl_varm.filled(np.nan)
-                
-                self.rec[clump-1][self.massfields[mss*2]] = np.nansum(cl_m)
-                self.rec[clump-1][self.massfields[mss*2+1]] = np.nansum(cl_varm)
+
+                m = np.nansum(cl_m.data[0])
+                var_m = np.nansum(cl_m.data[1])
+                self.rec[clump-1][self.massflds[mss*2]] = m
+                self.rec[clump-1][self.massflds[mss*2+1]] = var_m
 
                 if mss == 1 :
                     # column density ad-hoc
                     #
-            
                     clump_N, clump_varN = Clump.columndensity(
-                        np.nansum(cl_m), np.nansum(cl_varm), area,
-                        self.params.d, self.params.mu, self.params.mH)
+                        m, var_m, area, self.params.d, self.params.mu,
+                        self.params.mH)
 
                     self.rec[clump-1]['N'] = clump_N
                     self.rec[clump-1]['varN'] = clump_varN
@@ -118,14 +117,11 @@ class Clump (object):
                     
             numtemps = np.shape(self.temps)[0]
             for t in range(numtemps) :
-                cl_td_idx = ma.masked_where(ma.getmask(self.temps[t]),
-                                            mskcl)
-
-                cl_td = ma.masked_where(ma.getmask(cl_td_idx), self.temps[t])
+                cl_td = self.temps[t].masked_where(ma.getmask(mskcl))
                     
-                if cl_td.count() > 0 :
-                    self.rec[clump-1]['maxT'] = np.nanmax(cl_td)
-                    self.rec[clump-1]['minT'] = np.nanmin(cl_td)
+                if cl_td.data[0].count() > 0 :
+                    self.rec[clump-1]['maxT'] = np.nanmax(cl_td.data[0])
+                    self.rec[clump-1]['minT'] = np.nanmin(cl_td.data[0])
                 else:
                     self.rec[clump-1]['maxT'] = -99
                     self.rec[clump-1]['minT'] = -99
@@ -150,14 +146,14 @@ class Clump (object):
             
             numflux = np.shape(self.fluxes)[0]
             for flx in range(numflux):
-                ff = self.fluxfields[flx]
+                ff = self.fluxflds[flx]
                 str_out = ' {0} {1:7.3f}'.format(str_out, self.rec[ff][i])  
 
                 
             numasses = np.shape(self.mass)[0]
             for mss in range(numasses) :
-                m_field = self.massfields[mss*2]
-                varm_field = self.massfields[mss*2+1]
+                m_field = self.massflds[mss*2]
+                varm_field = self.massflds[mss*2+1]
                 str_out = '{0} {1:8.2f} ({2:6.2f})'.format(
                     str_out, self.rec[i][m_field],
                     np.sqrt(self.rec[i][varm_field]))
