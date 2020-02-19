@@ -28,6 +28,21 @@ import MapClass as maps
 ##-- Functions ---------------------------------------------------------
 
 
+def get_maptemperature(mapratio, ini, pre, par):
+
+    new = maps.Map.empty()
+    
+    new.data[0] = get_temperature(mapratio.data[0]/pre, ini,
+                                  (par.hk850, par.hk450))
+
+
+    new.data[1] = get_temp_variance(new.data[0], mapratio.data[1],
+                                    par.hk850, par.hk450, pre)
+
+    return new
+    
+
+
 def get_temperature(ratio, ini_value, vargs):
     """ calculate the temperature from the flux ratio
     """
@@ -191,6 +206,27 @@ def mass_h2_thin(flux, d, k, Bnu) :
     return M_h2
 
 
+def filtermap(pmap, type_filter, cut):
+    """Filter pixels using the variance of the parameter
+
+    It returns the map data and the variance
+    """
+
+    if type_filter == "variance" :
+        new = pmap.masked_greater(cut)
+        
+    elif type_filter == "snr" :
+        snr = pmap.data[0] / np.sqrt(pmap.data[1])
+        snr_cut = ma.masked_where(snr < cut, snr)
+        new = pmap.masked_where(ma.getmask(snr_cut))
+        
+    else :
+        print(" ++ ERROR: unknown filter option")
+        sys.exit(1)
+        
+    return new
+
+
 
 def filter_parameter(value, variance, type_filter, cut):
     """Filter pixels using the variance of the parameter
@@ -203,6 +239,7 @@ def filter_parameter(value, variance, type_filter, cut):
 
     elif type_filter == "snr" :
         snr = value / np.sqrt(variance)
+        
 
         snr_cut = np.ma.masked_where(snr < cut, snr)
         varfilter = np.ma.masked_where(np.ma.getmask(snr_cut), variance)
@@ -296,37 +333,37 @@ def clump_weighted_avg(array, weights, clump_mask) :
 
 
 
-def get_size(n, pixsize, beamsize) :
-    """Calculate some geometrical parameters of the clump."""
+#def get_size(n, pixsize, beamsize) :
+#    """Calculate some geometrical parameters of the clump."""
+#
+#    area = n* pixsize * pixsize
+#    ef_rad = np.sqrt(area / np.pi)
+#    dec_r = np.sqrt(4 * ef_rad * ef_rad -
+#                    (np.pi / 4. / np.log(2.) )* beamsize * beamsize) * 0.5
+#    
+#    return area, ef_rad, dec_r
 
-    area = n* pixsize * pixsize
-    ef_rad = np.sqrt(area / np.pi)
-    dec_r = np.sqrt(4 * ef_rad * ef_rad -
-                    (np.pi / 4. / np.log(2.) )* beamsize * beamsize) * 0.5
-    
-    return area, ef_rad, dec_r
 
 
-
-def columndensity(mass, var_mass, area, d, mu, mH ) :
-    """Calculate column density from a mass and an area
-
-    mass in solar masses, area in arcsec^2, d in pc.
-    Returns the column density in cm^-2 and the variance of the column
-    density in cm^-4
-    """
-
-    arad = area.to(u.radian * u.radian)
-    dcm = d.to(u.cm)
-
-    solangle = 2. * np.pi * (1. - np.cos(2. * np.sqrt(arad/np.pi)))
-
-    fact = const.M_sun / mu / mH / dcm / dcm / solangle
-    
-    col = mass * fact
-    var_col = var_mass * fact * fact
-
-    return col, var_col
+#def columndensity(mass, var_mass, area, d, mu, mH ) :
+#    """Calculate column density from a mass and an area
+#
+#    mass in solar masses, area in arcsec^2, d in pc.
+#    Returns the column density in cm^-2 and the variance of the column
+#    density in cm^-4
+#    """
+#
+#    arad = area.to(u.radian * u.radian)
+#    dcm = d.to(u.cm)
+#
+#    solangle = 2. * np.pi * (1. - np.cos(2. * np.sqrt(arad/np.pi)))
+#
+#    fact = const.M_sun / mu / mH / dcm / dcm / solangle
+#    
+#    col = mass * fact
+#    var_col = var_mass * fact * fact
+#
+#    return col, var_col
 
 
 
@@ -402,6 +439,23 @@ def modify_header(old, htype) :
     
     return old
 
+
+def test_condition(cond, arr):
+    with np.errstate(invalid='ignore'):
+
+        xx = np.ma.masked_where(eval(cond), arr)
+
+    return xx
+
+
+
+def fill_likearray(value, model) :
+    """Fill array like model with value."""
+
+    t1 = ma.copy(model)
+    return ma.divide(t1, t1) * value
+
+
 ##-- End of functions --------------------------------------------------
 
 
@@ -442,11 +496,11 @@ ini_Testimate = 3.
 
 sigma_cut450 = 4.
 
-#type_cutTd = "snr"
-#cut_Td = 3.
+type_cutTd = "snr"
+cut_Td = 3.
 
-type_cutTd = "variance"
-cut_Td = 30.
+#type_cutTd = "variance"
+#cut_Td = 30.
 
 type_cutM = "snr"
 sigma_cutM = 1.
@@ -502,14 +556,18 @@ var450 = data[1]
 snr450 = snr[0]
 
 
-mm = maps.Map(name="850micron", filename=fname_850)
+map850 = maps.Map.fromfitsfile(fname_850, name="850micron")
+mapsnr = maps.Map.fromfitsfile(fname_snr850, name="SNR 850micron")
+map450 = maps.Map.fromfitsfile(fname_450, name="450micron")
+mapsnr450 = maps.Map.fromfitsfile(fname_snr450, name="SNR 450micron")
+
 
 print(" >> reading clump mask...")
 
 with fits.open(fname_clumps) as hdumask:
     clump_def = hdumask[0].data
 
-n_clumps = np.int(np.nanmax(clump_def))
+#n_clumps = np.int(np.nanmax(clump_def))
 
 clump_idxs = clump_def.view(ma.MaskedArray)
 
@@ -518,41 +576,67 @@ clump_idxs = clump_def.view(ma.MaskedArray)
 clump_idxs_invalid = ma.masked_invalid(clump_idxs)
 inclumps = ma.masked_less(clump_idxs_invalid, 1)
 
+maphi450 = mapsnr450.masked_less(sigma_cut450)
 
 # to avoid complains about NaNs
 #
 with np.errstate(invalid='ignore'):
-    high450 = np.ma.masked_where(snr450 < sigma_cut450, snr450)
+    high450 = ma.masked_where(snr450 < sigma_cut450, snr450)
+    
+
+high450_idx = ma.masked_where(ma.getmask(high450), inclumps)
+#
+test = ma.masked_where(maphi450.getmask(), inclumps)
 
 
+clumps_hi450 = ma.masked_where(ma.getmask(high450_idx), data450)
+#
+mapclumpshi450 = map450.masked_where(ma.getmask(high450_idx))
 
-high450_idx = np.ma.masked_where(np.ma.getmask(high450), inclumps)
-clumps_hi450 = np.ma.masked_where(np.ma.getmask(high450_idx), data450)
 
-clumps_450 = np.ma.masked_where(np.ma.getmask(inclumps), data450)
+clumps_450 = ma.masked_where(ma.getmask(inclumps), data450)
+#
+mapclumps450 = map450.masked_where(ma.getmask(inclumps))
 
-clumps_hi850 = np.ma.masked_where(np.ma.getmask(inclumps), data850)
+clumps_hi850 = ma.masked_where(ma.getmask(inclumps), data850)
+#
+mapclumpshi850 = map850.masked_where(ma.getmask(inclumps))
 
-doublef_cl850 = np.ma.masked_where(np.ma.getmask(high450_idx), clumps_hi850)
-singlef_cl850_idx = np.ma.masked_where(~np.ma.getmask(doublef_cl850), inclumps)
-singlef_cl850 = np.ma.masked_where(np.ma.getmask(singlef_cl850_idx), data850) 
+doublef_cl850 = ma.masked_where(ma.getmask(high450_idx), clumps_hi850)
+#
+mapdblf_cl850 = mapclumpshi850.masked_where(ma.getmask(test))
+
+singlef_cl850_idx = ma.masked_where(~ma.getmask(doublef_cl850), inclumps)
+singlef_cl850 = ma.masked_where(ma.getmask(singlef_cl850_idx), data850) 
+#
+sf_cl850_idx = ma.masked_where(~mapdblf_cl850.getmask(), inclumps)
+mapsf_cl850 = map850.masked_where(ma.getmask(sf_cl850_idx))
+
 
 
 # definition of array to hold pixels where WE fix Tdust
 #
-manual_temp = np.ma.copy(singlef_cl850)
+manual_temp = ma.copy(singlef_cl850)
 
+mapmanual_temp = mapsf_cl850.copy()
 
 print(" >> calculating flux ratios...")
 
-ratio = np.ma.divide(clumps_hi450, doublef_cl850)
+ratio = ma.divide(clumps_hi450, doublef_cl850)
 
 var_ratio = get_variance_ratio(ratio, doublef_cl850, clumps_hi450, var850,
                                var450)
 
+map_ratio = maps.divide(mapclumpshi450, mapdblf_cl850)
+
+
 ok = save_fitsfile(ratio, var_ratio, outfile='test_ratio.fits',
                    hdr_type='fluxratio', oldheader=header850, append=False,
                    overwrite=True)
+
+ok = map_ratio.save_fitsfile(fname='test_ratio2.fits', hdr_type='fluxratio',
+                             oldheader=header850, append=False,
+                             overwrite=True)
 
 print("  ...done")
 
@@ -561,8 +645,7 @@ print(" >> calculating temperatures...")
 
 pre_ratio = ratio / pre
 
-t1 = np.ma.copy(ratio)
-ini_array = np.ma.divide(t1, t1) * ini_Testimate
+ini_array = np.full_like(ratio, ini_Testimate)
 
 with np.errstate(invalid='ignore'):
     t_array = get_temperature(pre_ratio, ini_array, (hk850, hk450))
@@ -583,6 +666,11 @@ var_temp = get_temp_variance(t_array, var_ratio, hk850, hk450, pre)
 temp = np.ma.masked_where(np.ma.getmask(var_temp), t_array)
 
 
+###
+###
+maptemp = get_maptemperature(map_ratio, ini_array, pre, pr)
+
+
 
 novartemp = np.ma.masked_where(~np.ma.getmask(var_temp), t_array)
 manual_temp = merge_masked_arrays(manual_temp, novartemp)
@@ -591,9 +679,20 @@ manual_temp = merge_masked_arrays(manual_temp, novartemp)
 varT_filter = filter_parameter(temp, var_temp, type_cutTd, cut_Td)
 temp_filter = np.ma.masked_where(np.ma.getmask(varT_filter), temp)
 
+
+maptemp_filter = filtermap(maptemp, type_cutTd, cut_Td)
+
+
 ok = save_fitsfile(temp_filter, varT_filter, outfile='test_Tdust.fits',
                    hdr_type='tdust', oldheader=header850, append=False,
                    overwrite=True)
+
+
+ok = maptemp_filter.save_fitsfile(fname='test_Tdust2.fits',
+                                  hdr_type='tdust', oldheader=header850,
+                                  append=False, overwrite=True)
+
+
 
 novarfilter = np.ma.masked_where(~np.ma.getmask(varT_filter), temp)
 manual_temp = merge_masked_arrays(manual_temp, novarfilter)
@@ -607,6 +706,8 @@ print("   ...done")
 print(" >> convert flux to SI...")
 S_850 = doublef_cl850 *  flux_factor
 varS_850 = var850 * flux_factor * flux_factor
+
+mapS_850 = mapdblf_cl850.mult(flux_factor)
 print("   ...done")
 
 
@@ -620,34 +721,34 @@ print("   ...done")
 
 varMsnr = filter_parameter(thin_mass, var_thin_mass, type_cutM, sigma_cutM)
 
-mass_850 = np.ma.masked_where(np.ma.getmask(varMsnr), thin_mass)
+mass_850 = ma.masked_where(ma.getmask(varMsnr), thin_mass)
 
-lowM = np.ma.masked_where(~np.ma.getmask(varMsnr), thin_mass)
+lowM = ma.masked_where(~ma.getmask(varMsnr), thin_mass)
 
 manual_temp = merge_masked_arrays(manual_temp, lowM)
 
-temp_filtermass = np.ma.masked_where(np.ma.getmask(varMsnr), temp_filter)
+temp_filtermass = ma.masked_where(ma.getmask(varMsnr), temp_filter)
 
 
 print(" >>\n >> processing fixed dust temperature pixels...")
 
-f850_notemp = np.ma.masked_where(np.ma.getmask(manual_temp), clumps_hi850)
-var850_notemp = np.ma.masked_where(np.ma.getmask(manual_temp), var850)
-var450_notemp = np.ma.masked_where(np.ma.getmask(manual_temp), var450)
+f850_notemp = ma.masked_where(ma.getmask(manual_temp), clumps_hi850)
+var850_notemp = ma.masked_where(ma.getmask(manual_temp), var850)
+var450_notemp = ma.masked_where(ma.getmask(manual_temp), var450)
 
 new_f450 = flux450(f850_notemp, manual_Tdust, hk850, hk450, pre)
 
-#nt_ratio = np.ma.divide(new_f450, f850_notemp)
+#nt_ratio = ma.divide(new_f450, f850_notemp)
 
 #var_ntratio = get_variance_ratio(nt_ratio, f850_notemp, new_f450,
 #                                 var850_notemp, var450_notemp)
 
 #varT_notemp = get_temp_variance(manual_temp, var_ntratio, hk850, hk450, pre)
-x = np.ma.copy(new_f450)
-varT_notemp = np.ma.divide(x, x) * 30.
+x = ma.copy(new_f450)
+varT_notemp = ma.divide(x, x) * 30.
 
 
-#snrnotemp = manual_Tdust / np.ma.sqrt(var_ntratio)
+#snrnotemp = manual_Tdust / ma.sqrt(var_ntratio)
 
 
 S850_notemp = f850_notemp * flux_factor
@@ -662,14 +763,14 @@ mass_notemp, thin_mass_notemp, var_thin_mass_notemp = calc_mass(S850_notemp,
                                                     beta, hk850)
 
 print(np.nansum(thin_mass_notemp), "+-",
-      np.ma.sqrt(np.nansum(var_thin_mass_notemp)))
-print(np.nansum(mass_850), "+-", np.ma.sqrt(np.nansum(varMsnr)))
+      ma.sqrt(np.nansum(var_thin_mass_notemp)))
+print(np.nansum(mass_850), "+-", ma.sqrt(np.nansum(varMsnr)))
 
 
-mass_th_total = np.ma.copy(mass_850)
+mass_th_total = ma.copy(mass_850)
 mass_th_total = merge_masked_arrays(mass_th_total, thin_mass_notemp)
 
-varM_th_total = np.ma.copy(varMsnr)
+varM_th_total = ma.copy(varMsnr)
 varM_th_total = merge_masked_arrays(varMsnr, var_thin_mass_notemp)
 
 ok = save_fitsfile(mass_th_total, varM_th_total, outfile='test_Mass.fits',
@@ -708,7 +809,7 @@ print(" >> clump masses")
 
 x = clumpcat.make_table()
 
-#clumpcat.print_table()
+clumpcat.print_table()
 
 #totpix = [0, 0, 0, 0, 0]
 
@@ -728,35 +829,35 @@ x = clumpcat.make_table()
 #                                                        deconv_r / u.arcsec)
 #
 #
-#    cl_f850 = np.ma.masked_where(np.ma.getmask(mskcl), clumps_hi850)
+#    cl_f850 = ma.masked_where(ma.getmask(mskcl), clumps_hi850)
 #
 #    cl_S850 = cl_f850 * flux_factor
 #    cl_flux = np.nansum(cl_S850) / 1.e-26
 #
 #    str_out = ' {0} {1:7.3f}'.format(str_out, cl_flux)
 #
-#    cl_f450hi = np.ma.masked_where(np.ma.getmask(mskcl), clumps_hi450)
+#    cl_f450hi = ma.masked_where(ma.getmask(mskcl), clumps_hi450)
 #    cl_S450hi = cl_f450hi * flux_factor
 #    cl_flux450hi = np.nansum(cl_S450hi) / 1.e-26
 #    str_out = ' {0} {1:7.3f}'.format(str_out, cl_flux450hi)
 #
-#    cl_f450 = np.ma.masked_where(np.ma.getmask(mskcl), clumps_450)
+#    cl_f450 = ma.masked_where(ma.getmask(mskcl), clumps_450)
 #    cl_S450 = cl_f450 * flux_factor
 #    cl_flux450 = np.nansum(cl_S450) / 1.e-26
 #    str_out = ' {0} {1:7.3f}'.format(str_out, cl_flux450)
 #
 #     
-#    #masscl = np.ma.masked_where(np.ma.getmask(mass), mskcl)
+#    #masscl = ma.masked_where(ma.getmask(mass), mskcl)
 #
-#    cl_td_idx = np.ma.masked_where(np.ma.getmask(temp_filtermass), mskcl)
+#    cl_td_idx = ma.masked_where(ma.getmask(temp_filtermass), mskcl)
 #
-#    cl_td = np.ma.masked_where(np.ma.getmask(cl_td_idx), temp_filtermass)
+#    cl_td = ma.masked_where(ma.getmask(cl_td_idx), temp_filtermass)
 #        
-#    cl_thin_mass_idx = np.ma.masked_where(np.ma.getmask(mass_850), mskcl)
+#    cl_thin_mass_idx = ma.masked_where(ma.getmask(mass_850), mskcl)
 #    
-#    cl_thin_mass = np.ma.masked_where(np.ma.getmask(cl_thin_mass_idx),
+#    cl_thin_mass = ma.masked_where(ma.getmask(cl_thin_mass_idx),
 #                                      mass_850) 
-#    cl_var_thin_mass = np.ma.masked_where(np.ma.getmask(cl_thin_mass_idx),
+#    cl_var_thin_mass = ma.masked_where(ma.getmask(cl_thin_mass_idx),
 #                                          varMsnr)
 #
 #    cl_N_th, cl_var_N_th = columndensity(cl_thin_mass, cl_var_thin_mass,
@@ -766,17 +867,17 @@ x = clumpcat.make_table()
 #    str_out = '{0} {1:4d}'.format(str_out, cl_thin_mass.count())
 #    str_out = '{0} {1:8.2f} ({2:6.2f})'.format(str_out,
 #                                        np.nansum(cl_thin_mass),
-#                                        np.ma.sqrt(np.nansum(cl_var_thin_mass)))
+#                                        ma.sqrt(np.nansum(cl_var_thin_mass)))
 
     
-#    cl_tot_mass_idx =  np.ma.masked_where(np.ma.getmask(mass_th_total), mskcl)
-#    cl_tot_mass = np.ma.masked_where(np.ma.getmask(cl_tot_mass_idx),
+#    cl_tot_mass_idx =  ma.masked_where(ma.getmask(mass_th_total), mskcl)
+#    cl_tot_mass = ma.masked_where(ma.getmask(cl_tot_mass_idx),
 #                                     mass_th_total) 
-#    cl_var_tot_mass = np.ma.masked_where(np.ma.getmask(cl_tot_mass_idx),
+#    cl_var_tot_mass = ma.masked_where(ma.getmask(cl_tot_mass_idx),
 #                                         varM_th_total)
 #
 #    str_out = '{0} {1:8.2f} ({2:6.2f})'.format(str_out, np.nansum(cl_tot_mass),
-#        np.ma.sqrt(np.nansum(cl_var_tot_mass)))
+#        ma.sqrt(np.nansum(cl_var_tot_mass)))
 #
 #    cl_N_tot, cl_var_N_tot = columndensity(cl_tot_mass, cl_var_tot_mass,
 #                                         pixarea, distance, mu, mH)
