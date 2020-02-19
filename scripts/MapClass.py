@@ -10,6 +10,7 @@
 """
 
 import numpy as np
+import numpy.ma as ma
 from astropy.io import fits
 from datetime import datetime
 
@@ -17,39 +18,86 @@ from datetime import datetime
 
 class Map (object):
 
-    def __init__(self, name='', filename='', data='', header=''):
+    def __init__(self, name='', filename='', data=[None]*2, header=[None]*2):
         """Initialization of the Map object."""
 
         self.name = name
         self.fname = filename
+        self.data= data
+        self.header = header
 
-        if data == '' :
-            self.data, self.header = Map.read_fitsfile(self)
-        else :
-            self.data = data
+        #if data == '' :
+        #    if self.fname != '' :
+        #        self.data, self.header = Map.read_fitsfile(self)
+        #    else :
+        #        self.data = [None] * 2
+        #        self.header = [None] * 2
+        #else :
+        #    self.data = data
+
+
         
-        
-    def read_fitsfile(self):
+    @classmethod
+    def empty(cls) :
+        name = ''
+        fname = ''
+        data = [None]*2
+        header = [None] * 2
+
+        new = cls(name=name, filename=fname, data=data, header=header)
+
+        return new
+
+
+    
+    @classmethod
+    def fromfitsfile(cls, fname, name=''):
         """Read input data and header from a FITS file."""
+
+        if name == '' :
+            name = fname
+            
+        print(" >> reading",name,"data...")
     
-        print(" >> reading",self.name,"data...")
-    
-        with fits.open(self.fname) as hdu_data:
+        with fits.open(fname) as hdu_data:
             data_info = [hdu_data[0].data, hdu_data[1].data]
             header_info = [hdu_data[0].header, hdu_data[1].header]
 
-            return data_info, header_info
+
+        new = cls(name=name, filename=fname, data=data_info,
+                  header=header_info)
+
+        return new
+    
+        
+#    def read_fitsfile(self):
+#        """Read input data and header from a FITS file."""
+#
+#        if self.name == '' :
+#            name = self.fname
+#        else :
+#            name = self.name
+#            
+#        print(" >> reading",name,"data...")
+#    
+#        with fits.open(self.fname) as hdu_data:
+#            data_info = [hdu_data[0].data, hdu_data[1].data]
+#            header_info = [hdu_data[0].header, hdu_data[1].header]
+#
+#            return data_info, header_info
 
 
         
     def save_fitsfile(self, oldheader='', append=False, overwrite=False,
-                      hdr_type=''):
+                      hdr_type='', fname=''):
 
         if oldheader :
             self.header = Map.modify_header(oldheader, hdr_type)
         else :
             return 3
 
+        if fname != '' :
+            self.fname = fname
     
         print(" >> saving", self.fname, "...")
 
@@ -113,4 +161,83 @@ class Map (object):
         
     
         return old
+
+
+
+    def masked_less(self, val):
+        new = Map.empty()
+
+        new.data[0] = ma.masked_less(self.data[0], val)
+        new.data[1] = ma.masked_less(self.data[1], val)
+
+        return new
+
+
+
+    def masked_greater(self, val):
+        new = Map.empty()
+
+        new.data[0] = ma.masked_greater(self.data[0], val)
+        new.data[1] = ma.masked_greater(self.data[1], val)
+
+        return new
+
+
     
+    def getmask(self) :
+        mask = ma.getmask(self.data[0])
+        return mask
+
+
+    
+    def masked_where(self, mask) :
+        new = Map.empty()
+        
+        new.data[0] = ma.masked_where(mask, self.data[0])
+        new.data[1] = ma.masked_where(mask, self.data[1])
+
+        return new
+
+
+    
+    def copy(self) :
+        new = Map.empty()
+
+        new.data[0] = ma.copy(self.data[0])
+        new.data[1] = ma.copy(self.data[1])
+        new.header = self.header.copy()
+
+        return new
+
+
+    def mult(self, factor):
+
+        new = Map.empty()
+        new.data[0] = self.data[0] * factor
+        new.data[1] = self.data[1] * factor * factor
+        new.header = self.header.copy()
+
+        return new
+
+    
+def divide(a, b):
+    """Divides one map by another.
+
+    It also calculates the variance of the ratio
+    """
+    
+    new = Map.empty()
+
+    new.data[0] = ma.divide(a.data[0], b.data[0]) 
+    new.data[1] = get_variance_ratio(new.data[0], b.data[0], a.data[0],
+                                     b.data[1], a.data[1])
+
+    return new
+
+
+        
+def get_variance_ratio(r, den, num, var_den, var_num):
+    """Calculate the variance of a ratio."""
+    
+    var_r = (r * r) * (var_den / den / den + var_num / num / num)
+    return var_r
