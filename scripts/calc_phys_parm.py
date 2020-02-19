@@ -518,14 +518,14 @@ ini_Testimate = 3.
 
 sigma_cut450 = 4.
 
-type_cutTd = "snr"
-cut_Td = 3.
+#type_cutTd = "snr"
+#cut_Td = 3.
 
-#type_cutTd = "variance"
-#cut_Td = 30.
+type_cutTd = "variance"
+cut_Td = 30.
 
 type_cutM = "snr"
-sigma_cutM = 1.
+sigma_cutM = 2.
 
 manual_Tdust = 20.
 ##
@@ -690,7 +690,8 @@ temp = np.ma.masked_where(np.ma.getmask(var_temp), t_array)
 
 ###
 ###
-maptemp = get_maptemperature(map_ratio, ini_array, pre, pr)
+with np.errstate(invalid='ignore'):
+    maptemp = get_maptemperature(map_ratio, ini_array, pre, pr)
 
 
 
@@ -754,11 +755,23 @@ varMsnr = filter_parameter(thin_mass, var_thin_mass, type_cutM, sigma_cutM)
 
 mass_850 = ma.masked_where(ma.getmask(varMsnr), thin_mass)
 
+##
+##
+mapmass_filter = filtermap(mapmass, type_cutM, sigma_cutM)
+
+
 lowM = ma.masked_where(~ma.getmask(varMsnr), thin_mass)
 
 manual_temp = merge_masked_arrays(manual_temp, lowM)
 
 temp_filtermass = ma.masked_where(ma.getmask(varMsnr), temp_filter)
+
+##
+##
+maptemp_filtermass = maptemp_filter.masked_where(mapmass_filter.getmask())
+show_values(temp_filtermass, "TTTT111")
+show_values(maptemp_filtermass.data[0], "TTTT222")
+
 
 
 print("  >>\n  >> processing fixed dust temperature pixels...")
