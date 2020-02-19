@@ -39,3 +39,5 @@ class Param(object):
         self.hk850 = hk / l850 / u.K
         self.hk450 = hk / l450 / u.K
 
+        self.nu = const.c / l850
+

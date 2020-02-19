@@ -57,7 +57,7 @@ class Map (object):
         if name == '' :
             name = fname
             
-        print(" >> reading",name,"data...")
+        print("  >> reading",name,"data...")
     
         with fits.open(fname) as hdu_data:
             data_info = [hdu_data[0].data, hdu_data[1].data]
@@ -99,7 +99,7 @@ class Map (object):
         if fname != '' :
             self.fname = fname
     
-        print(" >> saving", self.fname, "...")
+        print("  >> saving", self.fname, "...")
 
         data = self.data[0].filled(np.nan)
         var = self.data[1].filled(np.nan)

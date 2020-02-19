@@ -82,27 +82,43 @@ def get_temp_variance(temp, ratio_var, trmA, trmB, pre_fct):
 
 
 
+def calc_mapmass(flux, temp, par):
+    """Calculate the masses in the map."""
+    
+    flux_mask = flux.masked_where(temp.getmask())
+
+    bnu = planck_u(par.nu, temp.data[0])
+    
+    knu = absorption_coefficient("freq", par.nu, par.beta) / par.dtogas
+    
+    mpmass = mapmass_h2_thin(flux_mask, temp, (par.d).to(u.m), knu, bnu,
+                             par.hk850)
+
+    return mpmass
+
+
+
 def calc_mass(flux, var_flux, temp_arr, var_temp, d, dtog, mH, mu, solangle,
               nu, beta, hk) :
 
     flux_mask = np.ma.masked_where(np.ma.getmask(var_temp), flux)
 
-    print("    >> calculating Bnu...")
+    print("     >> calculating Bnu...")
     bnu = planck_u(nu, temp_arr)
     print("       ... done")
     
     knu = absorption_coefficient("freq", nu, beta) / dtog
     
-    print("    >> calculating dust opacities...")
+    print("     >> calculating dust opacities...")
     dust_op = dust_opacity(flux_mask, solangle, bnu)
     print("       ... done")
 
 
-    print("    >> calculating column density...")
+    print("     >> calculating column density...")
     dcol_h2 = col_h2(dust_op, (knu.si).value, mu, mH.value)
     print("       ... done")
     
-    print("    >> calculating masses...")
+    print("     >> calculating masses...")
     mass = mass_h2(dcol_h2, d.to(u.m), solangle, mu, mH.value)
     mass_array = np.ma.masked_where(np.ma.getmask(temp_arr), mass)
     print("       ... done")
@@ -115,6 +131,29 @@ def calc_mass(flux, var_flux, temp_arr, var_temp, d, dtog, mH, mu, solangle,
                                            temp_arr, var_temp, hk)
     
     return mass_array, mass_thin, var_mass_thin
+
+
+
+def mapmass_h2_thin(flux, temp, d, k, Bnu, hk) :
+    """Calculate the pixel mass and mass variance (optically thin)."""
+
+    mass = maps.Map.empty()
+
+    ## calculate masses
+    ##
+    mass.data[0] = flux.data[0] * d * d / k / Bnu / const.M_sun
+
+    ## calculate the variances
+    ##
+    hkt = hk / temp.data[0]
+    fct = mass.data[0] / flux.data[0]
+
+    term_varT= flux.data[0] * hkt / temp.data[0] / (1. - np.exp(-hkt))
+    term_var = flux.data[1] + term_varT * term_varT * temp.data[1]
+
+    mass.data[1] = fct * fct * term_var
+
+    return mass
 
 
 
@@ -269,7 +308,7 @@ def show_values(msk_arr, txt):
 def read_fitsfile(fn_data, txt):
     """Read input data and header from a FITS file."""
     
-    print(" >> reading",txt,"data...")
+    print("  >> reading",txt,"data...")
     
     with fits.open(fn_data) as hdu_data:
         data_info = [hdu_data[0].data, hdu_data[1].data]
@@ -376,7 +415,7 @@ def save_fitsfile(data, var, outfile='out.fits', oldheader='', append=False,
         return 3
 
     
-    print(" >> saving", outfile, "...")
+    print("  >> saving", outfile, "...")
 
     data = data.filled(np.nan)
     var = var.filled(np.nan)
@@ -522,7 +561,7 @@ pr = par.Param(mu, d=distance, dtogas=dtogas, beta=beta, beam=beam,
 
 
 print(" ++ Start")
-print(" >> reading input files...")
+print("  >> reading input files...")
 
 data, header850 = read_fitsfile(fname_850, "850micron")
 snr, header_snr = read_fitsfile(fname_snr850, "SNR 850micron")
@@ -545,7 +584,7 @@ map450 = maps.Map.fromfitsfile(fname_450, name="450micron")
 mapsnr450 = maps.Map.fromfitsfile(fname_snr450, name="SNR 450micron")
 
 
-print(" >> reading clump mask...")
+print("  >> reading clump mask...")
 
 with fits.open(fname_clumps) as hdumask:
     clump_def = hdumask[0].data
@@ -603,7 +642,7 @@ manual_temp = ma.copy(singlef_cl850)
 
 mapmanual_temp = mapsf_cl850.copy()
 
-print(" >> calculating flux ratios...")
+print("  >> calculating flux ratios...")
 
 ratio = ma.divide(clumps_hi450, doublef_cl850)
 
@@ -624,7 +663,7 @@ ok = map_ratio.save_fitsfile(fname='test_ratio2.fits', hdr_type='fluxratio',
 print("  ...done")
 
 
-print(" >> calculating temperatures...")
+print("  >> calculating temperatures...")
 
 pre_ratio = ratio / pre
 
@@ -688,7 +727,7 @@ print("   ...done")
 #
 # flux was in mJy, all still in SI
 #
-print(" >> convert flux to SI...")
+print("  >> convert flux to SI...")
 S_850 = doublef_cl850 *  flux_factor
 varS_850 = var850 * flux_factor * flux_factor
 
@@ -696,11 +735,18 @@ mapS_850 = mapdblf_cl850.cmult(flux_factor)
 print("   ...done")
 
 
-print(" >> calculating masses...")
+print("  >> calculating masses...")
 mass, thin_mass, var_thin_mass = calc_mass(S_850, varS_850,
                                            temp_filter, varT_filter,
                                            distance, dtogas, mH, mu,
                                            pixsolangle, f850, beta, hk850)
+##
+## Calculate pixel masses
+## (for now, only do the optically thin approach)
+##
+mapmass = calc_mapmass(mapS_850, maptemp_filter, pr)
+
+
 print("   ...done")
 
 
@@ -715,7 +761,7 @@ manual_temp = merge_masked_arrays(manual_temp, lowM)
 temp_filtermass = ma.masked_where(ma.getmask(varMsnr), temp_filter)
 
 
-print(" >>\n >> processing fixed dust temperature pixels...")
+print("  >>\n  >> processing fixed dust temperature pixels...")
 
 f850_notemp = ma.masked_where(ma.getmask(manual_temp), clumps_hi850)
 var850_notemp = ma.masked_where(ma.getmask(manual_temp), var850)
@@ -790,7 +836,7 @@ clumpcat = cl.Clump(idxs=clump_idxs,
                  params=pr)
 
 
-print(" >> clump masses")
+print("  >> clump masses")
 
 x = clumpcat.make_table()
 
