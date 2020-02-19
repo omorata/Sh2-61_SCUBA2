@@ -210,6 +210,15 @@ class Map (object):
 
         return new
 
+
+    def filled(self, fill) :
+        new = Map.empty()
+        
+        new.data[0] = self.data[0].filled(fill)
+        new.data[1] = self.data[1].filled(fill)
+
+        return new
+    
     
 def divide(a, b):
     """Divides one map by another.
