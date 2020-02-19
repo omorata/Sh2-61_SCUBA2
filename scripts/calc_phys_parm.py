@@ -29,6 +29,11 @@ import MapClass as maps
 
 
 def get_maptemperature(mapratio, ini, pre, par):
+    """Calculates the temperature of the map
+
+    It calculates the temperature from the ratio of the two fluxes and
+    also the variance in the temperature.
+    """
 
     new = maps.Map.empty()
     
@@ -39,6 +44,9 @@ def get_maptemperature(mapratio, ini, pre, par):
     new.data[1] = get_temp_variance(new.data[0], mapratio.data[1],
                                     par.hk850, par.hk450, pre)
 
+
+    new.data[0] = ma.masked_where(ma.getmask(new.data[1]), new.data[0])
+    
     return new
     
 
@@ -252,7 +260,8 @@ def filtermap(pmap, type_filter, cut):
     """
 
     if type_filter == "variance" :
-        new = pmap.masked_greater(cut)
+        mask = ma.masked_greater(pmap.data[1], cut)
+        new = pmap.masked_where(mask.mask)
         
     elif type_filter == "snr" :
         snr = pmap.data[0] / np.sqrt(pmap.data[1])
@@ -600,6 +609,7 @@ inclumps = ma.masked_less(clump_idxs_invalid, 1)
 
 maphi450 = mapsnr450.masked_less(sigma_cut450)
 
+
 # to avoid complains about NaNs
 #
 with np.errstate(invalid='ignore'):
@@ -642,6 +652,7 @@ manual_temp = ma.copy(singlef_cl850)
 
 mapmanual_temp = mapsf_cl850.copy()
 
+
 print("  >> calculating flux ratios...")
 
 ratio = ma.divide(clumps_hi450, doublef_cl850)
@@ -650,6 +661,7 @@ var_ratio = get_variance_ratio(ratio, doublef_cl850, clumps_hi450, var850,
                                var450)
 
 map_ratio = maps.divide(mapclumpshi450, mapdblf_cl850)
+
 
 
 ok = save_fitsfile(ratio, var_ratio, outfile='test_ratio.fits',
@@ -687,25 +699,33 @@ var_temp = get_temp_variance(t_array, var_ratio, hk850, hk450, pre)
 
 temp = np.ma.masked_where(np.ma.getmask(var_temp), t_array)
 
+novartemp = np.ma.masked_where(~np.ma.getmask(var_temp), t_array)
+manual_temp = merge_masked_arrays(manual_temp, novartemp)
+
 
 ###
 ###
 with np.errstate(invalid='ignore'):
     maptemp = get_maptemperature(map_ratio, ini_array, pre, pr)
 
-
-
-novartemp = np.ma.masked_where(~np.ma.getmask(var_temp), t_array)
-manual_temp = merge_masked_arrays(manual_temp, novartemp)
+mapnotemp = map_ratio.masked_where(~maptemp.getmask())
+mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnotemp)
+##
+##
 
 
 varT_filter = filter_parameter(temp, var_temp, type_cutTd, cut_Td)
 temp_filter = np.ma.masked_where(np.ma.getmask(varT_filter), temp)
 
+novarfilter = np.ma.masked_where(~np.ma.getmask(varT_filter), temp)
+manual_temp = merge_masked_arrays(manual_temp, novarfilter)
 
 ##
 ##
 maptemp_filter = filtermap(maptemp, type_cutTd, cut_Td)
+mapnotemp_filter = maptemp.masked_where(~maptemp_filter.getmask())
+mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnotemp_filter)
+
 
 
 ok = save_fitsfile(temp_filter, varT_filter, outfile='test_Tdust.fits',
@@ -719,8 +739,6 @@ ok = maptemp_filter.save_fitsfile(fname='test_Tdust2.fits',
 
 
 
-novarfilter = np.ma.masked_where(~np.ma.getmask(varT_filter), temp)
-manual_temp = merge_masked_arrays(manual_temp, novarfilter)
 
 print("   ...done")
 
@@ -747,6 +765,9 @@ mass, thin_mass, var_thin_mass = calc_mass(S_850, varS_850,
 ##
 mapmass = calc_mapmass(mapS_850, maptemp_filter, pr)
 
+print("mass", thin_mass.count(), var_thin_mass.count())
+print("mapmass", mapmass.data[0].count(), mapmass.data[1].count())
+
 
 print("   ...done")
 
@@ -758,6 +779,9 @@ mass_850 = ma.masked_where(ma.getmask(varMsnr), thin_mass)
 ##
 ##
 mapmass_filter = filtermap(mapmass, type_cutM, sigma_cutM)
+print("massfilter", mass_850.count(), varMsnr.count())
+print("mapmass_filter", mapmass_filter.data[0].count(),
+      mapmass_filter.data[1].count())
 
 
 lowM = ma.masked_where(~ma.getmask(varMsnr), thin_mass)
@@ -769,9 +793,15 @@ temp_filtermass = ma.masked_where(ma.getmask(varMsnr), temp_filter)
 ##
 ##
 maptemp_filtermass = maptemp_filter.masked_where(mapmass_filter.getmask())
-show_values(temp_filtermass, "TTTT111")
-show_values(maptemp_filtermass.data[0], "TTTT222")
 
+mapnotemp_filtermass = maptemp_filter.masked_where(~maptemp_filtermass.getmask())
+mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnotemp_filtermass)
+
+print("temp_filtermass:", temp_filtermass.count(), lowM.count(),
+      manual_temp.count())
+print("maptemp_filtermass:", maptemp_filtermass.data[0].count(),
+      maptemp_filtermass.data[1].count(),
+      mapmanual_temp.data[0].count(), mapmanual_temp.data[1].count())
 
 
 print("  >>\n  >> processing fixed dust temperature pixels...")
