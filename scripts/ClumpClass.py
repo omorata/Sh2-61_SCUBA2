@@ -44,7 +44,7 @@ class Clump (object):
     def createRec(self):
         """Creates an empty structured array."""
         
-        list_names = ['id', 'npix', 'ngpix', 'area', 'eff_radius',
+        list_names = ['id', 'npix', 'nTpix', 'area', 'eff_radius',
                       'deconv_radius', 'flux850', 'flux450hi', 'flux450',
                       'mass', 'var_mass', 'masstot', 'var_masstot',
                       'N', 'varN', 'maxT', 'minT']
@@ -95,9 +95,13 @@ class Clump (object):
             numasses = np.shape(self.mass)[0]
             for mss in range(numasses) :
 
-
                 cl_m = self.mass[mss].masked_where(ma.getmask(mskcl))
+
+                if mss == 0 :
+                    self.rec[clump-1]['nTpix'] = cl_m.data[0].count()
+
                 cl_m = cl_m.filled(np.nan)
+                
 
                 m = np.nansum(cl_m.data[0])
                 var_m = np.nansum(cl_m.data[1])

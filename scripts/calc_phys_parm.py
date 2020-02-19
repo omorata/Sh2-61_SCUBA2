@@ -645,7 +645,6 @@ singlef_cl850 = ma.masked_where(ma.getmask(singlef_cl850_idx), data850)
 sf_cl850_idx = ma.masked_where(~mapdblf_cl850.getmask(), inclumps)
 mapsf_cl850 = map850.masked_where(ma.getmask(sf_cl850_idx))
 
-print("single:", singlef_cl850.count())
 
 # definition of array to hold pixels where WE fix Tdust
 #
@@ -901,7 +900,7 @@ print("   ...done")
 #                    mass=[mass_th, mass_tott],
 #                    params=pr)
 
-mpclumpcat = cl.Clump(idxs=clump_idxs,
+mapclumpcat = cl.Clump(idxs=clump_idxs,
                       fluxes=[mapclumpshi850,mapclumpshi450,mapclumps450],
                       temps=[maptemp_filtermass],
                       mass=[mapmass_filter, mapmass_total],
@@ -911,10 +910,8 @@ mpclumpcat = cl.Clump(idxs=clump_idxs,
 
 print("  >> clump masses")
 
-x = mpclumpcat.make_table()
-
-mpclumpcat.print_table()
-
-mpclumpcat.save_fitstable("test_table2.fits", overwrite=True)
+ok = mapclumpcat.make_table()
+mapclumpcat.print_table()
+mapclumpcat.save_fitstable("test_table2.fits", overwrite=True)
 
 print(" ++ ok")
