@@ -887,143 +887,34 @@ ok = mapmass_total.save_fitsfile(fname='test_Mass2.fits',
 print("   ...done")
 
 
-mass_th = maps.Map(name="thin mass", filename='mth',
-                   data=[mass_850, varMsnr])
-
-mass_tott = maps.Map(name="tot mass", filename='mtot',
-                   data=[mass_th_total, varM_th_total])
+#mass_th = maps.Map(name="thin mass", filename='mth',
+#                   data=[mass_850, varMsnr])
+#
+#mass_tott = maps.Map(name="tot mass", filename='mtot',
+#                   data=[mass_th_total, varM_th_total])
 
 
 
 #clumpcat = cl.Clump(idxs=clump_idxs,
-#                 fluxes=[clumps_hi850,clumps_hi450,clumps_450],
-#                 temps=[temp_filtermass],
-#                 mass=[mass_th, mass_tott],
-#                 params=pr)
+#                    fluxes=[clumps_hi850,clumps_hi450,clumps_450],
+#                    temps=[temp_filtermass],
+#                    mass=[mass_th, mass_tott],
+#                    params=pr)
 
-clumpcat = cl.Clump(idxs=clump_idxs,
-                 fluxes=[clumps_hi850,clumps_hi450,clumps_450],
-                 temps=[temp_filtermass],
-                 mass=[mass_th, mass_tott],
-                 params=pr)
+mpclumpcat = cl.Clump(idxs=clump_idxs,
+                      fluxes=[mapclumpshi850,mapclumpshi450,mapclumps450],
+                      temps=[maptemp_filtermass],
+                      mass=[mapmass_filter, mapmass_total],
+                      params=pr)
 
 
 
 print("  >> clump masses")
 
-x = clumpcat.make_table()
+x = mpclumpcat.make_table()
 
-clumpcat.print_table()
+mpclumpcat.print_table()
 
-#totpix = [0, 0, 0, 0, 0]
-
-#print("clump  #  mass_th+-errM  mass_tot+errM")
-
-#for clump in range(1, n_clumps+1):
-#    mskcl = ma.masked_not_equal(clump_idxs, clump)
-#    npix = mskcl.count()
-#
-#    str_out = '{0:2d} {1:4d}'.format(clump, npix)
-#
-#    area, eff_radius, deconv_r = get_size(npix, pixsize, beam)
-#
-#    str_out = ' {0} {1:7.1f} {2:8.2f} {3:8.2f}'.format(str_out,
-#                                                    area / u.arcsec / u.arcsec,
-#                                                    eff_radius / u.arcsec,
-#                                                        deconv_r / u.arcsec)
-#
-#
-#    cl_f850 = ma.masked_where(ma.getmask(mskcl), clumps_hi850)
-#
-#    cl_S850 = cl_f850 * flux_factor
-#    cl_flux = np.nansum(cl_S850) / 1.e-26
-#
-#    str_out = ' {0} {1:7.3f}'.format(str_out, cl_flux)
-#
-#    cl_f450hi = ma.masked_where(ma.getmask(mskcl), clumps_hi450)
-#    cl_S450hi = cl_f450hi * flux_factor
-#    cl_flux450hi = np.nansum(cl_S450hi) / 1.e-26
-#    str_out = ' {0} {1:7.3f}'.format(str_out, cl_flux450hi)
-#
-#    cl_f450 = ma.masked_where(ma.getmask(mskcl), clumps_450)
-#    cl_S450 = cl_f450 * flux_factor
-#    cl_flux450 = np.nansum(cl_S450) / 1.e-26
-#    str_out = ' {0} {1:7.3f}'.format(str_out, cl_flux450)
-#
-#     
-#    #masscl = ma.masked_where(ma.getmask(mass), mskcl)
-#
-#    cl_td_idx = ma.masked_where(ma.getmask(temp_filtermass), mskcl)
-#
-#    cl_td = ma.masked_where(ma.getmask(cl_td_idx), temp_filtermass)
-#        
-#    cl_thin_mass_idx = ma.masked_where(ma.getmask(mass_850), mskcl)
-#    
-#    cl_thin_mass = ma.masked_where(ma.getmask(cl_thin_mass_idx),
-#                                      mass_850) 
-#    cl_var_thin_mass = ma.masked_where(ma.getmask(cl_thin_mass_idx),
-#                                          varMsnr)
-#
-#    cl_N_th, cl_var_N_th = columndensity(cl_thin_mass, cl_var_thin_mass,
-#                                         pixarea, distance, mu, mH)
-#
-#    #show_values(cl_N_th, "coldens")
-#    str_out = '{0} {1:4d}'.format(str_out, cl_thin_mass.count())
-#    str_out = '{0} {1:8.2f} ({2:6.2f})'.format(str_out,
-#                                        np.nansum(cl_thin_mass),
-#                                        ma.sqrt(np.nansum(cl_var_thin_mass)))
-
-    
-#    cl_tot_mass_idx =  ma.masked_where(ma.getmask(mass_th_total), mskcl)
-#    cl_tot_mass = ma.masked_where(ma.getmask(cl_tot_mass_idx),
-#                                     mass_th_total) 
-#    cl_var_tot_mass = ma.masked_where(ma.getmask(cl_tot_mass_idx),
-#                                         varM_th_total)
-#
-#    str_out = '{0} {1:8.2f} ({2:6.2f})'.format(str_out, np.nansum(cl_tot_mass),
-#        ma.sqrt(np.nansum(cl_var_tot_mass)))
-#
-#    cl_N_tot, cl_var_N_tot = columndensity(cl_tot_mass, cl_var_tot_mass,
-#                                         pixarea, distance, mu, mH)
-#    
-#    clump_N, clump_varN = columndensity(np.nansum(cl_tot_mass),
-#                                        np.nansum(cl_var_tot_mass),
-#                                        area, distance, mu, mH)
-#    
-#    str_out = '{0} {1:9.3e} {2:9.3e}'.format(str_out, clump_N,
-#                                             np.sqrt(clump_varN))
-#    
-#    if cl_td.count() > 0 :
-#
-#        maxT = np.nanmax(cl_td)
-#        minT = np.nanmin(cl_td)
-#        SavgT = clump_weighted_avg(temp_filtermass, clumps_hi450, cl_td_idx)
-#
-#        SavgT = calc_perc(cl_td, 25)
-#        str_t = '///{0:6.1f} {1:6.1f} {2:6.1f}'.format(maxT, minT, SavgT)
-#        
-#    else :
-#        str_t = '///{0:20s}'.format(" ")
-#
-#    print(str_out, str_t)
-#    
-#
-#    totpix[0] += npix
-#
-#    totpix[1] += cl_thin_mass.count()
-#    
-#    if cl_thin_mass.count() > 0 :
-#        totpix[2] += np.nansum(cl_thin_mass)
-#
-#    totpix[3] += cl_tot_mass.count()
-#
-#    if cl_tot_mass.count() > 0 :
-#        totpix[4] += np.nansum(cl_tot_mass)
-    
-    
-      
-#print("total pixels:", totpix)
-
-clumpcat.save_fitstable("test_table.fits", overwrite=True)
+mpclumpcat.save_fitstable("test_table2.fits", overwrite=True)
 
 print(" ++ ok")
