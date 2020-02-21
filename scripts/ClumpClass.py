@@ -22,7 +22,8 @@ class Clump (object):
                  names='') :
         """Initialization of the Clump object.
 
-        The fluxes, temps and mass are suposed to be type Maps() objects
+        fluxes, temps, and mass are suposed to be lists of type Maps()
+        objects
         """
 
         self.n_clumps = np.int(np.nanmax(idxs))

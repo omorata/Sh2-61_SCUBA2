@@ -26,15 +26,6 @@ class Map (object):
         self.data= data
         self.header = header
 
-        #if data == '' :
-        #    if self.fname != '' :
-        #        self.data, self.header = Map.read_fitsfile(self)
-        #    else :
-        #        self.data = [None] * 2
-        #        self.header = [None] * 2
-        #else :
-        #    self.data = data
-
 
         
     @classmethod
@@ -69,25 +60,8 @@ class Map (object):
 
         return new
     
-        
-#    def read_fitsfile(self):
-#        """Read input data and header from a FITS file."""
-#
-#        if self.name == '' :
-#            name = self.fname
-#        else :
-#            name = self.name
-#            
-#        print(" >> reading",name,"data...")
-#    
-#        with fits.open(self.fname) as hdu_data:
-#            data_info = [hdu_data[0].data, hdu_data[1].data]
-#            header_info = [hdu_data[0].header, hdu_data[1].header]
-#
-#            return data_info, header_info
 
-
-        
+    
     def save_fitsfile(self, oldheader='', append=False, overwrite=False,
                       hdr_type='', fname=''):
 
@@ -155,9 +129,9 @@ class Map (object):
             old[1]['BUNIT'] = 'cm^-4'
 
 
-            for h in range(2) :
-                old[h]['DATE'] = timenow
-                old[h]['ORIGIN'] = 'MapClass.py'
+        for h in range(2) :
+            old[h]['DATE'] = timenow
+            old[h]['ORIGIN'] = 'MapClass.py'
         
     
         return old

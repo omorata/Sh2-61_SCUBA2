@@ -381,40 +381,6 @@ def clump_weighted_avg(array, weights, clump_mask) :
 
 
 
-#def get_size(n, pixsize, beamsize) :
-#    """Calculate some geometrical parameters of the clump."""
-#
-#    area = n* pixsize * pixsize
-#    ef_rad = np.sqrt(area / np.pi)
-#    dec_r = np.sqrt(4 * ef_rad * ef_rad -
-#                    (np.pi / 4. / np.log(2.) )* beamsize * beamsize) * 0.5
-#    
-#    return area, ef_rad, dec_r
-
-
-
-#def columndensity(mass, var_mass, area, d, mu, mH ) :
-#    """Calculate column density from a mass and an area
-#
-#    mass in solar masses, area in arcsec^2, d in pc.
-#    Returns the column density in cm^-2 and the variance of the column
-#    density in cm^-4
-#    """
-#
-#    arad = area.to(u.radian * u.radian)
-#    dcm = d.to(u.cm)
-#
-#    solangle = 2. * np.pi * (1. - np.cos(2. * np.sqrt(arad/np.pi)))
-#
-#    fact = const.M_sun / mu / mH / dcm / dcm / solangle
-#    
-#    col = mass * fact
-#    var_col = var_mass * fact * fact
-#
-#    return col, var_col
-
-
-
 def save_fitsfile(data, var, outfile='out.fits', oldheader='', append=False,
                   overwrite=False, hdr_type=''):
 
