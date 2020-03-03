@@ -87,13 +87,15 @@ snr-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd_snr.sdf
 
 crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd_crop.sdf
 
+$(eval mosaic_dir := $(CFG_DIR)/mosaic_lists)
 
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd.sdf:  $(jfiles_$(1)_list)  $(CFG_DIR)/$(1)-mosaic.list
+
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd.sdf:  $(jfiles_$(1)_list) $(mosaic_dir)/$(1)-mosaic.list
 	$(BIN)/post_scuba2.sh  \
 		-a add  \
 		-d $(RES_DIR)/$(1) \
 		-p $(CFG_DIR)/par$(1).cfg \
-		-l $(CFG_DIR)/$(1)-mosaic.list  \
+		-l $(mosaic_dir)/$(1)-mosaic.list  \
 		-o $(SNAME)-$(1)-coadd
 
 
