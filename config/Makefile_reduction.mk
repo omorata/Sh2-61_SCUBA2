@@ -9,13 +9,13 @@
 HOME_DIR=/lustre/opsw/work/omoratac/Sh2-61/SCUBA2
 SNAME=Sh2_61
 
-#dayruns = 850_r0
+#dayreductions = 850_r0
 #days = 0424 0425
 
-jointruns = j850_r0 j850_r1 j450_r0 j450_r1
-jointruns += j850_r0mf j850_r1mf j450_r0mf j450_r1mf
-jointruns += j850_r0_contamination j850_r1_contamination
-jointruns += j850_r0_contamination_mf
+jointreductions = j850_r0 j850_r1 j450_r0 j450_r1
+jointreductions += j850_r0mf j850_r1mf j450_r0mf j450_r1mf
+jointreductions += j850_r0_contamination j850_r1_contamination
+jointreductions += j850_r0_contamination_mf
 
 #
 ##-- End info ----------------------------------------------------------
@@ -34,7 +34,7 @@ export
 ##-- Template definition -----------------------------------------------
 
 # Template to define the rules to process steps of each different day for
-# the given run
+# the given reduction
 #
 define Days_Template
 
@@ -46,8 +46,8 @@ reduce-$(1)-$(2) : $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf
 cal-$(1)-$(2): $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc_cal.sdf
 
 
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf: $(CFG_DIR)/run-$(1)-$(2).cfg
-	. $(BIN)/reduce_raw.sh $(CFG_DIR)/run-$(1)-$(2).cfg
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf: $(CFG_DIR)/reduction-$(1)-$(2).cfg
+	. $(BIN)/reduce_raw.sh $(CFG_DIR)/reduction-$(1)-$(2).cfg
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc_cal.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf
@@ -61,13 +61,13 @@ $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc_cal.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-
 checkcal-$(1)-$(2):
 	. $(BIN)/check_fcf.sh \
 		-d $(RES_DIR)/$(1)  \
-		-c $(CFG_DIR)/run-$(1)-$(2).cfg
+		-c $(CFG_DIR)/reduction-$(1)-$(2).cfg
 
 endef
 
 
 
-# Template to run the rest of the steps of the defined run
+# Template to run the rest of the steps of the defined reduction
 #
 define Tag_Template
 
@@ -115,7 +115,7 @@ endef
 
 
 
-# Template to process all days of the same run on the same step
+# Template to process all days of the same reduction on the same step
 #
 define Joint_Template
 
@@ -134,8 +134,8 @@ snr-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf
 crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
 
 
-$(reduc_file): $(CFG_DIR)/run-$(1).cfg
-	. $(BIN)/reduce_raw.sh $(CFG_DIR)/run-$(1).cfg
+$(reduc_file): $(CFG_DIR)/reduction-$(1).cfg
+	. $(BIN)/reduce_raw.sh $(CFG_DIR)/reduction-$(1).cfg
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf: $(reduc_file) 
@@ -162,25 +162,25 @@ endef
 # loop to generate the lists needed for the rules that join data from more
 # than one day
 #
-$(foreach run, $(dayruns),\
-    $(eval reduce_$(run)_list = ) \
-    $(eval cal_$(run)_list = ) \
-    $(eval checkcal_$(run)_list = ) \
-    $(eval jfiles_$(run)_list = ) \
+$(foreach reduction, $(dayreductions),\
+    $(eval reduce_$(reduction)_list = ) \
+    $(eval cal_$(reduction)_list = ) \
+    $(eval checkcal_$(reduction)_list = ) \
+    $(eval jfiles_$(reduction)_list = ) \
     $(foreach day, $(days),\
-        $(eval reduce_$(run)_list += reduce-$(run)-$(day)) \
-        $(eval cal_$(run)_list += cal-$(run)-$(day)) \
-        $(eval checkcal_$(run)_list += checkcal-$(run)-$(day)) \
-        $(eval jfiles_$(run)_list += $(RES_DIR)/$(run)/$(SNAME)-$(run)-$(day)-reduc_cal.sdf) \
+        $(eval reduce_$(reduction)_list += reduce-$(reduction)-$(day)) \
+        $(eval cal_$(reduction)_list += cal-$(reduction)-$(day)) \
+        $(eval checkcal_$(reduction)_list += checkcal-$(reduction)-$(day)) \
+        $(eval jfiles_$(reduction)_list += $(RES_DIR)/$(reduction)/$(SNAME)-$(reduction)-$(day)-reduc_cal.sdf) \
 ))
 
 ##-- Enf of lists ------------------------------------------------------
 
 
-# define rules for joint runs
+# define rules for joint reductions
 #
-$(foreach run, $(jointruns),\
-    $(eval $(call Joint_Template,$(run)))\
+$(foreach reduction, $(jointreductions),\
+    $(eval $(call Joint_Template,$(reduction)))\
 )
 
 
@@ -193,15 +193,15 @@ $(foreach run, $(jointruns),\
 #850_r1mf: reduce-850_r1mf-days cal-850_r1mf-days coadd-850_r1mf snr-850_r1mf crop-850_r1mf mf-850_r1mf-days
 
 
-# define rules for day runs
+# define rules for day reductions
 #
-$(foreach run, $(dayruns),\
+$(foreach reduction, $(dayreductions),\
     $(foreach day, $(days), \
-        $(eval $(call Days_Template,$(run),$(day)))\
+        $(eval $(call Days_Template,$(reduction),$(day)))\
 ))
 
-$(foreach run, $(dayruns),\
-    $(eval $(call Tag_Template,$(run)))\
+$(foreach reduction, $(dayreductions),\
+    $(eval $(call Tag_Template,$(reduction)))\
 )
 
 .PHONY: ratios
