@@ -16,7 +16,7 @@ from astropy import constants as const
 from astropy.io import fits
 
 
-class Clump (object):
+class ClumpCatalog (object):
 
     def __init__(self, idxs='', fluxes='', temps='', mass='',params='',
                  names='') :

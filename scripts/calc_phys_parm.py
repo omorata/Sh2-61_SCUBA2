@@ -866,7 +866,7 @@ print("   ...done")
 #                    mass=[mass_th, mass_tott],
 #                    params=pr)
 
-mapclumpcat = cl.Clump(idxs=clump_idxs,
+mapclumpcat = cl.ClumpCatalog(idxs=clump_idxs,
                       fluxes=[mapclumpshi850,mapclumpshi450,mapclumps450],
                       temps=[maptemp_filtermass],
                       mass=[mapmass_filter, mapmass_total],
