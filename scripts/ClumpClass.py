@@ -70,22 +70,26 @@ class Clump(object):
    
 
     
-    def __init__(self, id, record=None, calcphys=False, **kwargs):
+    def __init__(self, id, record=None):
 
         self.id = id
 
         self.record = np.empty(1, dtype=self.ddtype)
 
         if record :
-            if not calcphys:
-                self.fill_clump(record)
-            else :
-                print("todo")
-                
-        elif calcphys :
-            self.calc_phys(id, **kwargs)
+            self.fill_clump(record)
 
 
+
+    @classmethod
+    def from_calcphys(cls, id, **kwargs):
+
+        new = cls(id)
+        new.calc_phys(id, **kwargs)
+
+        return new
+
+    
 
     def fill_clump(self, rec):
         """Fills the fields of a clump from a FITS_rec object."""
