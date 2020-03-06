@@ -33,7 +33,7 @@ class ClumpCatalog (object):
 
         
     @classmethod
-    def fromfile(cls, fname):
+    def from_file(cls, fname):
         """Creates a ClumpCatalog object from one or two files
 
         fname has to be a list
@@ -87,8 +87,6 @@ class ClumpCatalog (object):
             self.phyfile = fname
 
         self.fillfrom_rec(data)
-
-        #self.ncl = np.shape(self.clumps)[0]
 
         
         
@@ -147,20 +145,17 @@ class ClumpCatalog (object):
             id = icl - 1
             
             if not self.ncl :
-                self.clumps.append(cl.Clump(id, calcphys=True, idxs=idxs,
-                                         **kwargs))
+                self.clumps.append(
+                    cl.Clump.from_calcphys(id, idxs=idxs, **kwargs))
                 newclumps += 1
 
             else :
                 clump = self.id_isincatalog(icl)
                 if clump :
-                    clump.fill_clump(rec, calcphys=True, **kwargs)
+                    # WARNING: this line has to be tested yet
+                    clump.calc_phys(id, idxs=idxs, **kwargs)
 
         self.ncl += newclumps
-        
-        #print(np.shape(self.clumps))
-        #for x in self.clumps:
-        #    print(x.record)
                     
 
             
