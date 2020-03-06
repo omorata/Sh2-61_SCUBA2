@@ -6,7 +6,6 @@ import sys
 import numpy as np
 import numpy.ma as ma
 
-import astropy.wcs as wcs
 from astropy.io import fits
 from astropy import units as u
 from astropy import constants as const
@@ -14,9 +13,6 @@ from astropy import constants as const
 from scipy import optimize
 
 import math
-
-from datetime import datetime
-
 
 # definition of the custom classes
 #
@@ -106,39 +102,39 @@ def calc_mapmass(flux, temp, par):
 
 
 
-def calc_mass(flux, var_flux, temp_arr, var_temp, d, dtog, mH, mu, solangle,
-              nu, beta, hk) :
-
-    flux_mask = np.ma.masked_where(np.ma.getmask(var_temp), flux)
-
-    print("     >> calculating Bnu...")
-    bnu = planck_u(nu, temp_arr)
-    print("       ... done")
-    
-    knu = absorption_coefficient("freq", nu, beta) / dtog
-    
-    print("     >> calculating dust opacities...")
-    dust_op = dust_opacity(flux_mask, solangle, bnu)
-    print("       ... done")
-
-
-    print("     >> calculating column density...")
-    dcol_h2 = col_h2(dust_op, (knu.si).value, mu, mH.value)
-    print("       ... done")
-    
-    print("     >> calculating masses...")
-    mass = mass_h2(dcol_h2, d.to(u.m), solangle, mu, mH.value)
-    mass_array = np.ma.masked_where(np.ma.getmask(temp_arr), mass)
-    print("       ... done")
-    
-    mass_th = mass_h2_thin(flux_mask, d.to(u.m), knu, bnu)
-    mass_thin = np.ma.masked_where(np.ma.getmask(temp_arr), mass_th)
-
-
-    var_mass_thin = get_mass_variance_thin(mass_thin, flux_mask, var_flux,
-                                           temp_arr, var_temp, hk)
-    
-    return mass_array, mass_thin, var_mass_thin
+#def calc_mass(flux, var_flux, temp_arr, var_temp, d, dtog, mH, mu, solangle,
+#              nu, beta, hk) :
+#
+#    flux_mask = np.ma.masked_where(np.ma.getmask(var_temp), flux)
+#
+#    print("     >> calculating Bnu...")
+#    bnu = planck_u(nu, temp_arr)
+#    print("       ... done")
+#    
+#    knu = absorption_coefficient("freq", nu, beta) / dtog
+#    
+#    print("     >> calculating dust opacities...")
+#    dust_op = dust_opacity(flux_mask, solangle, bnu)
+#    print("       ... done")
+#
+#
+#    print("     >> calculating column density...")
+#    dcol_h2 = col_h2(dust_op, (knu.si).value, mu, mH.value)
+#    print("       ... done")
+#    
+#    print("     >> calculating masses...")
+#    mass = mass_h2(dcol_h2, d.to(u.m), solangle, mu, mH.value)
+#    mass_array = np.ma.masked_where(np.ma.getmask(temp_arr), mass)
+#    print("       ... done")
+#    
+#    mass_th = mass_h2_thin(flux_mask, d.to(u.m), knu, bnu)
+#    mass_thin = np.ma.masked_where(np.ma.getmask(temp_arr), mass_th)
+#
+#
+#    var_mass_thin = get_mass_variance_thin(mass_thin, flux_mask, var_flux,
+#                                           temp_arr, var_temp, hk)
+#    
+#    return mass_array, mass_thin, var_mass_thin
 
 
 
@@ -165,18 +161,18 @@ def mapmass_h2_thin(flux, temp, d, k, Bnu, hk) :
 
 
 
-def get_mass_variance_thin(mass, flux, var_flux, temp, var_temp, hk):
-    """Calculate the variance of the mass (optically thin emission).
-    """
-    
-    hkt = hk / temp
-    fct = mass / flux
-
-    varT_term = flux * hkt / temp / (1. - np.exp(-hkt)) 
-    varterm = var_flux + varT_term * varT_term * var_temp
-    varM = fct * fct * varterm
-    
-    return varM
+#def get_mass_variance_thin(mass, flux, var_flux, temp, var_temp, hk):
+#    """Calculate the variance of the mass (optically thin emission).
+#    """
+#    
+#    hkt = hk / temp
+#    fct = mass / flux
+#
+#    varT_term = flux * hkt / temp / (1. - np.exp(-hkt)) 
+#    varterm = var_flux + varT_term * varT_term * var_temp
+#    varM = fct * fct * varterm
+#    
+#    return varM
     
 
 
@@ -247,59 +243,59 @@ def mass_h2(N_h2, d, solangle, mu, mH):
 
 
 
-def mass_h2_thin(flux, d, k, Bnu) :
-    M_h2 = flux * d * d / k / Bnu / const.M_sun
-
-    return M_h2
-
-
-def filtermap(pmap, type_filter, cut):
-    """Filter pixels using the variance of the parameter
-
-    It returns the map data and the variance
-    """
-
-    if type_filter == "variance" :
-        mask = ma.masked_greater(pmap.data[1], cut)
-        new = pmap.masked_where(mask.mask)
-        
-    elif type_filter == "snr" :
-        snr = pmap.data[0] / np.sqrt(pmap.data[1])
-        snr_cut = ma.masked_where(snr < cut, snr)
-        new = pmap.masked_where(ma.getmask(snr_cut))
-        
-    else :
-        print(" ++ ERROR: unknown filter option")
-        sys.exit(1)
-        
-    return new
+#def mass_h2_thin(flux, d, k, Bnu) :
+#    M_h2 = flux * d * d / k / Bnu / const.M_sun
+#
+#    return M_h2
 
 
+#def filtermap(pmap, type_filter, cut):
+#    """Filter pixels using the variance of the parameter
+#
+#    It returns the map data and the variance
+#    """
+#
+#    if type_filter == "variance" :
+#        mask = ma.masked_greater(pmap.data[1], cut)
+#        new = pmap.masked_where(mask.mask)
+#        
+#    elif type_filter == "snr" :
+#        snr = pmap.data[0] / np.sqrt(pmap.data[1])
+#        snr_cut = ma.masked_where(snr < cut, snr)
+#        new = pmap.masked_where(ma.getmask(snr_cut))
+#        
+#    else :
+#        print(" ++ ERROR: unknown filter option")
+#        sys.exit(1)
+#        
+#    return new
 
-def filter_parameter(value, variance, type_filter, cut):
-    """Filter pixels using the variance of the parameter
 
-    It returns the array with the filtered variance
-    """
-    
-    if type_filter == "variance" :
-        varfilter = np.ma.masked_where(variance > cut, variance)
 
-    elif type_filter == "snr" :
-        snr = value / np.sqrt(variance)
-        
-
-        snr_cut = np.ma.masked_where(snr < cut, snr)
-        varfilter = np.ma.masked_where(np.ma.getmask(snr_cut), variance)
-
-    elif type_filter == "None":
-        varfilter = np.ma.copy(variance)
-        
-    else :
-        print(" ++ ERROR: unknown filter option")
-        sys.exit(1)
-        
-    return varfilter
+#def filter_parameter(value, variance, type_filter, cut):
+#    """Filter pixels using the variance of the parameter
+#
+#    It returns the array with the filtered variance
+#    """
+#    
+#    if type_filter == "variance" :
+#        varfilter = np.ma.masked_where(variance > cut, variance)
+#
+#    elif type_filter == "snr" :
+#        snr = value / np.sqrt(variance)
+#        
+#
+#        snr_cut = np.ma.masked_where(snr < cut, snr)
+#        varfilter = np.ma.masked_where(np.ma.getmask(snr_cut), variance)
+#
+#    elif type_filter == "None":
+#        varfilter = np.ma.copy(variance)
+#        
+#    else :
+#        print(" ++ ERROR: unknown filter option")
+#        sys.exit(1)
+#        
+#    return varfilter
 
 
 
@@ -314,27 +310,27 @@ def show_values(msk_arr, txt):
 
 
 
-def read_fitsfile(fn_data, txt):
-    """Read input data and header from a FITS file."""
-    
-    print("  >> reading",txt,"data...")
-    
-    with fits.open(fn_data) as hdu_data:
-        data_info = [hdu_data[0].data, hdu_data[1].data]
-        header_info = [hdu_data[0].header, hdu_data[1].header]
+#def read_fitsfile(fn_data, txt):
+#    """Read input data and header from a FITS file."""
+#    
+#    print("  >> reading",txt,"data...")
+#    
+#    with fits.open(fn_data) as hdu_data:
+#        data_info = [hdu_data[0].data, hdu_data[1].data]
+#        header_info = [hdu_data[0].header, hdu_data[1].header]
+#
+#    return data_info, header_info
 
-    return data_info, header_info
 
 
-
-def merge_masked_arrays(a, b) :
-    """Merge two masked arrays a and b."""
-    
-    merged = np.ma.copy(a)
-
-    merged[merged.mask] = b[merged.mask]
-    
-    return merged
+#def merge_masked_arrays(a, b) :
+#    """Merge two masked arrays a and b."""
+#    
+#    merged = np.ma.copy(a)
+#
+#    merged[merged.mask] = b[merged.mask]
+#    
+#    return merged
 
 
 
@@ -349,11 +345,11 @@ def flux450(f850, td, h850, h450, pre) :
 
 
 
-def get_variance_ratio(r, f850, f450, v850, v450):
-    """Calculate the variance of the flux ratio."""
-    
-    var_r = (r * r) * (v850 / f850 / f850 + v450 / f450 / f450)
-    return var_r
+#def get_variance_ratio(r, f850, f450, v850, v450):
+#    """Calculate the variance of the flux ratio."""
+#    
+#    var_r = (r * r) * (v850 / f850 / f850 + v450 / f450 / f450)
+#    return var_r
 
 
 
@@ -381,77 +377,77 @@ def clump_weighted_avg(array, weights, clump_mask) :
 
 
 
-def save_fitsfile(data, var, outfile='out.fits', oldheader='', append=False,
-                  overwrite=False, hdr_type=''):
-
-    if oldheader :
-        header = modify_header(oldheader, hdr_type)
-    else :
-        return 3
-
-    
-    print("  >> saving", outfile, "...")
-
-    data = data.filled(np.nan)
-    var = var.filled(np.nan)
-
-    hdu_data = fits.PrimaryHDU(data, header=header[0])
-    hdu_variance = fits.ImageHDU(var, header=header[1])
-
-    hdulist = fits.HDUList([hdu_data, hdu_variance])
-    hdulist.writeto(outfile, overwrite=overwrite)
-
-    return 0
-
-
-
-def modify_header(old, htype) :
-    """ modify a FITS header according to predefined types."""
-
-    # get current time
-    #
-    timenow = str(datetime.utcnow()).split('.')[0]
-    timenow = timenow.replace(' ','T')
-    
-    if htype == "fluxratio" :
-        old[0]['LABEL'] = 'Flux ratio'
-        old[0]['BUNIT'] = ''
-        old[0]['history'] = 'flux ratio Sh2-61'
-        
-        old[1]['LABEL'] = 'Flux ratio variance'
-        old[1]['BUNIT'] = ''
-
-    elif htype == "tdust" :
-        old[0]['LABEL'] = 'Tdust'
-        old[0]['BUNIT'] = 'K'
-        old[0]['history'] = 'dust temperature Sh2-61'
-        
-        old[1]['LABEL'] = 'Tdust variance'
-        old[1]['BUNIT'] = 'K^2'
-
-    elif htype == "mass" :
-        old[0]['LABEL'] = 'Mass H_2'
-        old[0]['BUNIT'] = 'M_sol'
-        old[0]['history'] = 'H_2 mass Sh2-61'
-        
-        old[1]['LABEL'] = 'Mass H_2 variance'
-        old[1]['BUNIT'] = '(M_sol)^2'
-
-    elif htype == "column" :
-        old[0]['LABEL'] = 'N(H_2)'
-        old[0]['BUNIT'] = 'cm^-2'
-        old[0]['history'] = 'H_2 column density Sh2-61'
-        
-        old[1]['LABEL'] = 'N(H_2) variance'
-        old[1]['BUNIT'] = 'cm^-4'
+#def save_fitsfile(data, var, outfile='out.fits', oldheader='', append=False,
+#                  overwrite=False, hdr_type=''):
+#
+#    if oldheader :
+#        header = modify_header(oldheader, hdr_type)
+#    else :
+#        return 3
+#
+#    
+#    print("  >> saving", outfile, "...")
+#
+#    data = data.filled(np.nan)
+#    var = var.filled(np.nan)
+#
+#    hdu_data = fits.PrimaryHDU(data, header=header[0])
+#    hdu_variance = fits.ImageHDU(var, header=header[1])
+#
+#    hdulist = fits.HDUList([hdu_data, hdu_variance])
+#    hdulist.writeto(outfile, overwrite=overwrite)
+#
+#    return 0
 
 
-    for h in range(2) :
-        old[h]['DATE'] = timenow
-        old[h]['ORIGIN'] = 'masks.py'
-        
-    
-    return old
+
+#def modify_header(old, htype) :
+#    """ modify a FITS header according to predefined types."""
+#
+#    # get current time
+#    #
+#    timenow = str(datetime.utcnow()).split('.')[0]
+#    timenow = timenow.replace(' ','T')
+#    
+#    if htype == "fluxratio" :
+#        old[0]['LABEL'] = 'Flux ratio'
+#        old[0]['BUNIT'] = ''
+#        old[0]['history'] = 'flux ratio Sh2-61'
+#        
+#        old[1]['LABEL'] = 'Flux ratio variance'
+#        old[1]['BUNIT'] = ''
+#
+#    elif htype == "tdust" :
+#        old[0]['LABEL'] = 'Tdust'
+#        old[0]['BUNIT'] = 'K'
+#        old[0]['history'] = 'dust temperature Sh2-61'
+#        
+#        old[1]['LABEL'] = 'Tdust variance'
+#        old[1]['BUNIT'] = 'K^2'
+#
+#    elif htype == "mass" :
+#        old[0]['LABEL'] = 'Mass H_2'
+#        old[0]['BUNIT'] = 'M_sol'
+#        old[0]['history'] = 'H_2 mass Sh2-61'
+#        
+#        old[1]['LABEL'] = 'Mass H_2 variance'
+#        old[1]['BUNIT'] = '(M_sol)^2'
+#
+#    elif htype == "column" :
+#        old[0]['LABEL'] = 'N(H_2)'
+#        old[0]['BUNIT'] = 'cm^-2'
+#        old[0]['history'] = 'H_2 column density Sh2-61'
+#        
+#        old[1]['LABEL'] = 'N(H_2) variance'
+#        old[1]['BUNIT'] = 'cm^-4'
+#
+#
+#    for h in range(2) :
+#        old[h]['DATE'] = timenow
+#        old[h]['ORIGIN'] = 'masks.py'
+#        
+#    
+#    return old
 
 
 ##-- End of functions --------------------------------------------------
@@ -694,7 +690,7 @@ mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnotemp)
 
 ##
 ##
-maptemp_filter = filtermap(maptemp, type_cutTd, cut_Td)
+maptemp_filter = maps.filtermap(maptemp, type_cutTd, cut_Td)
 mapnotemp_filter = maptemp.masked_where(~maptemp_filter.getmask())
 mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnotemp_filter)
 
@@ -747,7 +743,7 @@ print("   ...done")
 
 ##
 ##
-mapmass_filter = filtermap(mapmass, type_cutM, sigma_cutM)
+mapmass_filter = maps.filtermap(mapmass, type_cutM, sigma_cutM)
 
 
 #lowM = ma.masked_where(~ma.getmask(varMsnr), thin_mass)
