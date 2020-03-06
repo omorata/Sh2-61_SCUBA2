@@ -866,18 +866,20 @@ print("   ...done")
 #                    mass=[mass_th, mass_tott],
 #                    params=pr)
 
-mapclumpcat = cl.ClumpCatalog(idxs=clump_idxs,
-                      fluxes=[mapclumpshi850,mapclumpshi450,mapclumps450],
-                      temps=[maptemp_filtermass],
-                      mass=[mapmass_filter, mapmass_total],
-                      params=pr)
+mapclumpcat = cl.ClumpCatalog.from_calcphys(
+    idxs=clump_idxs,
+    fluxes=[mapclumpshi850,mapclumpshi450,mapclumps450],
+    temps=[maptemp_filtermass],
+    mass=[mapmass_filter, mapmass_total],
+    params=pr)
+
 
 
 
 print("  >> clump masses")
 
-ok = mapclumpcat.make_table()
-mapclumpcat.print_table()
-mapclumpcat.save_fitstable("test_table2.fits", overwrite=True)
+mapclumpcat.save_catalog("zx.fits", overwrite=True, ctype='phys')
+
+mapclumpcat.print_catalog(ctype='phys')
 
 print(" ++ ok")
