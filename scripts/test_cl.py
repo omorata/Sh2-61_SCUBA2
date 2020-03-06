@@ -8,7 +8,7 @@ clfile = 'cl1.fits'
 phyfile = 'cl2.fits'
 
 
-catlg = cl.ClumpCatalog.fromfile([clfile,phyfile])
+catlg = cl.ClumpCatalog.from_file([clfile,phyfile])
 #catlg = cl.ClumpCatalog.fromfile([clfile])
 
 #catlg.fillfrom_file(phyfile)
