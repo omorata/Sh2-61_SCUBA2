@@ -278,13 +278,13 @@ def read_configfile(fname):
 
 
 
-def inifile(cfg, section, key, status=''):
+def cfgval(cfg, section, key, status=''):
 
     if key in cfg[section] :
         return cfg[section][key]
     else :
         if status == 'required' :
-            print(" >> ERROR: missing required file", key)
+            print(" >> ERROR: missing required key", key)
             sys.exit(1)
         else :
             return ''
@@ -306,7 +306,7 @@ def get_values(cfg, section, names=None, status='', type='str', altnames=None):
         else :
             vkey = key
             
-        vv[vkey] = inifile(cfg, section, key, status=status)
+        vv[vkey] = cfgval(cfg, section, key, status=status)
         if type == 'float' :
             vv[vkey] = float(vv[vkey])
             
