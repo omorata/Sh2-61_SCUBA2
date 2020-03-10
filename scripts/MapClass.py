@@ -42,7 +42,7 @@ class Map (object):
 
     
     @classmethod
-    def fromfitsfile(cls, fname, name=''):
+    def from_fitsfile(cls, fname, name=''):
         """Read input data and header from a FITS file."""
 
         if name == '' :
