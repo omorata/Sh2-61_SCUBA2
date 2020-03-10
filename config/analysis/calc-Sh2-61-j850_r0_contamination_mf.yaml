@@ -7,22 +7,30 @@ infiles :
 #
 phys_params:
   beta : 1.8
+  mu: 2.8
+  distance : 2500
+  dtogas: 160
+  #
   beam : 17.5461
   pixsize: 3
-  distance : 2700
-  dtogas: 100
 
 data_params:
   snr_450 : 4.0
-  ini_temp : 4.0
+  ini_temp : 3.0
   #
   flux_factor : 0.001
   #
-  cut_varTemp : 
-  cut_varMass :
-  cut_snrTemp :
-  cut_snrMass :
+  type_cutTd : 'variance'
+  cut_Td : 30.
+  #
+  type_cutM : 'snr'
+  cut_M : 2
+  #
+  manual_Tdust : 20.
+  manual_varTdust : 30.
 #
 outfiles:
-  outfile : analysis_maps/Sh2-61-j850_r0_contamination_mf-calculations.fits
-  outtable: analysis_maps/Sh2-61-j850_r0_contamination_mf-clump_table.fits
+  ratio : analysis_maps/zcfg_ratio.fits
+  temperature : analysis_maps/zcfg_temp.fits
+  mass : analysis_maps/zcfg_mass.fits
+  clumptable: analysis_maps/zcfg_clump_table.fits

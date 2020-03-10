@@ -41,3 +41,20 @@ class Param(object):
 
         self.nu = const.c / l850
 
+        
+
+    @classmethod
+    def from_cfgfile(cls, cfg, section):
+        cf = cfg[section]
+        
+        mu = float(cf['mu'])
+        beta = float(cf['beta'])
+        distance = float(cf['distance']) * u.pc
+        dtogas = float(cf['dtogas'])
+        beam = float(cf['beam']) * u.arcsec
+        pixsize = float(cf['pixsize']) * u.arcsec
+
+        new = cls(mu=mu, d=distance, dtogas=dtogas, beta=beta, beam=beam,
+               pixsize=pixsize)
+
+        return new

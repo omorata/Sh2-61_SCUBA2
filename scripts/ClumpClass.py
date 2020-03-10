@@ -13,186 +13,189 @@ import numpy as np
 import numpy.ma as ma
 import astropy.units as u
 from astropy import constants as const
-from astropy.io import fits
 
 
-class Clump (object):
 
-    def __init__(self, idxs='', fluxes='', temps='', mass='',params='',
-                 names='') :
-        """Initialization of the Clump object.
+class Clump(object):
+
+    phys_names = [
+        'id', 'npix', 'nTpix', 'area', 'eff_radius', 'deconv_radius',
+        'flux850', 'flux450hi', 'flux450',
+        'mass', 'var_mass', 'masstot', 'var_masstot',
+        'N', 'varN', 'maxT', 'minT']
+
+    phys_formats = [
+        'i4', 'i4' , 'i4', 'f8', 'f8', 'f8',
+        'f8', 'f8', 'f8',
+        'f8', 'f8', 'f8', 'f8',
+        'f8', 'f8', 'f4', 'f4']
+    
+    phys_units = [
+        '', '', '', 'arcsec^2', 'arcsec', 'arcsec',
+        'mJy', 'mJy', 'mJy',
+        'Msol', 'Msol', 'Msol', 'Msol',
+        'cm-2', 'cm-2', 'K', 'K' ]
+
+    phys_prfmt = [
+        '2d', '4d', '4d', '7.1f', '8.2f', '8.2f',
+        '7.3f', '7.3f', '7.3f',
+        '8.2f', '6.2f', '8.2f', '6.2f',
+        '9.3e', '9.3e',
+        '6.1f', '6.1f' ]
+
+    
+    findclumps_names = [
+        'PIDENT', 'Peak1', 'Peak2', 'Cen1', 'Cen2', 'Size1', 'Size2', 'Sum',
+        'Peak', 'Volume', 'Shape' ]
+
+    findclumps_formats = [
+        'i4', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8',
+        'f8', 'f8', 'U250' ]
+
+    findclumps_units = [
+        '', 'deg', 'deg', 'deg', 'deg', 'arcsec', 'arcsec', 'mJy/beam',
+        'mJy/beam', 'arcsec.arcsec', '' ]
+
+
+    list_names = []
+    list_names.extend(findclumps_names)
+    list_names.extend(phys_names)
+
+    list_formats = []
+    list_formats.extend(findclumps_formats)
+    list_formats.extend(phys_formats)
+ 
+    ddtype = { 'names' : list_names, 'formats' : list_formats}
+    dtype_phys = { 'names' : phys_names, 'formats' : phys_formats}
+   
+
+    
+    def __init__(self, id, record=None):
+
+        self.id = id
+
+        self.record = np.empty(1, dtype=self.ddtype)
+
+        if record :
+            self.fill_clump(record)
+
+
+
+    @classmethod
+    def from_calcphys(cls, id, **kwargs):
+
+        new = cls(id)
+        new.calc_phys(id, **kwargs)
+
+        return new
+
+    
+
+    def fill_clump(self, rec):
+        """Fills the fields of a clump from a FITS_rec object."""
+
+        for f in self.list_names :
+            try:
+                self.record[f] = rec[f]
+            except KeyError:
+                pass
+
+
+            
+    def calc_phys(self, id, idxs='', fluxes='', temps='', mass='', params=''):
+        """Fill a Clump Object from calcphys.
 
         fluxes, temps, and mass are suposed to be lists of type Maps()
         objects
         """
-
-        self.n_clumps = np.int(np.nanmax(idxs))
-        self.idxs = idxs
-        self.fluxes = fluxes
-        self.temps = temps
-        self.mass = mass
-
-        self.names= names
-            
-        self.params = params
-
-        self.rec = Clump.createRec(self)
-        self.fluxflds = ['flux850', 'flux450hi', 'flux450'] 
-        self.massflds = ['mass', 'var_mass', 'masstot', 'var_masstot']
         
+        fluxflds = ['flux850', 'flux450hi', 'flux450'] 
+        massflds = ['mass', 'var_mass', 'masstot', 'var_masstot']
 
+        cl = id + 1
+        mskcl = ma.masked_not_equal(idxs, cl)
+        npix = mskcl.count()
+
+        self.record['id'] = cl
+        self.record['npix'] = npix
+
+        area, eff_radius, deconv_r = self.get_size(
+            npix, params.pixsize, params.beam)
         
-    def createRec(self):
-        """Creates an empty structured array."""
-        
-        list_names = ['id', 'npix', 'nTpix', 'area', 'eff_radius',
-                      'deconv_radius', 'flux850', 'flux450hi', 'flux450',
-                      'mass', 'var_mass', 'masstot', 'var_masstot',
-                      'N', 'varN', 'maxT', 'minT']
+        self.record['area'] = area / u.arcsec / u.arcsec
+        self.record['eff_radius'] = eff_radius / u.arcsec
+        self.record['deconv_radius'] = deconv_r / u.arcsec
 
-        list_formats = ['i4', 'i4' , 'i4', 'f4', 'f4', 'f4', 'f4', 'f4', 'f4',
-                        'f4', 'f4', 'f4', 'f4', 'f8', 'f8', 'f4', 'f4']
-        
-        ddtype = { 'names' : list_names,
-                   'formats' : list_formats}
+        numflux = np.shape(fluxes)[0]
+        for flx in range(numflux):
+            f = fluxes[flx].masked_where(ma.getmask(mskcl))
 
-        record = np.empty(self.n_clumps, dtype=ddtype)
+            S = f.cmult(params.flux_factor)
+            S = S.filled(np.nan)
 
-        return record
-
-    
-        
-    def make_table(self) :
-        """Builds the catalogue table in the rec structured array."""
-
-        for clump in range(1, self.n_clumps+1):
-            mskcl = ma.masked_not_equal(self.idxs, clump)
-            npix = mskcl.count()
-
-
-            self.rec[clump-1]['id'] = clump
-            self.rec[clump-1]['npix'] = npix
-
-
-            area, eff_radius, deconv_r = Clump.get_size(npix,
-                                                        self.params.pixsize,
-                                                        self.params.beam)
-            self.rec[clump-1]['area'] = area / u.arcsec / u.arcsec
-            self.rec[clump-1]['eff_radius'] = eff_radius / u.arcsec
-            self.rec[clump-1]['deconv_radius'] = deconv_r / u.arcsec
-
-            
-            numflux = np.shape(self.fluxes)[0]
-            for flx in range(numflux):
-                f = self.fluxes[flx].masked_where(ma.getmask(mskcl))
-
-                S = f.cmult(self.params.flux_factor)
-                S = S.filled(np.nan)
-
-                field = self.fluxflds[flx]
-                self.rec[clump-1][field] = np.nansum(S.data[0]) / 1e-26
-                
-
-            numasses = np.shape(self.mass)[0]
-            for mss in range(numasses) :
-
-                cl_m = self.mass[mss].masked_where(ma.getmask(mskcl))
-
-                if mss == 0 :
-                    self.rec[clump-1]['nTpix'] = cl_m.data[0].count()
-
-                cl_m = cl_m.filled(np.nan)
-                
-
-                m = np.nansum(cl_m.data[0])
-                var_m = np.nansum(cl_m.data[1])
-                self.rec[clump-1][self.massflds[mss*2]] = m
-                self.rec[clump-1][self.massflds[mss*2+1]] = var_m
-
-                if mss == 1 :
-                    # column density ad-hoc
-                    #
-                    clump_N, clump_varN = Clump.columndensity(
-                        m, var_m, area, self.params.d, self.params.mu,
-                        self.params.mH)
-
-                    self.rec[clump-1]['N'] = clump_N
-                    self.rec[clump-1]['varN'] = clump_varN
-
-                    
-            numtemps = np.shape(self.temps)[0]
-            for t in range(numtemps) :
-                cl_td = self.temps[t].masked_where(ma.getmask(mskcl))
-                    
-                if cl_td.data[0].count() > 0 :
-                    self.rec[clump-1]['maxT'] = np.nanmax(cl_td.data[0])
-                    self.rec[clump-1]['minT'] = np.nanmin(cl_td.data[0])
-                else:
-                    self.rec[clump-1]['maxT'] = -99
-                    self.rec[clump-1]['minT'] = -99
-
-        return 0
-
-        
-                    
-    def print_table(self):
-        """Prints catalogue table stored in the rec structured array."""
-        
-        for i in range(np.shape(self.rec)[0]) :
-
-            str_out = '{0:2d} {1:4d}'.format(self.rec['id'][i],
-                                             self.rec['npix'][i])
-
-            str_out = ' {0} {1:7.1f} {2:8.2f} {3:8.2f}'.format(
-                str_out, self.rec['area'][i],
-                self.rec['eff_radius'][i],
-                self.rec['deconv_radius'][i])
-
-            
-            numflux = np.shape(self.fluxes)[0]
-            for flx in range(numflux):
-                ff = self.fluxflds[flx]
-                str_out = ' {0} {1:7.3f}'.format(str_out, self.rec[ff][i])  
+            field = fluxflds[flx]
+            self.record[field] = np.nansum(S.data[0]) / 1e-26
 
                 
-            numasses = np.shape(self.mass)[0]
-            for mss in range(numasses) :
-                m_field = self.massflds[mss*2]
-                varm_field = self.massflds[mss*2+1]
-                str_out = '{0} {1:8.2f} ({2:6.2f})'.format(
-                    str_out, self.rec[i][m_field],
-                    np.sqrt(self.rec[i][varm_field]))
+        numasses = np.shape(mass)[0]
+        for mss in range(numasses) :
 
+            cl_m = mass[mss].masked_where(ma.getmask(mskcl))
 
+            if mss == 0 :
+                self.record['nTpix'] = cl_m.data[0].count()
 
-            str_out = '{0} {1:9.3e} ({2:9.3e})'.format(
-                str_out, self.rec[i]['N'], np.sqrt(self.rec[i]['varN']))
+            cl_m = cl_m.filled(np.nan)
+                
 
-            if self.rec[i]['maxT'] >0 :
-                str_out = '{0} ///{1:6.1f} {2:6.1f}'.format(str_out,
-                                                            self.rec[i]['maxT'],
-                                                            self.rec[i]['minT'])
+            m = np.nansum(cl_m.data[0])
+            var_m = np.nansum(cl_m.data[1])
+            self.record[massflds[mss*2]] = m
+            self.record[massflds[mss*2+1]] = var_m
+
+            if mss == 1 :
+                # column density ad-hoc
+                #
+                clump_N, clump_varN = self.columndensity(
+                    m, var_m, area, params.d, params.mu, params.mH)
+
+                self.record['N'] = clump_N
+                self.record['varN'] = clump_varN
+
+                    
+        numtemps = np.shape(temps)[0]
+        for t in range(numtemps) :
+            cl_td = temps[t].masked_where(ma.getmask(mskcl))
+                    
+            if cl_td.data[0].count() > 0 :
+                self.record['maxT'] = np.nanmax(cl_td.data[0])
+                self.record['minT'] = np.nanmin(cl_td.data[0])
             else:
-                str_out = '{0} ///{1:13s}'.format(str_out, " ")
-                
-            print(str_out)
+                self.record['maxT'] = -99
+                self.record['minT'] = -99
 
 
 
+    def print_clump(self, ctype='phys') :
+        """Prints the information contained in a clump.
 
-    def save_fitstable(self, fname, overwrite=False) :
-        """Save a fits table with the clump parameters."""
+        ctype: ....
+        """
 
-        print(" >>> Saving fits table ", fname," ...")
-        
-        t = fits.BinTableHDU.from_columns(self.rec)
-        t.writeto(fname, overwrite=overwrite)
+        out = ""
+        ct = 0
+        for ff in self.phys_names :
+            
+            prfmt = self.phys_prfmt[ct]
+            strfmt = '{0} {1:'+str(prfmt)+'}'
+            out = strfmt.format(out, (self.record[ff])[0])
 
-        print(" >>> ...done")
+            ct += 1
+
+        return out
+
     
-        
-            
-            
+
     @staticmethod
     def get_size(n, pixsize, beamsize) :
         """Calculate some geometrical parameters of the clump."""
@@ -229,3 +232,7 @@ class Clump (object):
         var_col = var_mass * f *f
 
         return col, var_col
+
+
+    
+    

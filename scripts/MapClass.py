@@ -8,7 +8,7 @@
     Definition of the class Map 
 
 """
-
+import sys
 import numpy as np
 import numpy.ma as ma
 from astropy.io import fits
@@ -42,7 +42,7 @@ class Map (object):
 
     
     @classmethod
-    def fromfitsfile(cls, fname, name=''):
+    def from_fitsfile(cls, fname, name=''):
         """Read input data and header from a FITS file."""
 
         if name == '' :
@@ -239,7 +239,26 @@ def full_like(model, inival=(0,0)):
     new.data[1] = np.full_like(model.data[1], inival[1])
 
     return new
-
     
 
     
+def filtermap(pmap, type_filter, cut):
+    """Filter pixels using the variance of the parameter
+
+    It returns the map data and the variance
+    """
+
+    if type_filter == "variance" :
+        mask = ma.masked_greater(pmap.data[1], cut)
+        new = pmap.masked_where(mask.mask)
+        
+    elif type_filter == "snr" :
+        snr = pmap.data[0] / np.sqrt(pmap.data[1])
+        snr_cut = ma.masked_where(snr < cut, snr)
+        new = pmap.masked_where(ma.getmask(snr_cut))
+        
+    else :
+        print(" ++ ERROR: unknown filter option")
+        sys.exit(1)
+        
+    return new
