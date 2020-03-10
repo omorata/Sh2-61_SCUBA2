@@ -64,6 +64,7 @@ class Map (object):
     
     def save_fitsfile(self, oldheader='', append=False, overwrite=False,
                       hdr_type='', fname=''):
+        """Save Map object to a fitsfile."""
 
         if oldheader :
             self.header = Map.modify_header(oldheader, hdr_type)

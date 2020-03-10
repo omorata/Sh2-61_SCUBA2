@@ -471,7 +471,6 @@ print("  >> calculating masses...")
 mapmass = calc_mapmass(mapS_850, maptemp_filter, pr)
 
 
-
 mapmass_filter = maps.filtermap(mapmass, typecut['M'], cuts['M'])
 
 maptemp_filtermass = maptemp_filter.masked_where(mapmass_filter.getmask())
