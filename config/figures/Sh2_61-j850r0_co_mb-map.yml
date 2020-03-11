@@ -1,0 +1,58 @@
+page:
+  outfile: 'out.pdf'
+  dpi: 200
+  size: [9,9]
+
+
+panels:
+  yx: [1,1]
+  view:
+    type: 'radius'
+    #center: [278.33826,-4.95481]
+    radius: 0.15
+    
+  labels:
+    color: 'black'
+    size: 16
+    lab_B: { relative: True, text: 'aaa', position: [0.15, 0.50],
+             color: 'black', size: 16 }
+  contours:
+    colors: 'darkgreen'
+    base: 2.048
+    linewidth: 0.8
+    #linestyle: '-.'
+    #levels: [-3,-2,3,4,5,6,7,8]
+  pixrange:
+    colormap: 'afmhot_r'
+    range: [-5.4, 1400, 'arcsinh']
+    
+  panel_01:
+    #view: { type: 'radius', radius: 0.00138889 }
+    labels:
+      lab1: { text: '\textbf{Sh2-61}', relative: True, position: [0.15, 0.92],
+              size: 20 }
+      lab2: { text: 'SCUBA2 850$\mu$m ', relative: True, position: [0.17, 0.88],
+              size: 16}
+      lab3: { text: 'CO\,corr.\,mf', relative: True, position: [0.17, 0.85],
+              size: 14}
+    dataset_01:
+      filename: 'Sh2_61-j850_r0_contamination_mf.fits'
+      dims: [0,1]
+      type: 'pixel'
+      #pixrange:
+      #  range: [-7e-6, 7e-5]
+    dataset_02:
+      filename: 'Sh2_61-j850_r0_contamination_mf.fits'
+      dims: [0,1]
+      type: 'cntr'
+      contours:
+        #base: 8e-6
+        #colors: 'yellow'
+        #gen_levels: [1.,8.,1.]
+        levels: [10,25,50,100,150,200,250,300,350,500,750,1000]
+      
+    colorbar:
+      width: 0.2
+      text: 'S(850$\mu$m)'
+      #location: 'right'
+  
