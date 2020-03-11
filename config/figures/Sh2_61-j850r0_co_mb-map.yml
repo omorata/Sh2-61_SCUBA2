@@ -36,13 +36,13 @@ panels:
       lab3: { text: 'CO\,corr.\,mf', relative: True, position: [0.17, 0.85],
               size: 14}
     dataset_01:
-      filename: 'Sh2_61-j850_r0_contamination_mf.fits'
+      filename: 'Sh2_61-j850r0_co_mb.fits'
       dims: [0,1]
       type: 'pixel'
       #pixrange:
       #  range: [-7e-6, 7e-5]
     dataset_02:
-      filename: 'Sh2_61-j850_r0_contamination_mf.fits'
+      filename: 'Sh2_61-j850r0_co_mb.fits'
       dims: [0,1]
       type: 'cntr'
       contours:

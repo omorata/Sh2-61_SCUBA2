@@ -14,7 +14,7 @@
 ##
 
 # for makefile
-#sh scripts/findclumps.sh -c fw-Sh2-61-j850_r0_contamination_mf-snr6.sh -o z1 
+#sh scripts/findclumps.sh -c fw-Sh2-61-j850r0_co_mb-snr6.sh -o z1 
 #
 
 

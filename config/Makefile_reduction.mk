@@ -9,13 +9,13 @@
 HOME_DIR=/lustre/opsw/work/omoratac/Sh2-61/SCUBA2
 SNAME=Sh2_61
 
-#dayreductions = 850_r0
+#dayreductions = 850r0
 #days = 0424 0425
 
-jointreductions = j850_r0 j850_r1 j450_r0 j450_r1
-jointreductions += j850_r0mf j850_r1mf j450_r0mf j450_r1mf
-jointreductions += j850_r0_contamination j850_r1_contamination
-jointreductions += j850_r0_contamination_mf
+jointreductions = j850r0 j850r1 j450r0 j450r1
+jointreductions += j850r0_mb j850r1_mb j450r0_mb j450r1_mb
+jointreductions += j850r0_co j850r1_co
+jointreductions += j850r0_co_mb
 
 #
 ##-- End info ----------------------------------------------------------
@@ -186,13 +186,13 @@ $(foreach reduction, $(jointreductions),\
 )
 
 
-#850_r0: reduce-850_r0-days cal-850_r0-days coadd-850_r0 snr-850_r0 crop-850_r0
-#850_r1: reduce-850_r1-days cal-850_r1-days coadd-850_r1 snr-850_r1 crop-850_r1
+#850r0: reduce-850r0-days cal-850r0-days coadd-850r0 snr-850r0 crop-850r0
+#850r1: reduce-850r1-days cal-850r1-days coadd-850r1 snr-850r1 crop-850r1
 
-#450_r0: reduce-450_r0-days cal-450_r0-days coadd-450_r0 snr-450_r0 crop-450_r0
-#450_r1: reduce-450_r1-days cal-450_r1-days coadd-450_r1 snr-450_r1 crop-450_r1
+#450r0: reduce-450r0-days cal-450r0-days coadd-450r0 snr-450r0 crop-450r0
+#450r1: reduce-450r1-days cal-450r1-days coadd-450r1 snr-450r1 crop-450r1
 
-#850_r1mf: reduce-850_r1mf-days cal-850_r1mf-days coadd-850_r1mf snr-850_r1mf crop-850_r1mf mf-850_r1mf-days
+#850r1mf: reduce-850r1mf-days cal-850r1mf-days coadd-850r1mf snr-850r1mf crop-850r1mf mf-850r1mf-days
 
 
 # define rules for day reductions
@@ -207,37 +207,37 @@ $(foreach reduction, $(dayreductions),\
 )
 
 .PHONY: ratios
-.PHONY: ratio-j450_r0mf_j850_r0mf ratio-j450_r0mf_j850_r1mf
+.PHONY: ratio-j450r0_mb__j850r0_mb ratio-j450r0_mb__j850r1_mb
 
 
-ratios: ratio-j450_r0mf_j850_r0mf ratio-j450_r0mf_j850_r1mf ratio-j450_r0mf_j850_r0_contamination_mf
+ratios: ratio-j450r0_mb__j850r0_mb ratio-j450r0_mb__j850r1_mb ratio-j450r0_mb__j850r0_co_mb
 
-$(eval rj450r0mfj850r0mf := $(RES_DIR)/ratios/ratio-j450_r0mf_j850_r0mf.sdf)
+$(eval rj450r0mfj850r0mf := $(RES_DIR)/ratios/ratio-j450r0_mb__j850r0_mb.sdf)
 
-ratio-j450_r0mf_j850_r0mf: $(rj450r0mfj850r0mf)
+ratio-j450r0_mb__j850r0_mb: $(rj450r0mfj850r0mf)
 
-$(rj450r0mfj850r0mf): $(CFG_DIR)/ratio-j450_r0mf_j850_r0mf.cfg $(RES_DIR)/j450_r0mf/$(SNAME)-j450_r0mf-reduc.sdf $(RES_DIR)/j850_r0mf/$(SNAME)-j850_r0mf-reduc.sdf
+$(rj450r0mfj850r0mf): $(CFG_DIR)/ratio-j450r0_mb__j850r0_mb.cfg $(RES_DIR)/j450r0_mb/$(SNAME)-j450r0_mb-reduc.sdf $(RES_DIR)/j850r0_mb/$(SNAME)-j850r0_mb-reduc.sdf
 	sh $(BIN)/mkratios.sh \
-		-c $(CFG_DIR)/ratio-j450_r0mf_j850_r0mf.cfg \
+		-c $(CFG_DIR)/ratio-j450r0_mb__j850r0_mb.cfg \
 		-d $(RES_DIR)/ratios
 
 
-$(eval rj450r0mfj850r1mf := $(RES_DIR)/ratios/ratio-j450_r0mf_j850_r1mf.sdf)
+$(eval rj450r0mfj850r1mf := $(RES_DIR)/ratios/ratio-j450r0_mb__j850r1_mb.sdf)
 
-ratio-j450_r0mf_j850_r1mf: $(rj450r0mfj850r1mf)
+ratio-j450r0_mb__j850r1_mb: $(rj450r0mfj850r1mf)
 
-$(rj450r0mfj850r1mf): $(CFG_DIR)/ratio-j450_r0mf_j850_r1mf.cfg $(RES_DIR)/j450_r0mf/$(SNAME)-j450_r0mf-reduc.sdf $(RES_DIR)/j850_r1mf/$(SNAME)-j850_r1mf-reduc.sdf
+$(rj450r0mfj850r1mf): $(CFG_DIR)/ratio-j450r0_mb__j850r1_mb.cfg $(RES_DIR)/j450r0_mb/$(SNAME)-j450r0_mb-reduc.sdf $(RES_DIR)/j850r1_mb/$(SNAME)-j850r1_mb-reduc.sdf
 	sh $(BIN)/mkratios.sh \
-		-c $(CFG_DIR)/ratio-j450_r0mf_j850_r1mf.cfg \
+		-c $(CFG_DIR)/ratio-j450r0_mb__j850r1_mb.cfg \
 		-d $(RES_DIR)/ratios
 
-$(eval rj450r0mfj850r0contmf := $(RES_DIR)/ratios/ratio-j450_r0mf_j850_r0_contamination_mf.sdf)
+$(eval rj450r0mfj850r0contmf := $(RES_DIR)/ratios/ratio-j450r0_mb__j850r0_co_mb.sdf)
 
-ratio-j450_r0mf_j850_r0_contamination_mf: $(rj450r0mfj850r0contmf)
+ratio-j450r0_mb__j850r0_co_mb: $(rj450r0mfj850r0contmf)
 
-$(rj450r0mfj850r0contmf): $(CFG_DIR)/ratio-j450_r0mf_j850_r0_contamination_mf.cfg $(RES_DIR)/j450_r0mf/$(SNAME)-j450_r0mf-reduc.sdf $(RES_DIR)/j850_r0_contamination_mf/$(SNAME)-j850_r0_contamination_mf-reduc.sdf
+$(rj450r0mfj850r0contmf): $(CFG_DIR)/ratio-j450r0_mb__j850r0_co_mb.cfg $(RES_DIR)/j450r0_mb/$(SNAME)-j450r0_mb-reduc.sdf $(RES_DIR)/j850r0_co_mb/$(SNAME)-j850r0_co_mb-reduc.sdf
 	sh $(BIN)/mkratios.sh \
-		-c $(CFG_DIR)/ratio-j450_r0mf_j850_r0_contamination_mf.cfg \
+		-c $(CFG_DIR)/ratio-j450r0_mb__j850r0_co_mb.cfg \
 		-d $(RES_DIR)/ratios
 
 
