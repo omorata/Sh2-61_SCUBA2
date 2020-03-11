@@ -46,22 +46,22 @@ reduce-$(1)-$(2) : $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf
 cal-$(1)-$(2): $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc_cal.sdf
 
 
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf: $(CFG_DIR)/reduction-$(1)-$(2).cfg
-	. $(BIN)/reduce_raw.sh $(CFG_DIR)/reduction-$(1)-$(2).cfg
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf: $(CFG_DIR)/reduc-$(1)-$(2).cfg
+	. $(BIN)/reduce_raw.sh $(CFG_DIR)/reduc-$(1)-$(2).cfg
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc_cal.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-$(2)-reduc.sdf
 	$(BIN)/post_scuba2.sh  \
 		-a cal  \
 		-d $(RES_DIR)/$(1)/ \
-		-p $(CFG_DIR)/par$(1)-$(2).cfg  \
+		-p $(CFG_DIR)/recipe-$(1)-$(2).cfg  \
 		-i $(SNAME)-$(1)-$(2)-reduc
 
 
 checkcal-$(1)-$(2):
 	. $(BIN)/check_fcf.sh \
 		-d $(RES_DIR)/$(1)  \
-		-c $(CFG_DIR)/reduction-$(1)-$(2).cfg
+		-c $(CFG_DIR)/reduc-$(1)-$(2).cfg
 
 endef
 
@@ -94,7 +94,7 @@ $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd.sdf:  $(jfiles_$(1)_list) $(mosaic_dir)/$(1)
 	$(BIN)/post_scuba2.sh  \
 		-a add  \
 		-d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/par$(1).cfg \
+		-p $(CFG_DIR)/recipe-$(1).cfg \
 		-l $(mosaic_dir)/$(1)-mosaic.list  \
 		-o $(SNAME)-$(1)-coadd
 
@@ -110,7 +110,7 @@ $(RES_DIR)/$(1)/$(SNAME)-$(1)-coadd_crop.sdf: $(RES_DIR)/$(1)/$(SNAME)-$(1)-coad
 	$(BIN)/post_scuba2.sh  \
 		-a crop  \
 		-d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/par$(1).cfg  \
+		-p $(CFG_DIR)/recipe-$(1).cfg  \
 		-i $(SNAME)-$(1)-coadd
 
 endef
@@ -121,26 +121,30 @@ endef
 #
 define Joint_Template
 
-.PHONY: $(1) reduce-$(1) snr-$(1) crop-$(1)
+.PHONY: $(1) reduce-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
 
 $(eval reduc_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf)
+$(eval snr_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf)
 
 
-$(1): reduce-$(1) snr-$(1) crop-$(1)
+
+$(1): reduce-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
 
 
 reduce-$(1) : $(reduc_file)
 
-snr-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf
+snr-$(1): $(snr_file)
 
 crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
 
-
-$(reduc_file): $(CFG_DIR)/reduction-$(1).cfg
-	. $(BIN)/reduce_raw.sh $(CFG_DIR)/reduction-$(1).cfg
+snrcrop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
 
 
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf: $(reduc_file) 
+$(reduc_file): $(CFG_DIR)/reduc-$(1).cfg
+	. $(BIN)/reduce_raw.sh $(CFG_DIR)/reduc-$(1).cfg
+
+
+$(snr_file): $(reduc_file) 
 	$(BIN)/post_scuba2.sh \
 		-a snr  \
 		-d $(RES_DIR)/$(1)  \
@@ -151,8 +155,15 @@ $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf: $(reduc_file)
 	$(BIN)/post_scuba2.sh  \
 		-a crop  \
 		-d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/par$(1).cfg  \
+		-p $(CFG_DIR)/recipe-$(1).cfg  \
 		-i $(SNAME)-$(1)-reduc
+
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf: $(snr_file) 
+	$(BIN)/post_scuba2.sh  \
+		-a crop  \
+		-d $(RES_DIR)/$(1) \
+		-p $(CFG_DIR)/recipe-$(1).cfg  \
+		-i $(SNAME)-$(1)-reduc_snr
 
 endef
 
