@@ -21,46 +21,19 @@ help(){
     echo "prepare_maps.sh"
     echo " Options:"
     echo "--------------------------------------------------"
-    echo " -c file   configuration file"
-    echo " -d DIR    configuration directory (default ${CFG_DIR})"
+    echo " -f FILE   input file"
     echo " -h        help"
-    echo " -i DIR    input directory (default ${RES_DIR})"
-    echo " -o DIR    ouput directory"
-}
-
-check_file(){
-# check if file $1 of type $2 exists
-#
-    if [[ ! -f $1 ]];then
-	echo -e "\n  ** ERROR: $2 file $1 not found\n"
-	exit 1
-    fi
-}
-
-
-
-build_arrays(){
-    #
-    pfx=$1
-    InArray=("${!2}")
-
-    if [[ ${#InArray[@]} -gt 0 ]];then
-	arr=()
-	for e in $InArray
-	do
-	    arr+=($pfx/$e)
-	done
-    else
-	echo "ERROR: no defined input data "
-	exit 1
-    fi
+    echo " -o FILE   output file"
+    echo " -r FILE   reference file for align"
+    echo " -t task   task to execute (align, strip, tofits)"
 }
 
 
 
 convert_tofits(){
     sdffile=$1
-    fitsfile=${sdffile/\.sdf/\.fits}
+    #fitsfile=${sdffile/\.sdf/\.fits}
+    fitsfile=$2
     
     echo " >>> converting $sdffile to $fitsfile";echo
     ${CONVERT_DIR}/ndf2fits $sdffile $fitsfile
@@ -69,38 +42,16 @@ convert_tofits(){
 
 
 strip_data(){
-    # strips the third axis from the sdf files
+    # strips the third axis from the sdf file
     #
-    argIn=("${!1}")
-    argOut=("${!2}")
-
-    nelem=${#argIn[@]}
-    idx=0
-
-    while [ $idx -lt $nelem ]
-    do
-	inf=${argIn[$idx]}
-	echo;echo " Processing file $inf"
-	echo "  stripping third axis...";echo
+    dfile=$1
+    echo -e "\n Processing file $dfile"
+    echo -e "  stripping third axis...\n"
 	
-	dfile=${RES_DIR}/$inf
-	check_file $dfile "data"
-	
-	ofile=${output_dir}/${argOut[$idx]}
+    ofile=$2
 
-	if [[ $do_sec -eq "y"  &&  $idx -gt 0 ]];then
-	    ofile=${ofile/\.sdf/_strp\.sdf}
-	fi
+    ${KAPPA_DIR}/ndfcopy in=\"$dfile\(:,:\)\" out=$ofile
 
-	${KAPPA_DIR}/ndfcopy in=\"$dfile\(:,:\)\" out=$ofile
-
-	if [[ $idx -eq 0 && $do_fits -eq "y" ]];then
-	   convert_tofits $ofile
-	fi
-	   
-	idx=$((idx+1))
-
-    done
 }
 
 
@@ -109,34 +60,14 @@ align_maps(){
     # align maps to the reference, which is the first element of the
     # array
     #
-    argIn=("${!1}")
 
-    nelem=${#argIn[@]}
-
-    idx=1
-
-    ref_file=${output_dir}/${argIn[0]}
-    while [ $idx -lt $nelem ]
-    do
-	ofile=${output_dir}/${argIn[idx]}
-	ofile_strip=${ofile/\.sdf/_strp\.sdf}
-
-	check_file $ofile_strip "data"
-
-	echo;echo " >> Aligning $ofile_strip to $ofile"
-	
-	${KAPPA_DIR}/wcsalign in=$ofile_strip \
-		    out=$ofile \
-		    ref=$ref_file alignref=true
-
-	if [[ $do_fits -eq "y" ]];then
-	   convert_tofits $ofile
-	fi
-	
-	rm $ofile_strip
-	
-	idx=$((idx+1))
-    done
+    ifile=$1
+    ref_file=$2
+    ofile=$3
+    echo;echo " >> Aligning $ifile to $ref"
+    
+    ${KAPPA_DIR}/wcsalign in=$ifile  out=$ofile  ref=$ref_file  \
+		alignref=true accept
 }
 
 
@@ -146,71 +77,47 @@ align_maps(){
 
 # read cli options
 #
-while getopts "c:d:hi:o:" options
+while getopts "f:ho:r:t:" options
 do
     case $options in
-	c) cfg_file=$OPTARG
-	   ;;
-	d) CFG_DIR=$OPTARG
-	   ;;
+	f) infile=$OPTARG  ;;
 	h) help
-	   exit 0
-	   ;;
-	i) RES_DIR=$OPTARG
-	   ;;
-	o) output_dir=$OPTARG
-	   ;;
+	   exit 0  ;;
+	o) output_file=$OPTARG  ;;
+	r) reference_file=$OPTARG  ;;
+	t) task=$OPTARG  ;;
 	*) echo " ERROR: wrong option"
-	   exit 1
-	   ;;
+	   help
+	   exit 1  ;;
     esac
 done
 
 
-# check and fill variables
-#
-if [[ -n $cfg_file ]];then
-    cfg_file=${CFG_DIR}/${cfg_file}
-    check_file $cfg_file "configuration"
 
-    source $cfg_file
-else
-    echo "ERROR: configuration file ${cfg_file} is not defined"
-    exit 1
+
+if [[ ! -f $infile ]];then
+    echo -e "\n  ** ERROR: input file ${infile} not found\n"
 fi
 
+output_dir=$(dirname $infile)
 if [[ ! -d ${output_dir} ]];then
     echo -e "\n  ** ERROR: output directory ${output_dir} not found\n"
     exit 1
 fi
 
+if [[ -z $task ]]
+then
+    echo -e "\n  ** WARNING: task not defined; using tofits\n"
+    task="tofits"
+fi
 
-
-arr_data=($in_data)
-arr_out=($out_data)
-
-if [[ $do_snr -eq "y" ]];then
-    arr_snr=($in_snr)
+case $task in
+    "align") align_maps $infile $reference_file $output_file  ;;
+    "strip") strip_data $infile $output_file  ;;
+    "tofits") convert_tofits $infile  $output_file  ;;
+    *) echo " wrong task option"
+       exit 1
+       ;;
+esac
     
-    arr_out_snr=($out_snr)
-fi
 
-
-# strip third axis from data files
-#
-strip_data arr_data[@] arr_out[@]
-
-if [[ do_snr -eq "y" ]];then
-    strip_data arr_snr[@] arr_out_snr[@]
-fi
-
-
-# align maps
-#
-if [[ $do_sec -eq "y" ]];then
-    align_maps arr_out[@]
-
-    if [[ do_snr -eq "y" ]];then
-	align_maps arr_out_snr[@]
-    fi
-fi
