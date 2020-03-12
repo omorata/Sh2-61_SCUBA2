@@ -1,9 +1,9 @@
 infiles :
   data850: analysis_maps/Sh2_61-j850r0_co_mb.fits
   snr850: analysis_maps/Sh2_61-j850r0_co_mb-snr.fits
-  clumpdef: findclumps/Sh2_61-j850r0_co_mb-fw-snr6-extr.FITS
-  data450: analysis_maps/Sh2_61-j450r0_mb.fits
-  snr450: analysis_maps/Sh2_61-j450r0_mb-snr.fits
+  clumpdef: findclumps/Sh2_61-j850r0_co_mb-fw_01-clumps.fits
+  data450: analysis_maps/Sh2_61-j450r0_mb-aligned_to-j850r0_co_mb.fits
+  snr450: analysis_maps/Sh2_61-j450r0_mb-snr-aligned_to-j850r0_co_mb.fits
 
 phys_params:
   beta : 1.8
