@@ -24,6 +24,13 @@ CFG_DIR=$(HOME_DIR)/config/reduction
 DATA_DIR=$(HOME_DIR)/data
 RES_DIR=$(HOME_DIR)/results
 
+# defaults
+#
+SHELL := bash
+.DELETE_ON_ERROR:
+.SHELLFLAGS := -eu -o pipefail -c
+MAKEFLAGS += --warn-undefined-varibles
+MAKEFLAFS += --no-builtin_rules
 
 export
 
