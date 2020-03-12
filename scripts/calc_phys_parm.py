@@ -17,6 +17,8 @@ import math
 import argparse as ap
 import yaml
 
+import logging
+
 # definition of the custom classes
 #
 import Param as par
@@ -254,8 +256,16 @@ def read_command_line() :
         help='process clumps')
     
     parser.add_argument(
+        '-l', dest='logfile',  help='log file',
+        default='', metavar='FILE')
+
+    parser.add_argument(
         '--print', dest='print_table', action='store_true', default=False,
         help='print table')
+    
+    parser.add_argument(
+        '-w', dest='wkdir',  help='working directory',
+        default='.', metavar='DIR')
 
     parser.add_argument('args', nargs=ap.REMAINDER)
     
@@ -324,7 +334,12 @@ print(" ++ Start")
 
 args = read_command_line()
 
+wdir = args.wkdir+'/'
 
+if args.logfile:
+    logg=True
+else:
+    logg=False
 
 cnfg = read_configfile(args.cfgfile)
 
@@ -350,6 +365,11 @@ cuts = get_values(cnfg, 'data_params', names=['snr_450', 'cut_Td', 'cut_M'],
                   altnames=['snr450', 'Td', 'M'], type='float')
 
 
+
+if logg: 
+    logging.basicConfig(filename=args.logfile, filemode='w',
+                        level=logging.INFO)
+    logging.info('Started')
 
 # calculate some variables
 #
@@ -378,17 +398,22 @@ pre = (850. / 450.)**(3.+ pr.beta)
 
 print("  >> reading input files...")
 
-map850 = maps.Map.from_fitsfile(fname['data850'], name="850micron")
-mapsnr = maps.Map.from_fitsfile(fname['snr850'], name="SNR 850micron")
-map450 = maps.Map.from_fitsfile(fname['data450'], name="450micron")
-mapsnr450 = maps.Map.from_fitsfile(fname['snr450'], name="SNR 450micron")
+if logg:
+    logging.info('+ reading input files')
+
+map850 = maps.Map.from_fitsfile(wdir+fname['data850'], name="850micron")
+mapsnr = maps.Map.from_fitsfile(wdir+fname['snr850'], name="SNR 850micron")
+map450 = maps.Map.from_fitsfile(wdir+fname['data450'], name="450micron")
+mapsnr450 = maps.Map.from_fitsfile(wdir+fname['snr450'], name="SNR 450micron")
 
 header850 = map850.header
 
 
 print("  >> reading clump mask...")
+if logg:
+    logging.info('+ reading clump mask')
 
-with fits.open(fname['clumpdef']) as hdumask:
+with fits.open(wdir+fname['clumpdef']) as hdumask:
     clump_def = hdumask[0].data
 
 clump_idxs = clump_def.view(ma.MaskedArray)
@@ -422,13 +447,15 @@ mapmanual_temp = mapsf_cl850.copy()
 
 
 print("  >> calculating flux ratios...")
+if logg:
+    logging.info('+ calculating flux ratios')
 
 map_ratio = maps.divide(mapclumpshi450, mapdblf_cl850)
 
 
 if fout['ratio']:
     ok = map_ratio.save_fitsfile(
-        fname=fout['ratio'], hdr_type='fluxratio', oldheader=map850.header,
+        fname=wdir+fout['ratio'], hdr_type='fluxratio', oldheader=map850.header,
         append=False, overwrite=True)
 
 print("  ...done")
@@ -451,8 +478,8 @@ mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnotemp_filter)
 
 if fout['temperature'] :
     ok = maptemp_filter.save_fitsfile(
-        fname=fout['temperature'], hdr_type='tdust', oldheader=map850.header,
-        append=False, overwrite=True)
+        fname=wdir+fout['temperature'], hdr_type='tdust',
+        oldheader=map850.header, append=False, overwrite=True)
 
 print("   ...done")
 
@@ -504,7 +531,7 @@ mapmass_total = maps.merge_maps(mapmass_filter, mapmass_notemp)
 
 if fout['mass'] :
     ok = mapmass_total.save_fitsfile(
-        fname=fout['mass'], hdr_type='mass', oldheader=map850.header,
+        fname=wdir+fout['mass'], hdr_type='mass', oldheader=map850.header,
         append=False, overwrite=True)
 
 print("   ...done")
@@ -519,10 +546,12 @@ if args.clumps :
         params=pr)
 
     if fout['clumptable']:
-        mapclumpcat.save_catalog(fout['clumptable'], overwrite=True,
+        mapclumpcat.save_catalog(wdir+fout['clumptable'], overwrite=True,
                                  ctype='phys')
 
         if args.print_table: 
             mapclumpcat.print_catalog(ctype='phys')
 
 print(" ++ ok")
+if logg:
+    logging.info('+ ok')
