@@ -82,7 +82,8 @@ done
 # check and fill variables
 #
 if [[ -n $cfg_file ]];then
-    cfg_file=${CFG_DIR}/${cfg_file}
+    echo "******* $cfg_file"
+    cfg_file=${CFG_DIR}/$(basename ${cfg_file})
     check_file $cfg_file "configuration"
 
     source $cfg_file
