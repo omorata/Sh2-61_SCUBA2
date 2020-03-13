@@ -38,30 +38,17 @@ export
 ##-- Template definition -----------------------------------------------
 
 
+define Joint_Template
 # Template to process all days of the same reduction on the same step
 #
-define Joint_Template
-
-.PHONY: $(1) reduce-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
+#  Parameter: 1- target
+#
 
 $(eval reduc_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf)
 $(eval snr_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf)
 
 
-
-$(1): reduce-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
-
-
-reduce-$(1) : $(reduc_file)
-
-snr-$(1): $(snr_file)
-
-crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
-
-snrcrop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
-
-
-$(reduc_file): $(CFG_DIR)/reduc-$(1).cfg
+$(reduc_file): $(wildcard $(CFG_DIR)/reduc-$(1).cfg)
 	. $(BIN)/reduce_raw.sh $(CFG_DIR)/reduc-$(1).cfg
 
 
@@ -85,6 +72,16 @@ $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf: $(snr_file)
 		-d $(RES_DIR)/$(1) \
 		-p $(CFG_DIR)/recipe-$(1).cfg  \
 		-i $(SNAME)-$(1)-reduc_snr
+
+
+.PHONY: reduce-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
+reduce-$(1) : $(reduc_file)
+snr-$(1): $(snr_file)
+crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
+snrcrop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
+
+.PHONY: $(1)
+$(1): reduce-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
 
 endef
 
