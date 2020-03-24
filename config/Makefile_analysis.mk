@@ -217,10 +217,12 @@ $(eval align_tgt := $(outdir)/$(SNAME)-$(sec_tgt).sdf)
 $(eval align_snrtgt := $(outdir)/$(SNAME)-$(sec_tgt)-snr.sdf)
 
 $(eval aligned_file := $(outdir)/$(SNAME)-$(sec_tgt)-aligned_to-$(ref_tgt).sdf)
-$(eval aligned_snrfile := $(outdir)/$(SNAME)-$(sec_tgt)-snr-aligned_to-$(ref_tgt).sdf)
+$(eval aligned_snrfile :=    \
+    $(outdir)/$(SNAME)-$(sec_tgt)-snr-aligned_to-$(ref_tgt).sdf)
 
 $(eval aligned_fits := $(outdir)/$(SNAME)-$(sec_tgt)-aligned_to-$(ref_tgt).fits)
-$(eval aligned_snrfits := $(outdir)/$(SNAME)-$(sec_tgt)-snr-aligned_to-$(ref_tgt).fits)
+$(eval aligned_snrfits :=   \
+    $(outdir)/$(SNAME)-$(sec_tgt)-snr-aligned_to-$(ref_tgt).fits)
 
 
 
@@ -284,7 +286,8 @@ $(eval outdir := $(DATA_DIR)/analysis_maps)
 
 
 $(eval aligned_fits := $(outdir)/$(SNAME)-$(sec_tgt)-aligned_to-$(ref_tgt).fits)
-$(eval aligned_snrfits := $(outdir)/$(SNAME)-$(sec_tgt)-snr-aligned_to-$(ref_tgt).fits)
+$(eval aligned_snrfits :=    \
+    $(outdir)/$(SNAME)-$(sec_tgt)-snr-aligned_to-$(ref_tgt).fits)
 
 
 #
@@ -299,8 +302,8 @@ $(eval cfg_file := $(CFG_DIR)/$(SNAME)-$(1)-$(2)-phys_calc.yaml)
 
 $(eval calc_log := $(outdir)/calcs-$(1)-$(2).log )
 
-$(eval calc_refs := $(ffile) $(ffile_snr) $(aligned_fits) $(aligned_snrfits) \
-                        $(clfile))
+$(eval calc_refs :=    \
+    $(ffile) $(ffile_snr) $(aligned_fits) $(aligned_snrfits) $(clfile))
 
 $(calc_log):  $(wildcard $(cfg_file)) $(calc_refs)
 	@if [ -f $(cfg_file) ]; then \
