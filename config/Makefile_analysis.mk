@@ -10,8 +10,8 @@
 HOME_DIR := .
 SNAME := Sh2_61
 
-targets := j850r0_co_mb 
-fcs := fw_01
+targets := j850r0_co_mb
+fcs := fw_01 fw_02
 combined := j850r0_co_mb__j450r0_mb
 
 #
@@ -46,7 +46,7 @@ define Target_Template
 #
 $(eval out_dir := $(RES_DIR)/analysis_maps)
 
-$(eval tgt_dir := $(DATA_DIR)/$(1) )
+$(eval tgt_dir := $(DATA_DIR)/$(1))
 
 $(eval orig_file := $(tgt_dir)/$(SNAME)-$(1)-reduc.sdf)
 $(eval orig_snrfile := $(tgt_dir)/$(SNAME)-$(1)-reduc_snr.sdf)
@@ -300,7 +300,7 @@ $(eval clfile := $(DATA_DIR)/findclumps/$(SNAME)-$(ref_tgt)-$(2)-clumps.fits)
 
 $(eval cfg_file := $(CFG_DIR)/$(SNAME)-$(1)-$(2)-phys_calc.yaml)
 
-$(eval calc_log := $(outdir)/calcs-$(1)-$(2).log )
+$(eval calc_log := $(outdir)/calcs-$(1)-$(2).log)
 
 $(eval calc_refs :=    \
     $(ffile) $(ffile_snr) $(aligned_fits) $(aligned_snrfits) $(clfile))
