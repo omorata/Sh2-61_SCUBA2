@@ -1,6 +1,7 @@
 config/file_lists/safe
 config/file_lists/*short*list
 config/old_files
-scripts/old
+src/old
 ideas_sh261.org
 prjChiJui.org
+results

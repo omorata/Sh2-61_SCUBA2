@@ -4,7 +4,7 @@
 ##
 ##  script to get SCUBA2 850 and 450 micron maps ready to be processed
 ##  by other tools:
-##     - we strip the extra axis\
+##     - we strip the extra axis
 ##     - we align the 450 micron map to the 850 micron map
 ##
 
@@ -14,6 +14,7 @@ RES_DIR=${RES_DIR:-.}
 output_dir=.
 
 set -o errexit
+
 
 ##-- Functions ---------------------------------------------------------
 
@@ -31,8 +32,10 @@ help(){
 
 
 convert_tofits(){
+    # function to convert an sdf file into a fits file
+    #
+    
     sdffile=$1
-    #fitsfile=${sdffile/\.sdf/\.fits}
     fitsfile=$2
     
     echo " >>> converting $sdffile to $fitsfile";echo
@@ -42,8 +45,9 @@ convert_tofits(){
 
 
 strip_data(){
-    # strips the third axis from the sdf file
+    # strips the third axis from an sdf file
     #
+    
     dfile=$1
     echo -e "\n Processing file $dfile"
     echo -e "  stripping third axis...\n"
@@ -70,9 +74,6 @@ align_maps(){
 		alignref=true accept
 }
 
-
-
-
 ##-- End of functions --------------------------------------------------
 
 # read cli options
@@ -93,10 +94,9 @@ do
 done
 
 
-
-
 if [[ ! -f $infile ]];then
     echo -e "\n  ** ERROR: input file ${infile} not found\n"
+    exit 1
 fi
 
 output_dir=$(dirname $infile)
@@ -105,11 +105,11 @@ if [[ ! -d ${output_dir} ]];then
     exit 1
 fi
 
-if [[ -z $task ]]
-then
-    echo -e "\n  ** WARNING: task not defined; using tofits\n"
-    task="tofits"
-fi
+#if [[ -z $task ]]
+#then
+#    echo -e "\n  ** WARNING: task not defined; using tofits\n"
+#    task="tofits"
+#fi
 
 case $task in
     "align") align_maps $infile $reference_file $output_file  ;;
@@ -119,5 +119,5 @@ case $task in
        exit 1
        ;;
 esac
-    
 
+echo -e "\n ... done!"
