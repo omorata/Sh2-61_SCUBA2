@@ -1,7 +1,7 @@
 infiles :
   data850: analysis_maps/Sh2_61-j850r0_co_mb.fits
   snr850: analysis_maps/Sh2_61-j850r0_co_mb-snr.fits
-  clumpdef: findclumps/Sh2_61-j850r0_co_mb-fw_01-clumps.fits
+  clumpdef: findclumps/Sh2_61-j850r0_co_mb-fw_02-clumps.fits
   data450: analysis_maps/Sh2_61-j450r0_mb-aligned_to-j850r0_co_mb.fits
   snr450: analysis_maps/Sh2_61-j450r0_mb-snr-aligned_to-j850r0_co_mb.fits
 
@@ -30,7 +30,7 @@ data_params:
   manual_varTdust : 30.
 
 outfiles:
-  ratio : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-ratio.fits
-  temperature : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-tdust.fits
-  mass : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-mass.fits
-  clumptable: analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-clump_table.fits
+  ratio : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_02-ratio.fits
+  temperature : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_02-tdust.fits
+  mass : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_02-mass.fits
+  clumptable: analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_02-clump_table.fits
