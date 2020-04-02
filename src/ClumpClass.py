@@ -50,7 +50,7 @@ class Clump(object):
 
     findclumps_formats = [
         'i4', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8',
-        'f8', 'f8', 'U250' ]
+        'f8', 'f8', 'U500' ]
 
     findclumps_units = [
         '', 'deg', 'deg', 'deg', 'deg', 'arcsec', 'arcsec', 'mJy/beam',
@@ -58,7 +58,7 @@ class Clump(object):
 
     findclumps_prfmt = [
         '3d', '11.6f', '11.6f', '11.6f', '11.6f',  '11.6f', '11.6f', '14.6f',
-        '12.6f', '14.6f', '250s'
+        '12.6f', '14.6f', 's'
         ]
 
 
