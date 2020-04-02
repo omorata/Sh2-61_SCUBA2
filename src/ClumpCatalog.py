@@ -195,7 +195,8 @@ class ClumpCatalog (object):
 
 
         
-    def print_catalog(self, ctype='phys', **kwargs) :
+    def print_catalog(self, ctype='phys', fields=None, filename='',
+                      header=True) :
         """Prints the catalog
 
         ctype:
@@ -203,11 +204,30 @@ class ClumpCatalog (object):
            - 'phys' calc_phys fields
            - 'custom' custom set of fields (to finish)
         """
-        ##print header
         ##print units
-        ## print clumps
-        for clump in self.clumps:
-            str_out = clump.print_clump(ctype, **kwargs)
+        ## print clumpp
 
-            print(str_out)
+        if header :
+            head_on = False
+        else:
+            head_on = True
+        
+        if filename:
+            f = open(filename, 'w')
+
+        
+        for clump in self.clumps:
+            str_header, str_out = clump.print_clump(ctype, fields)
+
+            if filename :
+                if not head_on:
+                    f.write(str_header+'\n')
+                    head_on = True
+                f.write(str_out+'\n')
+                
+            else:
+                if not head_on:
+                    print(str_header)
+                    head_on = True
+                print(str_out)
 
