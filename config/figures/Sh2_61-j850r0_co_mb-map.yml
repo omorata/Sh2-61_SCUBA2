@@ -1,58 +1,171 @@
 page:
-  outfile: 'out.pdf'
-  dpi: 200
-  size: [9,9]
-
+  name: 'Sh2-61 j850r0_co_mb'
+  outfile: 'out2.pdf'
+  dpi: 100
+  size: [12,6]
 
 panels:
-  yx: [1,1]
+  yx: [1,2]
   view:
     type: 'radius'
     #center: [278.33826,-4.95481]
-    radius: 0.15
+    radius: 0.16
     
   labels:
-    color: 'black'
-    size: 16
-    lab_B: { relative: True, text: 'aaa', position: [0.15, 0.50],
-             color: 'black', size: 16 }
+    color: 'purple'
+    label_A: { text: '\textbf{Sh2-61}', relative: True,
+               position: [0.15, 0.92], size: 18 }
+    label_B: { text: 'SCUBA2 850$\mu$m ', relative: True,
+                position: [0.17, 0.87], size: 14, color: 'blue' }
+    label_C: { text: 'CO\,corr.\,mb', relative: True, position: [0.17, 0.83],
+                     size: 13, color: 'blue'} 
+
+  #markers:
+  #  marker-01: { file: '../../config/figures/clumps-fw_01.dat',
+  #               type: 'polygon', edgecolor: 'red', linewidth: 1.,
+  #               linestyle : 'dashed', show_label: True,
+  #               color: 'orangered', weight: 'bold', size: 14}
+                 
   contours:
     colors: 'darkgreen'
     base: 2.048
+    #levels: [10]
     linewidth: 0.8
     #linestyle: '-.'
     #levels: [-3,-2,3,4,5,6,7,8]
   pixrange:
     colormap: 'afmhot_r'
-    range: [-5.4, 1400, 'arcsinh']
+    base: 2.048
+    range: [-3, 700, 'arcsinh']
+    #range: [-5.4, 1400, 'arcsinh']
+    #range: ['100%', 'arcsinh']
+
+  #markers:
+    #file-a: 'markers-sh261.txt'
+  #  file-b: '../../config/figures/polygons-fw_01.txt'
     
   panel_01:
+    markers:
+      marker-01: { file: '../../config/figures/clumps-fw_01.dat',
+                   type: 'polygon', edgecolor: 'red', linewidth: 1.,
+                   linestyle : 'solid', show_label: True,
+                   color: 'brown', weight: 'bold', size: 12}
+    
     #view: { type: 'radius', radius: 0.00138889 }
+
     labels:
-      lab1: { text: '\textbf{Sh2-61}', relative: True, position: [0.15, 0.92],
-              size: 20 }
-      lab2: { text: 'SCUBA2 850$\mu$m ', relative: True, position: [0.17, 0.88],
-              size: 16}
-      lab3: { text: 'CO\,corr.\,mf', relative: True, position: [0.17, 0.85],
-              size: 14}
+      color: 'blue'
+      #label_1: { text: '\textbf{Sh2-61}', relative: True,
+      #         position: [0.15, 0.92], size: 20 }
+      #label_2: { text: 'SCUBA2 850$\mu$m ', relative: True,
+      #         position: [0.17, 0.87], size: 14 }
+      #label_3: { text: 'CO\,corr.\,mb', relative: True, position: [0.17, 0.83],
+      #               size: 14}
+      label_6: { text: 'fw\_01', relative: True, position: [0.17, 0.79],
+                     size: 12}
+                     
     dataset_01:
       filename: 'Sh2_61-j850r0_co_mb.fits'
       dims: [0,1]
       type: 'pixel'
       #pixrange:
       #  range: [-7e-6, 7e-5]
+      beam:
+        bmaj : 17.5461
+        corner : 'bottom right'
+        frame: True
+      #  pad: 0.2
+      
     dataset_02:
       filename: 'Sh2_61-j850r0_co_mb.fits'
       dims: [0,1]
       type: 'cntr'
-      contours:
-        #base: 8e-6
-        #colors: 'yellow'
-        #gen_levels: [1.,8.,1.]
-        levels: [10,25,50,100,150,200,250,300,350,500,750,1000]
+      #beam: [17.65]
+      #beam:
+      #  corner: 'bottom'
+      #  bmaj : 27.65
+        #borderpad: 2
+        #pad: 0.2
+      #  frame: True
       
+      contours:
+        #base: 10
+        #colors: 'red'
+        #gen_levels: [1.,8.,1.]
+        #append: True
+        levels: [10,25,50,100,150,200,250,300,350,500,750,1000]
+        #flevels: [30.1,40.1]
+        #gen_flevels: [1.1,10.1,1]
+        #gen_levels: [100,500,50]
+        #pbase: 1200
+        #plevels: [10,25, 50, 75]
+        #gen_plevels: [15,90,15]
+        
+        
+    colorbar:
+      width: 0.2
+      #text: 'S(850$\mu$m)'
+      #location: 'right'
+  
+  panel_02:
+    markers:
+      marker-02: { file: '../../config/figures/clumps-fw_02.dat',
+                   type: 'polygon', edgecolor: 'red', linewidth: 1.,
+                   linestyle : 'solid', show_label: True,
+                   color: 'blue', weight: 'bold', size: 12}
+    
+    #view: { type: 'radius', radius: 0.00138889 }
+
+    labels:
+      color: 'blue'
+      #label_1: { text: '\textbf{Sh2-61}', relative: True,
+      #         position: [0.15, 0.92], size: 20 }
+      #label_4: { text: 'SCUBA2 850$\mu$m ', relative: True,
+      #          position: [0.17, 0.87], size: 13 }
+      #label_5: { text: 'CO\,corr.\,mb', relative: True, position: [0.17, 0.83],
+      #               size: 13} 
+      label_6: { text: 'fw\_02', relative: True, position: [0.17, 0.79],
+                     size: 12}
+                    
+    dataset_01:
+      filename: 'Sh2_61-j850r0_co_mb.fits'
+      dims: [0,1]
+      type: 'pixel'
+      #pixrange:
+      #  range: [-7e-6, 7e-5]
+      beam:
+        bmaj : 17.5461
+        corner : 'bottom right'
+        frame: True
+      #  pad: 0.2
+      
+    dataset_04:
+      filename: 'Sh2_61-j850r0_co_mb.fits'
+      dims: [0,1]
+      type: 'cntr'
+      #beam: [17.65]
+      #beam:
+      #  corner: 'bottom'
+      #  bmaj : 27.65
+        #borderpad: 2
+        #pad: 0.2
+      #  frame: True
+      
+      contours:
+        #base: 10
+        #colors: 'red'
+        #gen_levels: [1.,8.,1.]
+        #append: True
+        levels: [10,25,50,100,150,200,250,300,350,500,750,1000]
+        #flevels: [30.1,40.1]
+        #gen_flevels: [1.1,10.1,1]
+        #gen_levels: [100,500,50]
+        #pbase: 1200
+        #plevels: [10,25, 50, 75]
+        #gen_plevels: [15,90,15]
+        
+        
     colorbar:
       width: 0.2
       text: 'S(850$\mu$m)'
-      #location: 'right'
-  
+      location: 'right'
