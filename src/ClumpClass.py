@@ -56,6 +56,11 @@ class Clump(object):
         '', 'deg', 'deg', 'deg', 'deg', 'arcsec', 'arcsec', 'mJy/beam',
         'mJy/beam', 'arcsec.arcsec', '' ]
 
+    findclumps_prfmt = [
+        '3d', '11.6f', '11.6f', '11.6f', '11.6f',  '11.6f', '11.6f', '14.6f',
+        '12.6f', '14.6f', '250s'
+        ]
+
 
     list_names = []
     list_names.extend(findclumps_names)
@@ -176,25 +181,49 @@ class Clump(object):
 
 
 
-    def print_clump(self, ctype='phys') :
+    def print_clump(self, ctype='phys', fields=None) :
         """Prints the information contained in a clump.
 
         ctype: ....
         """
 
+        if ctype == 'phys' :
+            out = self.extract_values(
+                self.record, names=self.phys_names, fields=fields,
+                print_formats=self.phys_prfmt)
+
+        elif ctype == 'findclumps' :
+            out = self.extract_values(
+                self.record, names=self.findclumps_names, fields=fields,
+                print_formats=self.findclumps_prfmt)
+
+        return out
+
+
+
+    @staticmethod
+    def extract_values(record, names=None, fields=None, print_formats=None):
+
         out = ""
         ct = 0
-        for ff in self.phys_names :
-            
-            prfmt = self.phys_prfmt[ct]
+
+        if fields == None :
+            fields = names
+
+        for ff in names :
+            if ff not in fields :
+                ct += 1
+                continue
+
+            prfmt = print_formats[ct]
             strfmt = '{0} {1:'+str(prfmt)+'}'
-            out = strfmt.format(out, (self.record[ff])[0])
+            out = strfmt.format(out, (record[ff])[0])
 
             ct += 1
 
         return out
 
-    
+
 
     @staticmethod
     def get_size(n, pixsize, beamsize) :
