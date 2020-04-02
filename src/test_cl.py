@@ -13,9 +13,11 @@ catlg = cl.ClumpCatalog.from_file([clfile,phyfile])
 
 #catlg.fillfrom_file(phyfile)
 
-catlg.save_catalog("xred.fits", overwrite=True, ctype='phys')
-catlg.save_catalog("xall.fits", overwrite=True, ctype='all')
+#catlg.save_catalog("xred.fits", overwrite=True, ctype='phys')
+#catlg.save_catalog("xall.fits", overwrite=True, ctype='all')
     
 
-catlg.print_catalog(ctype='phys')
+#catlg.print_catalog(ctype='phys')
+catlg.print_catalog(ctype='findclumps', fields=['PIDENT', 'Shape'])
 
+#catlg.print_catalog(ctype='all')
