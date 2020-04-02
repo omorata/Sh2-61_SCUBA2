@@ -188,22 +188,31 @@ class Clump(object):
         """
 
         if ctype == 'phys' :
-            out = self.extract_values(
+            header, out = self.extract_values(
                 self.record, names=self.phys_names, fields=fields,
                 print_formats=self.phys_prfmt)
 
         elif ctype == 'findclumps' :
-            out = self.extract_values(
+            header, out = self.extract_values(
                 self.record, names=self.findclumps_names, fields=fields,
                 print_formats=self.findclumps_prfmt)
 
-        return out
+        elif ctype == 'all' :
+            all_prfmt = self.findclumps_prfmt.copy()
+            all_prfmt.extend(self.phys_prfmt)
+
+            header, out = self.extract_values(
+                self.record, names=self.list_names, fields=fields,
+                print_formats=all_prfmt)
+
+        return header, out
 
 
 
     @staticmethod
     def extract_values(record, names=None, fields=None, print_formats=None):
 
+        header = ""
         out = ""
         ct = 0
 
@@ -218,10 +227,11 @@ class Clump(object):
             prfmt = print_formats[ct]
             strfmt = '{0} {1:'+str(prfmt)+'}'
             out = strfmt.format(out, (record[ff])[0])
-
+            header = '{0}  {1}'.format(header, ff)
+            
             ct += 1
 
-        return out
+        return header, out
 
 
 
