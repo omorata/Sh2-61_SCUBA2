@@ -1,6 +1,6 @@
 page:
-  name: 'Sh2-61 j850r0_co_mb'
-  outfile: 'Sh2_61-j850r0_co_mb-map.pdf'
+  name: 'Sh2-61 j450r0_mb'
+  outfile: 'Sh2_61-j450r0_mb-map.pdf'
   dpi: 100
   size: [9,9]
 
@@ -8,7 +8,7 @@ panels:
   yx: [1,1]
   view:
     type: 'radius'
-    radius: '10arcmin'
+    radius: '9.6arcmin'
     
   font: {family: 'Nimbus Roman'}
 
@@ -22,27 +22,27 @@ panels:
   labels:
     color: 'purple'
     label_A: { text: Sh2-61, relative: True,
-               position: [0.15, 0.92], size: xx-large }
-    label_B: { text: 'SCUBA2 850$\mu$m ', relative: True,
-                position: [0.17, 0.87], size: x-large, color: 'blue' }
-    label_C: { text: 'CO corr. mb', relative: True, position: [0.17, 0.83],
-                     size: large, color: 'blue'} 
+               position: [0.15, 0.92], size: 24, weight: 'bold' }
+    label_B: { text: 'SCUBA2 450$\mu$m ', relative: True,
+                position: [0.17, 0.87], size: 20, color: 'blue' }
+    label_C: { text: 'r0_mb', relative: True, position: [0.17, 0.83],
+                     size: 16, color: 'blue'} 
 
   
   colorbar:
     width: 0.20
     pad: 0.02
-    label_text: 'S 850 (mJy/beam)'
+    label_text: 'S 450 (mJy/beam)'
   
   contours:
     colors: 'darkgreen'
-    base: 2.048
+    base: 34.958
     linewidth: 0.8
 
   pixrange:
     colormap: 'afmhot_r'
-    base: 2.048
-    range: [-3, 700, 'arcsinh']
+    base: 34.958
+    range: [-3, 320, 'arcsinh']
 
   panel_01:
     axes:
@@ -53,12 +53,12 @@ panels:
         
 
     labels:
-      color: 'blue'
-      label_6: { text: 'fw_01', relative: True, position: [0.17, 0.79],
-                     size: 12, family: 'Nimbus Roman', }
+    #  color: 'blue'
+    #  label_6: { text: 'fw_01', relative: True, position: [0.17, 0.79],
+    #                 size: 12, family: 'Nimbus Roman', }
                      
     dataset_01:
-      filename: 'Sh2_61-j850r0_co_mb.fits'
+      filename: 'Sh2_61-j450r0_mb.fits'
       dims: [0,1]
       type: 'pixel'
 
@@ -68,11 +68,11 @@ panels:
         frame: True
       
     dataset_02:
-      filename: 'Sh2_61-j850r0_co_mb.fits'
+      filename: 'Sh2_61-j450r0_mb.fits'
       dims: [0,1]
       type: 'cntr'
       
       contours:
-        levels: [10,25,50,100,150,200,250,300,350,500,750,1000]
+        levels: [5,15,25,50,100,150,200,250,300]
 
       
