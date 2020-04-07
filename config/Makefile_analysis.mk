@@ -73,6 +73,12 @@ map-$(1): $(map_file)
 .PHONY: maps
 maps: map-$(1)
 
+.PHONY: clean_map-$(1)
+clean_map-$(1):
+	@rm -fv $(map_file)
+.PHONY: clean_maps
+clean_maps: clean_map-$(1)
+
 endef
 
 define Target_Template
@@ -417,13 +423,14 @@ $(foreach tgt, $(combined),\
         $(eval $(call CalcPhys_Template,$(tgt),$(fc)))\
         $(foreach mp, $(comb_map),\
            $(eval $(call MapPhysParam_Template,$(tgt),$(fc),$(mp)))\
+        )\
     ) \
 )
 
 
 # other rules
 #
-clean_list := clean-strip clean-align clean-findclumps clean-calcs
+clean_list := clean-strip clean-align clean-findclumps clean-calcs clean-maps
 
 .PHONY: clean
 clean:	$(clean_list)
