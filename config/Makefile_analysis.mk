@@ -10,20 +10,23 @@
 HOME_DIR := .
 SNAME := Sh2_61
 
-targets := j850r0_co_mb
+targets := j850r0_co j850r0_co_mb j850r0 j850r0_mb j850r1 j850r1_mb
+targets += j450r0 j450r0_mb j450r1 j450r1_mb
 fcs := fw_01 fw_02
 combined := j850r0_co_mb__j450r0_mb
 
+comb_maps := mass ratio tdust
 #
 ##-- End info ----------------------------------------------------------
 
 # names of directories
 #
-BIN_DIR := $(HOME_DIR)/scripts
+BIN_DIR := $(HOME_DIR)/src
 CFG_DIR := $(HOME_DIR)/config/analysis
 DATA_DIR := $(HOME_DIR)/results
 RES_DIR := $(HOME_DIR)/results
-
+EXT_DIR := $(HOME_DIR)/bin
+CFG_FIG := $(HOME_DIR)/config/figures
 
 # defaults
 #
@@ -38,6 +41,39 @@ export
 
 
 ##-- Template definition -----------------------------------------------
+
+define Map_Template
+# Template to make maps for targets
+#
+# Parameter: 1- target
+#
+$(eval map_dir := $(RES_DIR)/analysis_maps)
+
+$(eval tgt_dir := $(RES_DIR)/analysis_maps)
+
+$(eval orig_file := $(tgt_dir)/$(SNAME)-$(1).fits)
+
+$(eval map_file := $(map_dir)/$(SNAME)-$(1)-map.pdf)
+$(eval cfg_file := $(CFG_FIG)/$(SNAME)-$(1)-map.yml)
+
+$(map_file): $(orig_file) $(wildcard $(cfg_file))
+	@if [ -f $(cfg_file) ]; then \
+	     $(EXT_DIR)/dbxmap.py \
+                 -c $(cfg_file) \
+                 -o $(map_dir) \
+                 -w $(map_dir) ;\
+         else \
+             echo -e "\n++ Ignoring rule $(out_fc)" ;\
+             echo -e "    No cfg file $(cfg_file)" ;\
+         fi
+
+.PHONY: map-$(1)
+map-$(1): $(map_file)
+
+.PHONY: maps
+maps: map-$(1)
+
+endef
 
 define Target_Template
 # Template to process rules for targets
@@ -346,8 +382,12 @@ clean-calcs-$(ref_tgt): clean-calcs-$(1)
 
 endef
 
-#define Maps_Template
-#endef
+define MapPhysParam_Template
+# Template to make maps of the calculated physical parameter
+#
+# Arguments: 1- tgt, 2- findclump id, 3- parameter
+#
+endef
 
 
 
@@ -357,6 +397,7 @@ endef
 # define rules for targets
 #
 $(foreach tgt, $(targets),\
+    $(eval $(call Map_Template,$(tgt)))\
     $(eval $(call Target_Template,$(tgt)))\
 )
 
@@ -374,6 +415,8 @@ $(foreach tgt, $(combined),\
     $(eval $(call Align_Template,$(tgt)))\
     $(foreach fc, $(fcs),\
         $(eval $(call CalcPhys_Template,$(tgt),$(fc)))\
+        $(foreach mp, $(comb_map),\
+           $(eval $(call MapPhysParam_Template,$(tgt),$(fc),$(mp)))\
     ) \
 )
 
