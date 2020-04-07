@@ -388,11 +388,60 @@ clean-calcs-$(ref_tgt): clean-calcs-$(1)
 
 endef
 
+
 define MapPhysParam_Template
 # Template to make maps of the calculated physical parameter
 #
 # Arguments: 1- tgt, 2- findclump id, 3- parameter
 #
+$(eval tgt_dir := $(RES_DIR)/analysis_maps)
+$(eval out_dir := $(RES_DIR)/analysis_maps)
+
+$(eval orig_file := $(tgt_dir)/$(SNAME)-$(1)-$(2)-$(3).fits)
+
+$(eval out_file := $(out_dir)/$(SNAME)-$(1)-$(2)-$(3)-map.pdf)
+$(eval cfg_file := $(CFG_DIR)/$(SNAME)-$(1)-$(2)-$(3)-map.yml)
+
+$(out_file): $(orig_file) $(wildcard $(cfg_file))
+	@if [ -f $(cfg_file) ]; then \
+	     $(EXT_DIR)/dbxmap.py \
+                 -c $(cfg_file) \
+                 -o $(out_dir) \
+                 -w $(tgt_dir) ;\
+         else \
+             echo -e "\n++ Ignoring rule $(out_file)" ;\
+             echo -e "    No cfg file $(cfg_file)" ;\
+         fi
+
+
+map-physpar-$(1)-$(2)-$(3): $(out_file)
+.PHONY: map-physpar-$(1)-$(2)-$(3)
+
+maps-physpar-$(1)-$(2): map-physpar-$(1)-$(2)-$(3)
+.PHONY: maps-physpar-$(1)-$(2)
+
+maps-physpar-$(1): map-physpar-$(1)-$(2)
+.PHONY: maps-physpar-$(1)
+
+maps-physpar: map-physpar-$(1)
+.PHONY: maps-physpar
+
+
+clean-map_physpar-$(1)-$(2)-$(3):
+	@rm -fv $(out_file)
+
+PHONY: clean-map_physpar-$(1)-$(2)-$(3)
+
+
+clean-maps_physpar-$(1)-$(2): clean-map_physpar-$(1)-$(2)-$(3)
+.PHONY: clean-maps_physpar-$(1)-$(2)
+
+clean-maps_physpar-$(1): clean-map_physpar-$(1)-$(2)
+.PHONY: clean-maps_physpar-$(1)
+
+clean-maps_physpar: clean-map_physpar-$(1)
+.PHONY: clean-maps_physpar-$(1)
+
 endef
 
 
@@ -421,7 +470,7 @@ $(foreach tgt, $(combined),\
     $(eval $(call Align_Template,$(tgt)))\
     $(foreach fc, $(fcs),\
         $(eval $(call CalcPhys_Template,$(tgt),$(fc)))\
-        $(foreach mp, $(comb_map),\
+        $(foreach mp, $(comb_maps),\
            $(eval $(call MapPhysParam_Template,$(tgt),$(fc),$(mp)))\
         )\
     ) \
@@ -431,6 +480,7 @@ $(foreach tgt, $(combined),\
 # other rules
 #
 clean_list := clean-strip clean-align clean-findclumps clean-calcs clean-maps
+clean_list += clean-maps_physpar
 
 .PHONY: clean
 clean:	$(clean_list)
