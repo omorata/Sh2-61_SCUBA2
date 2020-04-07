@@ -6,7 +6,8 @@
 ##
 
 ##-- Info --------------------------------------------------------------
-HOME_DIR=/lustre/opsw/work/omoratac/Sh2-61/SCUBA2
+#HOME_DIR=/lustre/opsw/work/omoratac/Sh2-61/SCUBA2
+HOME_DIR=.
 SNAME=Sh2_61
 
 jointreductions = j850r0 j850r1 j450r0 j450r1
@@ -19,7 +20,7 @@ jointreductions += j850r0_co_mb
 
 # names of directories
 #
-BIN=$(HOME_DIR)/scripts
+BIN=$(HOME_DIR)/src
 CFG_DIR=$(HOME_DIR)/config/reduction
 DATA_DIR=$(HOME_DIR)/data
 RES_DIR=$(HOME_DIR)/results
