@@ -1,0 +1,88 @@
+page:
+  name: 'Sh2-61 j850r0_co_mb-fw_01-clumps'
+  outfile: 'Sh2_61-j850r0_co_mb-fw_01-clumps-map.pdf'
+  dpi: 150
+  size: [9,9]
+
+panels:
+  yx: [1,1]
+  view:
+    type: 'radius'
+    radius: '10arcmin'
+    
+  font: {family: 'Nimbus Roman'}
+
+  axes:
+    axes_labels:
+      font: {size: 'xx-large'}
+
+    tick_labels:
+      font: {size: 'large'}
+      
+  labels:
+    color: 'purple'
+    label_A: { text: Sh2-61, relative: True,
+               position: [0.15, 0.92], size: 24 }
+    label_B: { text: 'SCUBA2 850$\mu$m ', relative: True,
+                position: [0.17, 0.87], size: 20, color: 'blue' }
+    label_C: { text: 'CO corr. mb', relative: True, position: [0.17, 0.83],
+                     size: 16, color: 'blue'} 
+
+  markers:
+    marker-01: { file: '../../config/figures/clumps-fw_01-shapes.dat',
+                 type: 'polygon', edgecolor: 'red', linewidth: 1.,
+                 linestyle : 'dashed', show_label: True,
+                 color: 'slateblue', weight: 'bold', size: 12}
+                 
+    marker-02: { file: '../../config/figures/markers_main.dat',
+                 linewidth: 1.6, show_label: True, type: '(4,2,0)',
+                 facecolor: 'dodgerblue', lpad: [-150,0],
+                 color: 'black', weight: 'bold', size: 12}
+
+  colorbar:
+    width: 0.20
+    pad: 0.02
+    label_text: 'S 850 (mJy/beam)'
+  
+  contours:
+    colors: 'darkgreen'
+    base: 2.048
+    linewidth: 0.8
+
+  pixrange:
+    colormap: 'afmhot_r'
+    base: 2.048
+    range: [-3, 700, 'arcsinh']
+
+  panel_01:
+    axes:
+      ticks: { xspacing: 0.083333, yspacing: 0.0833333,
+               xminor_freq: 4, yminor_freq: 5, direction: in, 
+               length: 6.5, linewidth: 0.9,
+               hide: False, xhide: False, yhide: False}
+        
+
+    labels:
+      color: 'blue'
+      label_6: { text: 'fw_01', relative: True, position: [0.17, 0.79],
+                     size: 12, family: 'Nimbus Roman', }
+                     
+    dataset_01:
+      filename: 'Sh2_61-j850r0_co_mb.fits'
+      dims: [0,1]
+      type: 'pixel'
+
+      beam:
+        bmaj : '17.5461arcsec'
+        corner : 'bottom right'
+        frame: True
+      
+    dataset_02:
+      filename: 'Sh2_61-j850r0_co_mb.fits'
+      dims: [0,1]
+      type: 'cntr'
+      
+      contours:
+        levels: [10,25,50,100,150,200,250,300,350,500,750,1000]
+
+      
