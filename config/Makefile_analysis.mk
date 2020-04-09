@@ -22,11 +22,10 @@ comb_maps := mass ratio tdust
 # names of directories
 #
 BIN_DIR := $(HOME_DIR)/src
-CFG_DIR := $(HOME_DIR)/config/analysis
+CFG_DIR := $(HOME_DIR)/config
 DATA_DIR := $(HOME_DIR)/results
 RES_DIR := $(HOME_DIR)/results
 EXT_DIR := $(HOME_DIR)/bin
-CFG_FIG := $(HOME_DIR)/config/figures
 
 # defaults
 #
@@ -54,7 +53,7 @@ $(eval tgt_dir := $(RES_DIR)/analysis_maps)
 $(eval orig_file := $(tgt_dir)/$(SNAME)-$(1).fits)
 
 $(eval map_file := $(map_dir)/$(SNAME)-$(1)-map.pdf)
-$(eval cfg_file := $(CFG_FIG)/$(SNAME)-$(1)-map.yml)
+$(eval cfg_file := $(CFG_DIR)/figures/$(SNAME)-$(1)-map.yml)
 
 $(map_file): $(orig_file) $(wildcard $(cfg_file))
 	@if [ -f $(cfg_file) ]; then \
@@ -183,7 +182,7 @@ $(eval analysis_dir := $(DATA_DIR)/analysis_maps)
 $(eval findclumps_dir := $(RES_DIR)/findclumps)
 
 
-$(eval cfg_file := $(CFG_DIR)/$(SNAME)-$(1)-$(2).cfg)
+$(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2).cfg)
 
 $(eval in_fc := $(analysis_dir)/$(SNAME)-$(1).sdf)
 $(eval insnr_fc := $(analysis_dir)/$(SNAME)-$(1)-snr.sdf)
@@ -238,6 +237,43 @@ clean-findclumps-$(1): clean-findclumps-$(1)-$(2)
 
 .PHONY: clean-findclumps
 clean-findclumps: clean-findclumps-$(1)
+
+
+
+$(eval map_file := $(analysis_dir)/$(SNAME)-$(1).fits)
+$(eval cfg_mapfile := $(CFG_DIR)/figures/$(SNAME)-$(1)-$(2)-clumps-map.yml)
+$(eval cl_mapfile := $(analysis_dir)/$(NAME)-$(1)-$(2)-clumps-map.pdf)
+
+$(cl_mapfile): $(map_file) $(wildcard ($cfg_mapfile))
+	@if [ -f $(cfg_mapfile) ]; then \
+	     $(EXT_DIR)/dbxmap.py \
+                 -c $(cfg_mapfile) \
+                 -o $(out_dir) \
+                 -w $(out_dir) ;\
+         else \
+             echo -e "\n++ Ignoring rule $(out_file)" ;\
+             echo -e "    No cfg file $(cfg_mapfile)" ;\
+         fi
+
+clumps-map-$(1)-$(2): $(cl_mapfile)
+.PHONY: clumps-map-$(1)-$(2)
+
+clumps-map-$(1): clumps-map-$(1)-$(2)
+.PHONY: clumps-map-$(1)
+
+clumps-map: clumps-map-$(1)
+.PHONY: clumps-map
+
+
+clean-clumps-map-$(1)-$(2):
+	@rm -vg $(cl_mapfile)
+.PHONY: clean-clumps-map-$(1)-$(2)
+
+clean-clumps-map-$(1): clean-clumps-map-$(1)-$(2)
+.PHONY: clean-clumps-map-$(1)
+
+clean-clumps-map: clean-clumps-map-$(1)
+.PHONY: clean-clumps-map
 
 endef
 
@@ -340,7 +376,7 @@ $(eval ffile := $(outdir)/$(SNAME)-$(ref_tgt).fits)
 $(eval ffile_snr := $(outdir)/$(SNAME)-$(ref_tgt)-snr.fits)
 $(eval clfile := $(DATA_DIR)/findclumps/$(SNAME)-$(ref_tgt)-$(2)-clumps.fits)
 
-$(eval cfg_file := $(CFG_DIR)/$(SNAME)-$(1)-$(2)-phys_calc.yaml)
+$(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)-phys_calc.yaml)
 
 $(eval calc_log := $(outdir)/calcs-$(1)-$(2).log)
 
@@ -386,6 +422,8 @@ clean-calcs: clean-calcs-$(1)
 .PHONY: clean-calcs-$(ref_tgt)
 clean-calcs-$(ref_tgt): clean-calcs-$(1)
 
+
+
 endef
 
 
@@ -400,7 +438,7 @@ $(eval out_dir := $(RES_DIR)/analysis_maps)
 $(eval orig_file := $(tgt_dir)/$(SNAME)-$(1)-$(2)-$(3).fits)
 
 $(eval out_file := $(out_dir)/$(SNAME)-$(1)-$(2)-$(3)-map.pdf)
-$(eval cfg_file := $(CFG_DIR)/$(SNAME)-$(1)-$(2)-$(3)-map.yml)
+$(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)-$(3)-map.yml)
 
 $(out_file): $(orig_file) $(wildcard $(cfg_file))
 	@if [ -f $(cfg_file) ]; then \
@@ -429,8 +467,7 @@ maps-physpar: map-physpar-$(1)
 
 clean-map_physpar-$(1)-$(2)-$(3):
 	@rm -fv $(out_file)
-
-PHONY: clean-map_physpar-$(1)-$(2)-$(3)
+.PHONY: clean-map_physpar-$(1)-$(2)-$(3)
 
 
 clean-maps_physpar-$(1)-$(2): clean-map_physpar-$(1)-$(2)-$(3)
