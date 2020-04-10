@@ -242,9 +242,9 @@ clean-findclumps: clean-findclumps-$(1)
 
 $(eval map_file := $(analysis_dir)/$(SNAME)-$(1).fits)
 $(eval cfg_mapfile := $(CFG_DIR)/figures/$(SNAME)-$(1)-$(2)-clumps-map.yml)
-$(eval cl_mapfile := $(analysis_dir)/$(NAME)-$(1)-$(2)-clumps-map.pdf)
+$(eval cl_mapfile := $(analysis_dir)/$(SNAME)-$(1)-$(2)-clumps-map.pdf)
 
-$(cl_mapfile): $(map_file) $(wildcard ($cfg_mapfile))
+$(cl_mapfile): $(map_file) $(wildcard $(cfg_mapfile))
 	@if [ -f $(cfg_mapfile) ]; then \
 	     $(EXT_DIR)/dbxmap.py \
                  -c $(cfg_mapfile) \
@@ -266,7 +266,7 @@ clumps-map: clumps-map-$(1)
 
 
 clean-clumps-map-$(1)-$(2):
-	@rm -vg $(cl_mapfile)
+	@rm -vf $(cl_mapfile)
 .PHONY: clean-clumps-map-$(1)-$(2)
 
 clean-clumps-map-$(1): clean-clumps-map-$(1)-$(2)

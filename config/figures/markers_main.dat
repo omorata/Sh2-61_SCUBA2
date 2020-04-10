@@ -1,5 +1,5 @@
 id type coords center size 
-"AFGL 5502" symbol "world_deg" "278.3766625 -5.017425" 300
-"AS 310"    symbol "world_deg" "278.3383083 -4.968327778" 300
-#"AFGL 5502" cross "radec" "18 33 30.399 -05 01 02.73" 15
-#"AS 310"    cross "radec" "18 33 21.194 -04 58 05.98" 15
+#"AFGL 5502" symbol "world_deg" "278.3766625 -5.017425" 300
+#"AS 310"    symbol "world_deg" "278.3383083 -4.968327778" 300
+"AFGL 5502" cross "radec" "18h33m30.399s -05d01m02.73s" 300
+"AS 310"    cross "radec" "18h33m21.194s -04d58m05.98s" 300
