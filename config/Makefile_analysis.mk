@@ -6,6 +6,7 @@
 ##
 
 ##-- Info --------------------------------------------------------------
+PRJ_NAME=Sh2_61-SCUBA2
 #HOME_DIR := /lustre/opsw/work/omoratac/Sh2-61/SCUBA2
 HOME_DIR := .
 SNAME := Sh2_61
@@ -72,13 +73,16 @@ map-$(1): $(map_file)
 .PHONY: maps
 maps: map-$(1)
 
-.PHONY: clean_map-$(1)
-clean_map-$(1):
+.PHONY: clean-map-$(1)
+clean-map-$(1):
 	@rm -fv $(map_file)
-.PHONY: clean_maps
-clean_maps: clean_map-$(1)
+.PHONY: clean-maps
+clean-maps: clean-map-$(1)
 
 endef
+
+
+
 
 define Target_Template
 # Template to process rules for targets
@@ -170,6 +174,7 @@ clean-strip: clean-strip-$(1)
 
 
 endef
+
 
 
 
@@ -279,6 +284,7 @@ endef
 
 
 
+
 define Align_Template
 #
 # 1- combined string
@@ -353,6 +359,7 @@ endef
 
 
 
+
 define CalcPhys_Template
 #
 # 1- combined string, 2- findclump_id
@@ -422,9 +429,9 @@ clean-calcs: clean-calcs-$(1)
 .PHONY: clean-calcs-$(ref_tgt)
 clean-calcs-$(ref_tgt): clean-calcs-$(1)
 
-
-
 endef
+
+
 
 
 define MapPhysParam_Template
@@ -465,19 +472,19 @@ maps-physpar: map-physpar-$(1)
 .PHONY: maps-physpar
 
 
-clean-map_physpar-$(1)-$(2)-$(3):
-	@rm -fv $(out_file)
-.PHONY: clean-map_physpar-$(1)-$(2)-$(3)
+clean-map-physpar-$(1)-$(2)-$(3):
+	@rm -fv $(out-file)
+.PHONY: clean-map-physpar-$(1)-$(2)-$(3)
 
 
-clean-maps_physpar-$(1)-$(2): clean-map_physpar-$(1)-$(2)-$(3)
-.PHONY: clean-maps_physpar-$(1)-$(2)
+clean-maps-physpar-$(1)-$(2): clean-map-physpar-$(1)-$(2)-$(3)
+.PHONY: clean-maps-physpar-$(1)-$(2)
 
-clean-maps_physpar-$(1): clean-map_physpar-$(1)-$(2)
-.PHONY: clean-maps_physpar-$(1)
+clean-maps-physpar-$(1): clean-map-physpar-$(1)-$(2)
+.PHONY: clean-maps-physpar-$(1)
 
-clean-maps_physpar: clean-map_physpar-$(1)
-.PHONY: clean-maps_physpar-$(1)
+clean-maps-physpar: clean-map-physpar-$(1)
+.PHONY: clean-maps-physpar-$(1)
 
 endef
 
@@ -543,5 +550,93 @@ list_files:
                {if ($$1 !~ "^[#.]") {print $$1}}' | sort | \
            egrep -e '\/'
 
+
+help:
+	@echo;echo " Makefile to analyse the data of $(PRJ_NAME)"
+	@echo "-------------------------------------------"
+	@echo "  pre-defined variables:"
+	@echo "             Project Name : $(PRJ_NAME)"
+	@echo "              File prefix : $(SNAME)"
+	@echo "                  targets : $(targets)"
+	@echo "           findclumps ids : $(fcs)"
+	@echo "         combined targets : $(combined)"
+	@echo " physical parameters maps : $(comb_maps)"
+	@echo;echo;echo "  More help options:"
+	@echo "      make help_dirs  -  information on directories"
+	@echo "      make help_rules -  information on defined rules"
+	@echo
+
+
+
+help_dirs:
+	@echo
+	@echo " Directory set-up for project $(PRJ_NAME):"
+	@echo "---------------------------------------------------------"
+	@echo "   project home : $(HOME_DIR)"
+	@echo "           bin  : $(BIN_DIR)"
+	@echo "  configuration : $(CFG_DIR)"
+	@echo "           data : $(DATA_DIR)"
+	@echo "        results : $(RES_DIR)"
+	@echo "   external bin : $(EXT_DIR)"
+	@echo
+
+
+
+help_rules:
+	@echo;echo "-----------------"
+	@echo "  Defined rules"
+	@echo "-----------------"
+	@echo;echo "  (Warning: not all the following rules may be available."
+	@echo "   It will depend on the definition of the corresponding"
+	@echo "   configuration files)"
+	@echo;echo " The general actions are:"
+	@echo;echo "    make maps  --  plot maps of targets"
+	@echo "    make strip  --  strip third axis from sdf files of targets"
+	@echo "    make tofits  --  transform .sdf files of targets to .fits"
+	@echo "    make tofits-strip  --  transform stripped files to .fits "
+	@echo "    [ make align ] -- align map to reference"
+	@echo "    make findclumps_snr  -- find clumps in map using snr map"
+	@echo "    make clumps-map  --  plot overlay of clumps on emission map"
+	@echo "    [ make calcs ] -- calculate physical parameters from emission and clumps"
+	@echo "    make maps-physpar  -- plot map of physical parameters"
+	@echo "   clean options: clean-maps clean-strip clean-findclumps clean-clumps-map"
+	@echo "      clean-align clean-maps-physpar"
+	@echo;echo " In more detail:"
+	@echo;echo " + rules depending on the target"
+	@echo "   targets: $(targets)"
+	@echo "    make map-[target]"
+	@echo "    make strip-[target]"
+	@echo "    make tofits-[target]"
+	@echo "    make tofits_strip-[target]"
+	@echo "    make findclumps_snr-[target]"
+	@echo "    make clumps-map-[target]"
+	@echo "   clean options: clean-map-[target] clean-strip-[target] findclumps-[target]"
+	@echo "       clean-clumps-map-[target] clean-calcs"
+	@echo;echo " + rules depending on the target and findclumps_id"
+	@echo "   ids: $(fcs)"
+	@echo "    make findclumps_snr-[target]-[id]"
+	@echo "    make clumps-map-[target]-[id]"
+	@echo "   clean options: clean-findclumps-[target]-[id] clean-clumps-map-[target]-[id]"
+	@echo;echo " + rules depending on the combination map"
+	@echo "   comb. maps: $(combined)"
+	@echo "    make align-[secondary_target]-to-[reference_target]"
+	@echo "    make calcs-[comb_map]"
+	@echo "    make calcs-[reference_target]"
+	@echo "    make maps-physpar-[comb.map]"
+	@echo "   clean options: clean-align-[comb_map] clean-align-[secondary-target]"
+	@echo "        clean-calcs-[comb_map] clean-calcs-[reference_target]"
+	@echo "        clean-maps-physpar-[comb.map]"
+	@echo;echo " + rules depending on combination map and findclump_id"
+	@echo "    make calcs-[comb_map]-[id]"
+	@echo "    make maps-physpar-[comb.map]-[id]"
+	@echo "   clean options: clean-calcs-[comb_map]-[id]"
+	@echo "         clean-maps-physpar-[comb.map]-[id]"
+	@echo;echo " + rules depending on the comb. map, findclumps_id, and physical parameter"
+	@echo "   phys. param: $(comb_maps)"
+	@echo "    make map-physpar-[comb.map]-[id]-[physpar]"
+	@echo "   clean options:  clean-map-physpar[comb.map]-[id]-[physpar]"
+	@echo
+
+.PHONY: help help_dirs help_rules
 ##
 ##-- End of rules ------------------------------------------------------
