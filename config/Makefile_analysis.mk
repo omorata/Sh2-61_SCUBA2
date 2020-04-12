@@ -67,17 +67,18 @@ $(map_file): $(orig_file) $$(wildcard $$(cfg_file))
              echo -e "    No cfg file $(cfg_file)" ;\
          fi
 
-.PHONY: map-$(1)
 map-$(1): $(map_file)
+.PHONY: map-$(1)
 
-.PHONY: maps
 maps: map-$(1)
+.PHONY: maps
 
-.PHONY: clean-map-$(1)
 clean-map-$(1):
 	@rm -fv $(map_file)
-.PHONY: clean-maps
+.PHONY: clean-map-$(1)
+
 clean-maps: clean-map-$(1)
+.PHONY: clean-maps
 
 endef
 
@@ -217,6 +218,7 @@ $(out_fc_fits): $$(wildcard $$(cfg_file)) $(out_fc)
                  -t "tofits" ;\
          fi
 
+
 .PHONY: findclumps_snr-$(1)-$(2)
 findclumps_snr-$(1)-$(2): $(out_fc) $(out_fc_fits)
 
@@ -243,6 +245,34 @@ clean-findclumps-$(1): clean-findclumps-$(1)-$(2)
 .PHONY: clean-findclumps
 clean-findclumps: clean-findclumps-$(1)
 
+
+$(eval out_shapes := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-shapes.dat)
+$(eval out_catalog := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-catalog.fits)
+$(out_shapes): $$(wildcard $$(out_catalog))
+	@if [ -f $(out_catalog) ];then \
+	     sh $(BIN_DIR)/catalog_to_polygonfile.sh \
+                 $(out_catalog) $(out_shapes);\
+         fi
+
+polygonfile-$(1)-$(2): $(out_shapes)
+.PHONY: polygonfile-$(1)-$(2)
+
+polygonfiles-$(1): polygonfile-$(1)-$(2)
+.PHONY: polygonfiles-$(1)
+
+polygonfiles: polygonfiles-$(1)
+.PHONY: polygonfiles
+
+
+clean-polygonfile-$(1)-$(2):
+	@rm -fv $(out_shapes)
+.PHONY: clean-polygonfile-$(1)-$(2)
+
+clean-polygonfiles-$(1): clean-polygonfile-$(1)-$(2)
+.PHONY: clean-polygonfiles-$(1)
+
+clean-polygonfiles: clean-polygonfiles-$(1)
+.PHONY: polygonfiles
 
 
 $(eval map_file := $(analysis_dir)/$(SNAME)-$(1).fits)
@@ -602,7 +632,8 @@ help_rules:
 	@echo "    make tofits  --  transform .sdf files of targets to .fits"
 	@echo "    make tofits-strip  --  transform stripped files to .fits "
 	@echo "    [ make align ] -- align map to reference"
-	@echo "    make findclumps_snr  -- find clumps in map using snr map"
+	@echo "    make findclumps_snr  --  find clumps in map using snr map"
+	@echo "    make polygonfiles  --  extract shapes of clumps"
 	@echo "    make clumps-map  --  plot overlay of clumps on emission map"
 	@echo "    [ make calcs ] -- calculate physical parameters from emission and clumps"
 	@echo "    make maps-physpar  -- plot map of physical parameters"
@@ -616,12 +647,14 @@ help_rules:
 	@echo "    make tofits-[target]"
 	@echo "    make tofits_strip-[target]"
 	@echo "    make findclumps_snr-[target]"
+	@echo "    make polygonfiles-[target]"
 	@echo "    make clumps-map-[target]"
 	@echo "   clean options: clean-map-[target] clean-strip-[target] findclumps-[target]"
 	@echo "       clean-clumps-map-[target] clean-calcs"
 	@echo;echo " + rules depending on the target and findclumps_id"
 	@echo "   (ids: $(fcs))"
 	@echo "    make findclumps_snr-[target]-[id]"
+	@echo "    make polygonfiles-[target]-[id]"
 	@echo "    make clumps-map-[target]-[id]"
 	@echo "   clean options: clean-findclumps-[target]-[id] clean-clumps-map-[target]-[id]"
 	@echo;echo " + rules depending on the combination map"
