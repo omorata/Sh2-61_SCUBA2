@@ -8,7 +8,7 @@ panels:
   yx: [1,1]
   view:
     type: 'radius'
-    radius: '10arcmin'
+    radius: '11arcmin'
     
   font: {family: 'Nimbus Roman'}
 
