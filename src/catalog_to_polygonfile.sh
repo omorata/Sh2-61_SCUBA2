@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-##  polygons_to_plot.sh
+##  catalog_to_polygonfile.sh
 ##  O. Morata 2020
 ##
 ##  script to transform the output the shape of SCUBA2 clumps out of
@@ -8,17 +8,24 @@
 ##
 ##
 
+BIN_DIR=${BIN_DIR:-./src}
+
 if [[ $# -ne 2 ]];then
     echo "  >> ERROR: wrong number of parameters"
-    echo -e "\n    Usage: polygons_to_plot.sh infile outfile\n"
+    echo -e "\n    Usage: catalog_to_polygonfile.sh infile outfile\n"
     exit 1
 fi
 
 catalog=$1
 outname=$2
 
-cp $catalog $outname
+# print selected fields of catalog
+#
+${BIN_DIR}/print_catalog.py  -i $catalog  -o $outname
 
+
+# modify output file to the format needed by dbxmap
+#
 sed -i 's/PIDENT  Shape/id type    coord       corners/' $outname
 sed -i 's/J2000 TOPOCENTER /"world_deg" "/g' $outname
 sed -i 's/$/"/g' $outname
