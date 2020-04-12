@@ -56,7 +56,7 @@ $(eval orig_file := $(tgt_dir)/$(SNAME)-$(1).fits)
 $(eval map_file := $(map_dir)/$(SNAME)-$(1)-map.pdf)
 $(eval cfg_file := $(CFG_DIR)/figures/$(SNAME)-$(1)-map.yml)
 
-$(map_file): $(orig_file) $(wildcard $(cfg_file))
+$(map_file): $(orig_file) $$(wildcard $$(cfg_file))
 	@if [ -f $(cfg_file) ]; then \
 	     $(EXT_DIR)/dbxmap.py \
                  -c $(cfg_file) \
@@ -196,7 +196,7 @@ $(eval out_fc := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.sdf)
 $(eval out_fc_fits := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.fits)
 
 
-$(out_fc): $(wildcard $(cfg_file)) $(in_fc) $(insnr_fc) 
+$(out_fc): $$(wildcard $$(cfg_file)) $(in_fc) $(insnr_fc) 
 	@if [ -f $(cfg_file) ]; then \
 	     sh $(BIN_DIR)/findclumps.sh \
                  -c $(cfg_file) \
@@ -209,7 +209,7 @@ $(out_fc): $(wildcard $(cfg_file)) $(in_fc) $(insnr_fc)
          fi
 
 
-$(out_fc_fits): $(wildcard $(cfg_file)) $(out_fc) 
+$(out_fc_fits): $$(wildcard $$(cfg_file)) $(out_fc) 
 	@if [ -f $(cfg_file) ]; then \
              $(BIN_DIR)/prepare_maps.sh \
                  -f $(out_fc) \
@@ -249,7 +249,7 @@ $(eval map_file := $(analysis_dir)/$(SNAME)-$(1).fits)
 $(eval cfg_mapfile := $(CFG_DIR)/figures/$(SNAME)-$(1)-$(2)-clumps-map.yml)
 $(eval cl_mapfile := $(analysis_dir)/$(SNAME)-$(1)-$(2)-clumps-map.pdf)
 
-$(cl_mapfile): $(map_file) $(wildcard $(cfg_mapfile))
+$(cl_mapfile): $(map_file) $$(wildcard $$(cfg_mapfile))
 	@if [ -f $(cfg_mapfile) ]; then \
 	     $(EXT_DIR)/dbxmap.py \
                  -c $(cfg_mapfile) \
@@ -339,9 +339,8 @@ $(aligned_snrfits): $(aligned_snrfile)
 
 .INTERMEDIATE: $(aligned_file) $(aligned_snrfile)
 
-.PHONY: align-$(sec_tgt)-to-$(ref_tgt)
 align-$(sec_tgt)-to-$(ref_tgt): $(aligned_fits) $(aligned_snrfits)
-
+.PHONY: align-$(sec_tgt)-to-$(ref_tgt)
 
 .PHONY: clean-align-$(1)
 clean-align-$(1):
@@ -390,7 +389,7 @@ $(eval calc_log := $(outdir)/calcs-$(1)-$(2).log)
 $(eval calc_refs :=    \
     $(ffile) $(ffile_snr) $(aligned_fits) $(aligned_snrfits) $(clfile))
 
-$(calc_log):  $(wildcard $(cfg_file)) $(calc_refs)
+$(calc_log):  $$(wildcard $$(cfg_file)) $(calc_refs)
 	@if [ -f $(cfg_file) ]; then \
 	     $(BIN_DIR)/calc_phys_parm.py \
                  -c $(cfg_file) \
@@ -447,7 +446,7 @@ $(eval orig_file := $(tgt_dir)/$(SNAME)-$(1)-$(2)-$(3).fits)
 $(eval out_file := $(out_dir)/$(SNAME)-$(1)-$(2)-$(3)-map.pdf)
 $(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)-$(3)-map.yml)
 
-$(out_file): $(orig_file) $(wildcard $(cfg_file))
+$(out_file): $(orig_file) $$(wildcard $$(cfg_file))
 	@if [ -f $(cfg_file) ]; then \
 	     $(EXT_DIR)/dbxmap.py \
                  -c $(cfg_file) \
@@ -524,21 +523,29 @@ $(foreach tgt, $(combined),\
 # other rules
 #
 clean_list := clean-strip clean-align clean-findclumps clean-calcs clean-maps
-clean_list += clean-maps_physpar
+clean_list += clean-maps_physpar clean-clumps-map
 
 .PHONY: clean
 clean:	$(clean_list)
 
 
-.PHONY: list list_files
+.PHONY: list list_deps list_files
 list:
 # lists all the rules in the Makefile
 #
-	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | \
-           awk -v RS= -F: '/^# File/,/^# Finished Make data base/ \
-              {if ($$1 !~ "^[#.]") {print $$1}}' | sort | \
+	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST))  2>/dev/null |\
+           awk -v RS= -F: '/^# File/,/^# Finished Make data base/  \
+             {if ($$1 !~ "^[#.]") {print $$1}}' | sort | \
            egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
+##
 
+
+list_deps:
+
+	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST))  2>/dev/null |\
+           awk -v RS= -F: '/^# File/,/^# Finished Make data base/  \
+             {if ($$1 !~ "^[#.]") {print $$1" ==> "$$2}}' | sort | \
+           egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 ##
 
 
@@ -600,10 +607,10 @@ help_rules:
 	@echo "    [ make calcs ] -- calculate physical parameters from emission and clumps"
 	@echo "    make maps-physpar  -- plot map of physical parameters"
 	@echo "   clean options: clean-maps clean-strip clean-findclumps clean-clumps-map"
-	@echo "      clean-align clean-maps-physpar"
+	@echo "      clean-align clean-maps-physpar clean-calcs"
 	@echo;echo " In more detail:"
 	@echo;echo " + rules depending on the target"
-	@echo "   targets: $(targets)"
+	@echo "   (targets: $(targets))"
 	@echo "    make map-[target]"
 	@echo "    make strip-[target]"
 	@echo "    make tofits-[target]"
@@ -613,12 +620,12 @@ help_rules:
 	@echo "   clean options: clean-map-[target] clean-strip-[target] findclumps-[target]"
 	@echo "       clean-clumps-map-[target] clean-calcs"
 	@echo;echo " + rules depending on the target and findclumps_id"
-	@echo "   ids: $(fcs)"
+	@echo "   (ids: $(fcs))"
 	@echo "    make findclumps_snr-[target]-[id]"
 	@echo "    make clumps-map-[target]-[id]"
 	@echo "   clean options: clean-findclumps-[target]-[id] clean-clumps-map-[target]-[id]"
 	@echo;echo " + rules depending on the combination map"
-	@echo "   comb. maps: $(combined)"
+	@echo "   (comb. maps: $(combined))"
 	@echo "    make align-[secondary_target]-to-[reference_target]"
 	@echo "    make calcs-[comb_map]"
 	@echo "    make calcs-[reference_target]"
@@ -632,11 +639,12 @@ help_rules:
 	@echo "   clean options: clean-calcs-[comb_map]-[id]"
 	@echo "         clean-maps-physpar-[comb.map]-[id]"
 	@echo;echo " + rules depending on the comb. map, findclumps_id, and physical parameter"
-	@echo "   phys. param: $(comb_maps)"
+	@echo "   (phys. param: $(comb_maps))"
 	@echo "    make map-physpar-[comb.map]-[id]-[physpar]"
 	@echo "   clean options:  clean-map-physpar[comb.map]-[id]-[physpar]"
 	@echo
 
 .PHONY: help help_dirs help_rules
+
 ##
 ##-- End of rules ------------------------------------------------------
