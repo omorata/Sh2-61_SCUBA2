@@ -8,7 +8,7 @@ panels:
   yx: [1,1]
   view:
     type: 'radius'
-    radius: '9.6arcmin'
+    radius: '11arcmin'
     
   font: {family: 'Nimbus Roman'}
 
@@ -22,17 +22,56 @@ panels:
   labels:
     color: 'purple'
     label_A: { text: Sh2-61, relative: True,
-               position: [0.15, 0.92], size: 24, weight: 'bold' }
-    label_B: { text: 'SCUBA2 850$\mu$m ', relative: True,
+               position: [0.15, 0.92], size: 24, weight: 'bold'}
+    label_B: { text: 'SCUBA2 850$\mu$m', relative: True,
                 position: [0.17, 0.87], size: 20, color: 'blue' }
     label_C: { text: 'r0', relative: True, position: [0.17, 0.83],
-                     size: 16, color: 'blue'} 
+                     size: 16, color: 'blue'}
+    label_AF: { text: 'AFGL 5502', relative: True, position: [0.45, 0.38],
+                     size: 13, color: 'black', weight: 'bold' }
+    label_AS: { text: 'AS 310', relative: True, position: [0.64, 0.56],
+                     size: 13, color: 'black', weight: 'bold' }
 
-  
+  markers:
+                 
+    marker-ir: { file: '../../config/figures/markers_ir.dat',
+                 linewidth: 1.25, show_label: False, type: '*',
+                 facecolor: None, edgecolor: 'black', lpad: [-150,0],
+                 color: 'black', weight: 'bold', size: 10}
+
+    marker-ism: { file: '../../config/figures/markers_ism.dat',
+                 linewidth: 1.25, show_label: False, type: 's',
+                 facecolor: 'black', edgecolor: 'black', lpad: [-150,0],
+                 color: 'black', weight: 'bold', size: 10}
+
+    marker-hii: { file: '../../config/figures/markers_hii.dat',
+                 linewidth: 1.25, show_label: False, type: 'o',
+                 facecolor: 'blue', lpad: [-150,0],
+                 color: 'black', weight: 'bold', size: 10}
+
+    marker-rad: { file: '../../config/figures/markers_rad.dat',
+                 linewidth: 1.25, show_label: False, type: 'D',
+                 facecolor: None, edgecolor: 'red', lpad: [-150,0],
+                 color: 'black', weight: 'bold', size: 10}
+
+    marker-em: { file: '../../config/figures/markers_emo.dat',
+                 linewidth: 1.25, show_label: False, type: '^',
+                 facecolor: None, edgecolor: 'mediumpurple', lpad: [-150,0],
+                 color: 'black', weight: 'bold', size: 10}
+
+    marker-src: { file: '../../config/figures/markers_main.dat',
+                 linewidth: 1.6, show_label: False, type: '(4,2,0)',
+                 facecolor: 'dodgerblue', lpad: [-150,0],
+                 color: 'black', weight: 'bold', size: 12}
+
+
+
   colorbar:
     width: 0.20
     pad: 0.02
-    label_text: 'S 850 (mJy/beam)'
+    label_text: '$S_{850}$ (mJy beam$^{-1}$)'
+    font: {size: 14} 
+    label_font:  {size: 16}
   
   contours:
     colors: 'darkgreen'

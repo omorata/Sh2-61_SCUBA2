@@ -1,7 +1,7 @@
 page:
-  name: 'Sh2-61 j850r1'
-  outfile: 'Sh2_61-j850r1-map.pdf'
-  dpi: 100
+  name: 'Sh2-61 j850r0_mb-fw_01-clumps'
+  outfile: 'Sh2_61-j850r0_mb-fw_01-clumps-map.pdf'
+  dpi: 150
   size: [9,9]
 
 panels:
@@ -25,7 +25,7 @@ panels:
                position: [0.15, 0.92], size: 24, weight: 'bold'}
     label_B: { text: 'SCUBA2 850$\mu$m', relative: True,
                 position: [0.17, 0.87], size: 20, color: 'blue' }
-    label_C: { text: 'r1', relative: True, position: [0.17, 0.83],
+    label_C: { text: 'r0 mb', relative: True, position: [0.17, 0.83],
                      size: 16, color: 'blue'}
     label_AF: { text: 'AFGL 5502', relative: True, position: [0.45, 0.38],
                      size: 13, color: 'black', weight: 'bold' }
@@ -33,31 +33,35 @@ panels:
                      size: 13, color: 'black', weight: 'bold' }
 
   markers:
-                 
-    marker-ir: { file: '../../config/figures/markers_ir.dat',
+    marker-03: { file: '../../config/figures/markers_ir.dat',
                  linewidth: 1.25, show_label: False, type: '*',
                  facecolor: None, edgecolor: 'black', lpad: [-150,0],
                  color: 'black', weight: 'bold', size: 10}
 
-    marker-ism: { file: '../../config/figures/markers_ism.dat',
+    marker-04: { file: '../../config/figures/markers_ism.dat',
                  linewidth: 1.25, show_label: False, type: 's',
                  facecolor: 'black', edgecolor: 'black', lpad: [-150,0],
                  color: 'black', weight: 'bold', size: 10}
 
-    marker-hii: { file: '../../config/figures/markers_hii.dat',
+    marker-05: { file: '../../config/figures/markers_hii.dat',
                  linewidth: 1.25, show_label: False, type: 'o',
                  facecolor: 'blue', lpad: [-150,0],
                  color: 'black', weight: 'bold', size: 10}
 
     marker-rad: { file: '../../config/figures/markers_rad.dat',
                  linewidth: 1.25, show_label: False, type: 'D',
-                 facecolor: None, edgecolor: 'red', lpad: [-150,0],
+                 facecolor: None, edgecolor: 'purple', lpad: [-150,0],
                  color: 'black', weight: 'bold', size: 10}
 
-    marker-em: { file: '../../config/figures/markers_emo.dat',
+    marker-06: { file: '../../config/figures/markers_emo.dat',
                  linewidth: 1.25, show_label: False, type: '^',
                  facecolor: None, edgecolor: 'mediumpurple', lpad: [-150,0],
                  color: 'black', weight: 'bold', size: 10}
+
+    marker-cl: { file: '../../config/figures/clumps-fw_01-shapes.dat',
+                 type: 'polygon', edgecolor: 'red', linewidth: 1.,
+                 linestyle : 'dashed', show_label: True,
+                 color: 'red', weight: 'bold', size: 12}
 
     marker-src: { file: '../../config/figures/markers_main.dat',
                  linewidth: 1.6, show_label: False, type: '(4,2,0)',
@@ -75,43 +79,43 @@ panels:
   
   contours:
     colors: 'darkgreen'
-    base: 8.124
+    base: 2.048
     linewidth: 0.8
 
   pixrange:
     colormap: 'afmhot_r'
-    base: 8.124
-    range: [-3, 160, 'arcsinh']
+    base: 2.048
+    range: [-3, 700, 'arcsinh']
 
   panel_01:
     axes:
       ticks: { xspacing: 0.083333, yspacing: 0.0833333,
                xminor_freq: 4, yminor_freq: 5, direction: in, 
-               color: 'purple', length: 6, linewidth: 0.8,
+               length: 6.5, linewidth: 0.9,
                hide: False, xhide: False, yhide: False}
         
 
     labels:
-      color: 'blue'
-    #  label_6: { text: 'fw_01', relative: True, position: [0.17, 0.79],
-    #                 size: 12, family: 'Nimbus Roman', }
+      color: 'red'
+      label_6: { text: 'fw_01', relative: True, position: [0.17, 0.79],
+                     size: 12, family: 'Nimbus Roman', }
                      
     dataset_01:
-      filename: 'Sh2_61-j850r1.fits'
+      filename: 'Sh2_61-j850r0_mb.fits'
       dims: [0,1]
       type: 'pixel'
 
       beam:
-        bmaj : '14.5499arcsec'
+        bmaj : '17.5461arcsec'
         corner : 'bottom right'
         frame: True
       
     dataset_02:
-      filename: 'Sh2_61-j850r1.fits'
+      filename: 'Sh2_61-j850r0_mb.fits'
       dims: [0,1]
       type: 'cntr'
       
       contours:
-        levels: [5,10,20,30,40,50,75,100,125,150]
+        levels: [10,25,50,100,150,200,250,300,350,500,750,1000]
 
       
