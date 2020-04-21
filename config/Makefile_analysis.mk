@@ -16,7 +16,7 @@ targets += j450r0 j450r0_mb j450r1 j450r1_mb
 fcs := fw_01 fw_02
 combined := j850r0_co_mb__j450r0_mb
 
-comb_maps := mass ratio tdust
+comb_maps := ratio tdust N mass
 #
 ##-- End info ----------------------------------------------------------
 
@@ -514,7 +514,7 @@ maps-physpar: map-physpar-$(1)
 
 
 clean-map-physpar-$(1)-$(2)-$(3):
-	@rm -fv $(out-file)
+	@rm -fv $(out_file)
 .PHONY: clean-map-physpar-$(1)-$(2)-$(3)
 
 
