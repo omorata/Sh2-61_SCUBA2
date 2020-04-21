@@ -12,13 +12,11 @@ phys_params:
   dtogas: 160
   #
   beam : 17.5461
-  pixsize: 3
+  pixsize: 3.
 
 data_params:
   snr_450 : 4.0
   ini_temp : 3.0
-  #
-  flux_factor : 0.001
   #
   type_cutTd : 'variance'
   cut_Td : 30.
@@ -26,11 +24,12 @@ data_params:
   type_cutM : 'snr'
   cut_M : 2
   #
-  manual_Tdust : 20.
+  manual_Tdust : 15.
   manual_varTdust : 30.
 
 outfiles:
   ratio : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_02-ratio.fits
   temperature : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_02-tdust.fits
   mass : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_02-mass.fits
+  N : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_02-N.fits
   clumptable: analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_02-clump_table.fits

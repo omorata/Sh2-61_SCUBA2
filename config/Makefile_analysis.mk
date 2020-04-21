@@ -16,7 +16,7 @@ targets += j450r0 j450r0_mb j450r1 j450r1_mb
 fcs := fw_01 fw_02
 combined := j850r0_co_mb__j450r0_mb
 
-comb_maps := mass ratio tdust
+comb_maps := ratio tdust N mass
 #
 ##-- End info ----------------------------------------------------------
 
@@ -209,20 +209,20 @@ $(eval out_fc := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.sdf)
 $(eval out_fc_fits := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.fits)
 
 
-$(out_fc): $$(wildcard $$(cfg_file)) $(in_fc) $(insnr_fc) 
+$(out_fc): $$(wildcard $$(cfg_file)) $(in_fc) $(insnr_fc)
 	@if [ -f $(cfg_file) ]; then \
 	     sh $(BIN_DIR)/findclumps.sh \
                  -c $(cfg_file) \
                  -o $(findclumps_dir) \
                  -i $(analysis_dir) \
-                 -d $(CFG_DIR); \
+                 -d $(CFG_DIR)/analysis; \
          else \
              echo -e "\n++ Ignoring rule $(out_fc)" ;\
              echo -e "    No cfg file $(cfg_file)" ;\
          fi
 
 
-$(out_fc_fits): $$(wildcard $$(cfg_file)) $(out_fc) 
+$(out_fc_fits): $$(wildcard $$(cfg_file)) $(out_fc)
 	@if [ -f $(cfg_file) ]; then \
              $(BIN_DIR)/prepare_maps.sh \
                  -f $(out_fc) \
@@ -514,7 +514,7 @@ maps-physpar: map-physpar-$(1)
 
 
 clean-map-physpar-$(1)-$(2)-$(3):
-	@rm -fv $(out-file)
+	@rm -fv $(out_file)
 .PHONY: clean-map-physpar-$(1)-$(2)-$(3)
 
 

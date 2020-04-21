@@ -262,7 +262,7 @@ class Clump(object):
         arad = area.to(u.radian * u.radian)
         dcm = d.to(u.cm)
 
-        solangle = 2. * np.pi * (1. - np.cos(2. * np.sqrt(arad/np.pi)))
+        solangle = 2. * np.pi * (1. - np.cos(np.sqrt(arad/np.pi)))
         
         fact = const.M_sun / mu / mH / dcm / dcm / solangle
         f = fact * u.cm * u.cm
