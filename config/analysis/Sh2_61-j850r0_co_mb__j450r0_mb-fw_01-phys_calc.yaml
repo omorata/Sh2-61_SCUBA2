@@ -12,7 +12,7 @@ phys_params:
   dtogas: 160
   #
   beam : 17.5461
-  pixsize: 3
+  pixsize: 3.
 
 data_params:
   snr_450 : 4.0
@@ -33,4 +33,5 @@ outfiles:
   ratio : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-ratio.fits
   temperature : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-tdust.fits
   mass : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-mass.fits
+  N : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-N.fits
   clumptable: analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-clump_table.fits

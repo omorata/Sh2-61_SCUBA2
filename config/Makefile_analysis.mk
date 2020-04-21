@@ -209,20 +209,20 @@ $(eval out_fc := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.sdf)
 $(eval out_fc_fits := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.fits)
 
 
-$(out_fc): $$(wildcard $$(cfg_file)) $(in_fc) $(insnr_fc) 
+$(out_fc): $$(wildcard $$(cfg_file)) $(in_fc) $(insnr_fc)
 	@if [ -f $(cfg_file) ]; then \
 	     sh $(BIN_DIR)/findclumps.sh \
                  -c $(cfg_file) \
                  -o $(findclumps_dir) \
                  -i $(analysis_dir) \
-                 -d $(CFG_DIR); \
+                 -d $(CFG_DIR)/analysis; \
          else \
              echo -e "\n++ Ignoring rule $(out_fc)" ;\
              echo -e "    No cfg file $(cfg_file)" ;\
          fi
 
 
-$(out_fc_fits): $$(wildcard $$(cfg_file)) $(out_fc) 
+$(out_fc_fits): $$(wildcard $$(cfg_file)) $(out_fc)
 	@if [ -f $(cfg_file) ]; then \
              $(BIN_DIR)/prepare_maps.sh \
                  -f $(out_fc) \
