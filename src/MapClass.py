@@ -8,11 +8,14 @@
     Definition of the class Map 
 
 """
+
+import copy
+from datetime import datetime
 import sys
+
+from astropy.io import fits
 import numpy as np
 import numpy.ma as ma
-from astropy.io import fits
-from datetime import datetime
 
 
 
@@ -67,7 +70,8 @@ class Map (object):
         """Save Map object to a fitsfile."""
 
         if oldheader :
-            self.header = Map.modify_header(oldheader, hdr_type)
+            newheader = copy.deepcopy(oldheader)
+            self.header = Map.modify_header(newheader, hdr_type)
         else :
             return 3
 
