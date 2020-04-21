@@ -175,7 +175,7 @@ class Map (object):
 
         new.data[0] = ma.copy(self.data[0])
         new.data[1] = ma.copy(self.data[1])
-        new.header = self.header.copy()
+        new.header = copy.deepcopy(self.header)
 
         return new
 
@@ -185,7 +185,7 @@ class Map (object):
         new = Map.empty()
         new.data[0] = self.data[0] * factor
         new.data[1] = self.data[1] * factor * factor
-        new.header = self.header.copy()
+        new.header = copy.deepcopy(self.header)
 
         return new
 
