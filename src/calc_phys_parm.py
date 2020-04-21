@@ -218,6 +218,15 @@ def flux450(f850, td, h850, h450, pre) :
 
 
 
+def get_col_factor(par, solangle):
+
+    dist = (pr.d).to(u.cm)
+    col_factor = const.M_sun / pr.mu / pr.mH / dist / dist /solangle
+    col_factor *= u.cm * u.cm * u.rad * u.rad
+    return col_factor
+
+
+
 def calc_perc(array, p):
     """Calculate percentile for a masked array."""
     
@@ -348,7 +357,7 @@ fname = get_values(cnfg, 'infiles', status='required',
                             'clumpdef'])
 
 fout = get_values(cnfg, 'outfiles', 
-                   names = ['ratio', 'temperature', 'mass', 'clumptable'])
+                  names = ['ratio', 'temperature', 'mass', 'N', 'clumptable'])
 
 
 pr = par.Param.from_cfgfile(cnfg, 'phys_params')
@@ -537,6 +546,21 @@ if fout['mass'] :
 print("   ...done")
 
 
+
+# calculate array of column densities
+#
+column_factor = get_col_factor(pr, pixsolangle)
+
+coldens_total = mapmass_total.copy()
+coldens_total = coldens_total.cmult(column_factor)
+
+if fout['N']:
+    ok = coldens_total.save_fitsfile(
+        fname=wdir+fout['N'], hdr_type='column', oldheader=map850.header,
+        append=False, overwrite=True)
+
+
+    
 if args.clumps :
     print("  >> clump calculations")
 
