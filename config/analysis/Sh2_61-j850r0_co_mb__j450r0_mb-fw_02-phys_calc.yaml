@@ -18,15 +18,13 @@ data_params:
   snr_450 : 4.0
   ini_temp : 3.0
   #
-  flux_factor : 0.001
-  #
   type_cutTd : 'variance'
   cut_Td : 30.
   #
   type_cutM : 'snr'
   cut_M : 2
   #
-  manual_Tdust : 20.
+  manual_Tdust : 15.
   manual_varTdust : 30.
 
 outfiles:

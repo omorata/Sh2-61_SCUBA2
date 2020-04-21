@@ -207,14 +207,14 @@ def show_values(msk_arr, txt):
 
 
 
-def flux450(f850, td, h850, h450, pre) :
-    """Calculate the flux at 450micron from the flux at 850 micron and a
-        given dust temperature
-    """
-    
-    x = np.exp( 1. / td)
-    f = pre * f850 * (x**h850 - 1) / (x**h450 - 1)
-    return f
+#def flux450(f850, td, h850, h450, pre) :
+#    """Calculate the flux at 450micron from the flux at 850 micron and a
+#        given dust temperature
+#    """
+#    
+#    x = np.exp( 1. / td)
+#    f = pre * f850 * (x**h850 - 1) / (x**h450 - 1)
+#    return f
 
 
 
@@ -334,10 +334,6 @@ def get_values(cfg, section, names=None, status='', type='str', altnames=None):
 
 ##-- End of functions --------------------------------------------------
 
-l450 = 450e-6 * u.m
-l850 = 850e-6 * u.m
-
-
 print(" ++ Start")
 
 
@@ -382,27 +378,11 @@ if logg:
 
 # calculate some variables
 #
-pixelsbeam = np.pi / 4. / np.log(2.) * pr.beam * pr.beam / pr.pixsize / pr.pixsize
-
-pixarea = pr.pixsize * pr.pixsize
-
-# input fluxes in mJy/beam
-#
-flux_factor = 1e-26 / pixelsbeam / 1000.
 
 pixsize_rad = pr.pixsize.to(u.radian)
 pixsolangle = pixsize_rad * pixsize_rad
 
-hk = const.h * const.c / const.k_B
-
-
-f850 = const.c / l850
-
-hk850 = hk / l850 / u.K
-hk450 = hk / l450 / u.K
-
 pre = (850. / 450.)**(3.+ pr.beta)
-
 
 
 print("  >> reading input files...")
@@ -418,6 +398,9 @@ mapsnr450 = maps.Map.from_fitsfile(wdir+fname['snr450'], name="SNR 450micron")
 header850 = map850.header
 
 
+pr.get_flux_factor(map850)
+
+    
 print("  >> reading clump mask...")
 if logg:
     logging.info('+ reading clump mask')
@@ -498,7 +481,7 @@ print("   ...done")
 #
 print("  >> convert flux to SI...")
 
-mapS_850 = mapdblf_cl850.cmult(flux_factor)
+mapS_850 = mapdblf_cl850.cmult(pr.flux_factor)
 print("   ...done")
 
 
@@ -524,7 +507,7 @@ mapf850_notemp = mapclumpshi850.masked_where(mapmanual_temp.getmask())
 mapmanual_Tdust = maps.full_like(mapf850_notemp,
                                  (defaults['Td'], defaults['varTd']))
 
-mapS850_notemp = mapf850_notemp.cmult(flux_factor)
+mapS850_notemp = mapf850_notemp.cmult(pr.flux_factor)
 
 
 mapmass_notemp = calc_mapmass(mapS850_notemp, mapmanual_Tdust, pr)
