@@ -19,8 +19,8 @@ jointreductions += j850r0_co_mb
 
 # names of directories
 #
-BIN=$(HOME_DIR)/src
-CFG_DIR=$(HOME_DIR)/config/reduction
+BIN_DIR=$(HOME_DIR)/src
+CFG_DIR=$(HOME_DIR)/config
 DATA_DIR=$(HOME_DIR)/data
 RES_DIR=$(HOME_DIR)/results
 
@@ -39,7 +39,7 @@ export
 
 
 define DoReduction
-# Template to process all days of the same reduction on the same step
+# Template to process all observations in a single step
 #
 #  Parameter: 1- target
 #
@@ -48,40 +48,71 @@ $(eval reduc_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf)
 $(eval snr_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf)
 
 
-$(reduc_file): $(wildcard $(CFG_DIR)/reduc-$(1).cfg)
-	. $(BIN)/reduce_raw.sh $(CFG_DIR)/reduc-$(1).cfg
+$(reduc_file): $(wildcard $(CFG_DIR)/reduction/reduc-$(1).cfg)
+	. $(BIN_DIR)/reduce_raw.sh $(CFG_DIR)/reduction/reduc-$(1).cfg
 
 
 $(snr_file): $(reduc_file) 
-	$(BIN)/post_scuba2.sh \
+	$(BIN_DIR)/post_scuba2.sh \
 		-a snr  \
 		-d $(RES_DIR)/$(1)  \
 		-i $(SNAME)-$(1)-reduc
 
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf: $(reduc_file)
-	$(BIN)/post_scuba2.sh  \
+	$(BIN_DIR)/post_scuba2.sh  \
 		-a crop  \
 		-d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/recipe-$(1).cfg  \
+		-p $(CFG_DIR)/reduction/recipe-$(1).cfg  \
 		-i $(SNAME)-$(1)-reduc
 
 $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf: $(snr_file) 
-	$(BIN)/post_scuba2.sh  \
+	$(BIN_DIR)/post_scuba2.sh  \
 		-a crop  \
 		-d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/recipe-$(1).cfg  \
+		-p $(CFG_DIR)/reduction/recipe-$(1).cfg  \
 		-i $(SNAME)-$(1)-reduc_snr
 
 
-.PHONY: reduce-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
-reduce-$(1) : $(reduc_file)
-snr-$(1): $(snr_file)
-crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
-snrcrop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
+map-$(1) : $(reduc_file)
+.PHONY: map-$(1)
 
-.PHONY: $(1)
-$(1): reduce-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
+snr-$(1): $(snr_file)
+.PHONY: snr-$(1)
+
+crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
+.PHONY: crop-S(1)
+
+snrcrop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
+.PHONY: snrcrop-$(1)
+
+reduce-$(1): map-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
+.PHONY: reduce-$(1)
+
+
+clean-map-$(1):
+	@rm -vf $(reduc_file)
+.PHONY: clean-map-$(1)
+
+clean-snr-$(1):
+	@rm -vf $(snr_file)
+.PHONY: clean-snr-$(1)
+
+clean-crop-$(1):
+	@rm -vf $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
+.PHONY: clean-crop-$(1)
+
+clean-snrcrop-$(1):
+	@rm -vf $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
+.PHONY: clean-snrcrop-$(1)
+
+clean-reduce-$(1): clean-map-$(1) clean-snr-$(1) clean-crop-$(1)
+clean-reduce-$(1): clean-snrcrop-$(1)
+
+.PHONY: clean-reduce-$(1)
+
+clean: clean-reduce-$(1)
+.PHONY: clean
 
 endef
 
