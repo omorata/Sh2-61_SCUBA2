@@ -49,9 +49,41 @@ define PlotMaps
 #
 $(eval map_dir := $(RES_DIR)/analysis_maps)
 
-$(eval tgt_dir := $(RES_DIR)/analysis_maps)
+$(eval reduc_file := $(DATA_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf)
+$(eval reduc_snrfile := $(DATA_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf)
 
-$(eval orig_file := $(tgt_dir)/$(SNAME)-$(1).fits)
+$(eval fits_reducfile := $(map_dir)/$(SNAME)-$(1)-reduc.fits)
+$(eval fits_reducsnrfile := $(map_dir)/$(SNAME)-$(1)-reduc_snr.fits)
+
+$(fits_reducfile): $(reduc_file)
+	@ $(BIN_DIR)/prepare_maps.sh \
+                 -f $(reduc_file) \
+                 -o $(fits_reducfile) \
+                 -t "tofits" 
+
+$(fits_reducsnrfile): $(reduc_snrfile)
+	@ $(BIN_DIR)/prepare_maps.sh \
+                 -f $(reduc_snrfile) \
+                 -o $(fits_reducsnrfile) \
+                 -t "tofits"
+
+tofits-$(1): $(fits_reducfile) $(fits_reducsnrfile)
+.PHONY: tofits-$(1)
+
+tofits: tofits-$(1)
+.PHONY: tofits
+
+clean-fits_datasets-$(1):
+	@rm -fv $(fits_origfile)
+	@rm -fv $(fits_origsnrfile)
+.PHONY: clean-fits_datasets-$(1)
+
+clean-fits_datasets: clean-fits_datasets-$(1)
+.PHONY: clean-fits_datasets
+
+
+
+$(eval orig_file := $(RES_DIR)/analysis_maps/$(SNAME)-$(1).fits)
 
 $(eval map_file := $(map_dir)/$(SNAME)-$(1)-map.pdf)
 $(eval cfg_file := $(CFG_DIR)/figures/$(SNAME)-$(1)-map.yml)
@@ -119,28 +151,6 @@ strip-$(1): $(strip_file) $(strip_snrfile)
 strip: strip-$(1)
 
 
-$(eval fits_origfile := $(out_dir)/$(SNAME)-$(1)-reduc.fits)
-$(eval fits_origsnrfile := $(out_dir)/$(SNAME)-$(1)-reduc_snr.fits)
-
-$(fits_origfile): $(orig_file)
-	@ $(BIN_DIR)/prepare_maps.sh \
-                 -f $(orig_file) \
-                 -o $(fits_origfile) \
-                 -t "tofits" 
-
-$(fits_origsnrfile): $(orig_snrfile)
-	@ $(BIN_DIR)/prepare_maps.sh \
-                 -f $(orig_snrfile) \
-                 -o $(fits_origsnrfile) \
-                 -t "tofits"
-
-tofits-$(1): $(fits_origfile) $(fits_origsnrfile)
-.PHONY: tofits-$(1)
-
-tofits: tofits-$(1)
-.PHONY: tofits
-
-
 
 
 $(eval fits_stripfile := $(out_dir)/$(SNAME)-$(1).fits)
@@ -176,15 +186,6 @@ clean-strip-$(1):
 clean-strip: clean-strip-$(1)
 
 
-clean-fits_datasets-$(1):
-	@rm -fv $(fits_origfile)
-	@rm -fv $(fits_origsnrfile)
-	@rm -fv $(fits_stripfile)
-	@rm -fv $(fits_stripsnrfile)
-.PHONY: clean-fits_datasets-$(1)
-
-clean-fits_datasets: clean-fits_datasets-$(1)
-.PHONY: clean-fits_datasets
 
 endef
 
