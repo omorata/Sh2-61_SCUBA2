@@ -6,7 +6,6 @@
 ##
 
 ##-- Info --------------------------------------------------------------
-#HOME_DIR=/lustre/opsw/work/omoratac/Sh2-61/SCUBA2
 HOME_DIR=.
 SNAME=Sh2_61
 
@@ -39,7 +38,7 @@ export
 ##-- Template definition -----------------------------------------------
 
 
-define Joint_Template
+define DoReduction
 # Template to process all days of the same reduction on the same step
 #
 #  Parameter: 1- target
@@ -90,10 +89,10 @@ endef
 ##-- End of template definition ----------------------------------------
 
 
-# define rules for joint reductions
+# define rules for reductions
 #
 $(foreach reduction, $(jointreductions),\
-    $(eval $(call Joint_Template,$(reduction)))\
+    $(eval $(call DoReduction,$(reduction)))\
 )
 
 
