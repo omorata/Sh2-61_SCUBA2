@@ -42,8 +42,8 @@ export
 
 ##-- Template definition -----------------------------------------------
 
-define Map_Template
-# Template to make maps for targets
+define PlotMaps
+# Template to plot maps for targets
 #
 # Parameter: 1- target
 #
@@ -67,26 +67,26 @@ $(map_file): $(orig_file) $$(wildcard $$(cfg_file))
              echo -e "    No cfg file $(cfg_file)" ;\
          fi
 
-map-$(1): $(map_file)
-.PHONY: map-$(1)
+plotmap-$(1): $(map_file)
+.PHONY: plotmap-$(1)
 
-maps: map-$(1)
-.PHONY: maps
+plotmaps: plotmap-$(1)
+.PHONY: plotmaps
 
-clean-map-$(1):
+clean-plotmap-$(1):
 	@rm -fv $(map_file)
-.PHONY: clean-map-$(1)
+.PHONY: clean-plotmap-$(1)
 
-clean-maps: clean-map-$(1)
-.PHONY: clean-maps
+clean-plotmaps: clean-plotmap-$(1)
+.PHONY: clean-plotmaps
 
 endef
 
 
 
 
-define Target_Template
-# Template to process rules for targets
+define PrepareDataset
+# Template to prepare data files for further processing
 #
 #  Parameter: 1- target
 #
@@ -191,7 +191,7 @@ endef
 
 
 
-define FindClumps_Template
+define Findclumps
 # Template to find clumps in continuum maps
 #
 #  Parameters: 1- target; 2- findclump tag
@@ -327,8 +327,9 @@ endef
 
 
 
-define Align_Template
-#
+define Align_Dataset
+# Template to align one dataset to the grid of another one
+# 
 # 1- combined string
 
 $(eval ref_tgt := $(firstword $(subst __, ,$(1))))
@@ -401,7 +402,8 @@ endef
 
 
 
-define CalcPhys_Template
+define CalcPhysParam
+# Template to calculate the physical parameters from the datasets
 #
 # 1- combined string, 2- findclump_id
 
@@ -475,8 +477,8 @@ endef
 
 
 
-define MapPhysParam_Template
-# Template to make maps of the calculated physical parameter
+define MapPhysParam
+# Template to plot maps of the calculated physical parameter
 #
 # Arguments: 1- tgt, 2- findclump id, 3- parameter
 #
@@ -537,26 +539,26 @@ endef
 # define rules for targets
 #
 $(foreach tgt, $(targets),\
-    $(eval $(call Map_Template,$(tgt)))\
-    $(eval $(call Target_Template,$(tgt)))\
+    $(eval $(call PlotMaps,$(tgt)))\
+    $(eval $(call PrepareDataset,$(tgt)))\
 )
 
 # define rules for findclumps
 #
 $(foreach tgt, $(targets),\
     $(foreach fc, $(fcs),\
-        $(eval $(call FindClumps_Template,$(tgt),$(fc)))\
+        $(eval $(call Findclumps,$(tgt),$(fc)))\
     ) \
 )
 
 # define rules for combined and findclumps_id
 #
 $(foreach tgt, $(combined),\
-    $(eval $(call Align_Template,$(tgt)))\
+    $(eval $(call Align_Dataset,$(tgt)))\
     $(foreach fc, $(fcs),\
-        $(eval $(call CalcPhys_Template,$(tgt),$(fc)))\
+        $(eval $(call CalcPhysParam,$(tgt),$(fc)))\
         $(foreach mp, $(comb_maps),\
-           $(eval $(call MapPhysParam_Template,$(tgt),$(fc),$(mp)))\
+           $(eval $(call MapPhysParam,$(tgt),$(fc),$(mp)))\
         )\
     ) \
 )
@@ -565,8 +567,8 @@ $(foreach tgt, $(combined),\
 
 # other rules
 #
-clean_list := clean-strip clean-align clean-findclumps clean-calcs clean-maps
-clean_list += clean-maps_physpar clean-clumps-map
+clean_list := clean-strip clean-align clean-findclumps clean-calcs
+clean_list += clean-plotmaps clean-maps_physpar clean-clumps-map
 
 clean:	$(clean_list)
 .PHONY: clean
@@ -612,7 +614,7 @@ help_rules:
 	@echo "   It will depend on the definition of the corresponding"
 	@echo "   configuration files)"
 	@echo;echo " The general actions are:"
-	@echo;echo "    make maps  --  plot maps of targets"
+	@echo;echo "    make plotmaps  --  plot maps of targets"
 	@echo "    make strip  --  strip third axis from sdf files of targets"
 	@echo "    make tofits  --  transform .sdf files of targets to .fits"
 	@echo "    make tofits-strip  --  transform stripped files to .fits "
@@ -622,19 +624,19 @@ help_rules:
 	@echo "    make clumps-map  --  plot overlay of clumps on emission map"
 	@echo "    [ make calcs ] -- calculate physical parameters from emission and clumps"
 	@echo "    make maps-physpar  -- plot map of physical parameters"
-	@echo "   clean options: clean-maps clean-strip clean-fits_datasets clean-findclumps"
+	@echo "   clean options: clean-plotmaps clean-strip clean-fits_datasets clean-findclumps"
 	@echo "        clean-clumps-map clean-align clean-maps-physpar clean-calcs"
 	@echo;echo " In more detail:"
 	@echo;echo " + rules depending on the target"
 	@echo "    (targets: $(targets))"
-	@echo "     make map-[target]"
+	@echo "     make plotmap-[target]"
 	@echo "     make strip-[target]"
 	@echo "     make tofits-[target]"
 	@echo "     make tofits_strip-[target]"
 	@echo "     make findclumps_snr-[target]"
 	@echo "     make polygonfiles-[target]"
 	@echo "     make clumps-map-[target]"
-	@echo "    clean options: clean-map-[target] clean-strip-[target]"
+	@echo "    clean options: clean-plotmap-[target] clean-strip-[target]"
 	@echo "         clean-fits_datasets-[target] clean-findclumps-[target]"
 	@echo "         clean-clumps-map-[target] clean-calcs"
 	@echo;echo " + rules depending on the target and findclumps_id"
