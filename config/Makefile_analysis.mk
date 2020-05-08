@@ -16,7 +16,7 @@ targets += j850r0_mb j850r1_mb j450r0_mb j450r1_mb
 targets += j850r0_co j850r1_co
 targets += j850r0_co_mb
 
-fcs := fw_01 fw_02
+fcs := fw_01 fw_02 cf_01
 combined := j850r0_co_mb__j450r0_mb
 
 comb_maps := ratio tdust N mass
@@ -286,6 +286,7 @@ $(eval findclumps_dir := $(RES_DIR)/findclumps)
 
 
 $(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2).cfg)
+$(eval par_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2).par)
 
 $(eval in_fc := $(analysis_dir)/$(SNAME)-$(1).sdf)
 $(eval insnr_fc := $(analysis_dir)/$(SNAME)-$(1)-snr.sdf)
@@ -294,7 +295,7 @@ $(eval out_fc := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.sdf)
 $(eval out_fc_fits := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.fits)
 
 
-$(out_fc): $$(wildcard $$(cfg_file)) $(in_fc) $(insnr_fc)
+$(out_fc): $$(wildcard $$(cfg_file) $$(par_file)) $(in_fc) $(insnr_fc)
 	@if [ -f $(cfg_file) ]; then \
 	     sh $(BIN_DIR)/findclumps.sh \
                  -c $(cfg_file) \
@@ -345,7 +346,7 @@ clean-findclumps: clean-findclumps-$(1)
 
 $(eval out_shapes := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-shapes.dat)
 $(eval out_catalog := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-catalog.fits)
-$(out_shapes): $$(wildcard $$(out_catalog))
+$(out_shapes): $$(wildcard $$(out_catalog) $$(out_fc))
 	@if [ -f $(out_catalog) ];then \
 	     sh $(BIN_DIR)/catalog_to_polygonfile.sh \
                  $(out_catalog) $(out_shapes);\
