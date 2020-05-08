@@ -377,7 +377,7 @@ $(eval map_file := $(analysis_dir)/$(SNAME)-$(1).fits)
 $(eval cfg_mapfile := $(CFG_DIR)/figures/$(SNAME)-$(1)-$(2)-clumps-map.yml)
 $(eval cl_mapfile := $(analysis_dir)/$(SNAME)-$(1)-$(2)-clumps-map.pdf)
 
-$(cl_mapfile): $(map_file) $$(wildcard $$(cfg_mapfile))
+$(cl_mapfile): $(map_file) $$(wildcard $$(cfg_mapfile) $$(out_shapes))
 	@if [ -f $(cfg_mapfile) ]; then \
 	     $(EXT_DIR)/dbxmap.py \
                  -c $(cfg_mapfile) \
