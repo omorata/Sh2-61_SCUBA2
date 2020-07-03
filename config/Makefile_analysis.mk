@@ -17,7 +17,10 @@ targets += j850r0_co j850r1_co
 targets += j850r0_co_mb
 
 fcs := fw_01 fw_02 cf_01
-combined := j850r0_co_mb__j450r0_mb
+fcs += fw_01t1 fw_01t2 fw_01t3
+fcs += fw_01b1 fw_01b2 fw_01b3
+
+combined := j850r0_co_mb__j450r0_mb j850r0_mb__j450r0_mb
 
 comb_maps := ratio tdust N mass
 #
