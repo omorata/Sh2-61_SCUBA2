@@ -22,26 +22,26 @@ class Clump(object):
         'id', 'npix', 'nTpix', 'area', 'eff_radius', 'deconv_radius',
         'flux850', 'flux450hi', 'flux450',
         'mass', 'var_mass', 'masstot', 'var_masstot',
-        'N', 'varN', 'maxT', 'minT']
+        'N', 'varN', 'maxT', 'minT', 'meanT', 'medianT', 'weightT']
 
     phys_formats = [
         'i4', 'i4' , 'i4', 'f8', 'f8', 'f8',
         'f8', 'f8', 'f8',
         'f8', 'f8', 'f8', 'f8',
-        'f8', 'f8', 'f4', 'f4']
+        'f8', 'f8', 'f4', 'f4', 'f4', 'f4', 'f4']
     
     phys_units = [
         '', '', '', 'arcsec^2', 'arcsec', 'arcsec',
         'mJy', 'mJy', 'mJy',
         'Msol', 'Msol', 'Msol', 'Msol',
-        'cm-2', 'cm-2', 'K', 'K' ]
+        'cm-2', 'cm-2', 'K', 'K', 'K', 'K', 'K' ]
 
     phys_prfmt = [
         '2d', '4d', '4d', '7.1f', '8.2f', '8.2f',
         '7.3f', '7.3f', '7.3f',
         '8.2f', '6.2f', '8.2f', '6.2f',
         '9.3e', '9.3e',
-        '6.1f', '6.1f' ]
+        '6.1f', '6.1f', '6.1f', '6.1f', '6.1f' ]
 
     
     findclumps_names = [
@@ -171,10 +171,17 @@ class Clump(object):
         numtemps = np.shape(temps)[0]
         for t in range(numtemps) :
             cl_td = temps[t].masked_where(ma.getmask(mskcl))
-                    
+
+            f = fluxes[0].masked_where(ma.getmask(mskcl))
+
+
             if cl_td.data[0].count() > 0 :
                 self.record['maxT'] = np.nanmax(cl_td.data[0])
                 self.record['minT'] = np.nanmin(cl_td.data[0])
+                self.record['meanT'] = cl_td.data[0].mean()
+                self.record['weightT'] = ma.average(cl_td.data[0],
+                                                    weights=f.data[0])
+                self.record['medianT'] = ma.median(cl_td.data[0])
             else:
                 self.record['maxT'] = -99
                 self.record['minT'] = -99
