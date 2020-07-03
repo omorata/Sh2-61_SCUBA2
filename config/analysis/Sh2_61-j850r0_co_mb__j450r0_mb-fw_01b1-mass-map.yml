@@ -1,0 +1,79 @@
+page:
+  name: 'Sh2-61 j850r0_co_mb__j450r0_mb-mass'
+  outfile: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01b1-mass-map.pdf'
+  dpi: 100
+  size: [9,9]
+
+panels:
+  yx: [1,1]
+  view:
+    type: 'radius'
+    radius: '9.6arcmin'
+    
+  font: {family: 'Nimbus Roman'}
+
+  axes:
+    axes_labels:
+      font: {size: 'xx-large'}
+
+    tick_labels:
+      font: {size: 'large'}
+      
+  labels:
+    color: 'purple'
+    label_A: { text: Sh2-61, relative: True,
+               position: [0.15, 0.92], size: 24 }
+    label_B: { text: 'combined fw_01b1', relative: True,
+                position: [0.17, 0.87], size: 20, color: 'blue' }
+    label_C: { text: 'Mass', relative: True, position: [0.17, 0.83],
+                     size: 16, color: 'blue'} 
+
+  
+  colorbar:
+    width: 0.20
+    pad: 0.02
+    label_text: 'Mass (Mo)'
+  
+  contours:
+    colors: 'darkgreen'
+    #base: 2.048
+    linewidth: 0.8
+
+  pixrange:
+    colormap: 'afmhot_r'
+    #base: 2.048
+    range: [0.13, 16, 'sqrt']
+
+  panel_01:
+    axes:
+      ticks: { #xspacing: 0.083333, yspacing: 0.066667,
+               #xminor_freq: 4, yminor_freq: 5,
+               direction: in, 
+               color: 'purple', length: 6, linewidth: 0.8,
+               hide: False, xhide: False, yhide: False}
+        
+
+    labels:
+      color: 'blue'
+      #label_6: { text: 'fw_01b1', relative: True, position: [0.17, 0.79],
+      #               size: 12, family: 'Nimbus Roman', }
+                     
+    dataset_01:
+      filename: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01b1-mass.fits'
+      dims: [0,1]
+      type: 'pixel'
+
+      beam:
+        bmaj : '17.5461arcsec'
+        corner : 'bottom right'
+        frame: True
+      
+    dataset_02:
+      filename: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01b1-mass.fits'
+      dims: [0,1]
+      type: 'cntr'
+      
+      contours:
+        levels: [2,5,10]
+
+      

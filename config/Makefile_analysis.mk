@@ -1,5 +1,6 @@
 ##
-##  Makefile to run scripts to analyse the JCMT SCUBA2 data of Sh2-61
+##  Makefile to run scripts to reduce and analyse the JCMT SCUBA2 data
+##  of Sh2-61
 ##
 ##  O. Morata
 ##  2020
@@ -7,14 +8,19 @@
 
 ##-- Info --------------------------------------------------------------
 PRJ_NAME=Sh2_61-SCUBA2
-#HOME_DIR := /lustre/opsw/work/omoratac/Sh2-61/SCUBA2
 HOME_DIR := .
 SNAME := Sh2_61
 
-targets := j850r0_co j850r0_co_mb j850r0 j850r0_mb j850r1 j850r1_mb
-targets += j450r0 j450r0_mb j450r1 j450r1_mb
-fcs := fw_01 fw_02
-combined := j850r0_co_mb__j450r0_mb
+targets := j850r0 j850r1 j450r0 j450r1
+targets += j850r0_mb j850r1_mb j450r0_mb j450r1_mb
+targets += j850r0_co j850r1_co
+targets += j850r0_co_mb
+
+fcs := fw_01 fw_02 cf_01
+fcs += fw_01t1 fw_01t2 fw_01t3
+fcs += fw_01b1 fw_01b2 fw_01b3
+
+combined := j850r0_co_mb__j450r0_mb j850r0_mb__j450r0_mb
 
 comb_maps := ratio tdust N mass
 #
@@ -24,7 +30,7 @@ comb_maps := ratio tdust N mass
 #
 BIN_DIR := $(HOME_DIR)/src
 CFG_DIR := $(HOME_DIR)/config
-DATA_DIR := $(HOME_DIR)/results
+DATA_DIR := $(HOME_DIR)/data
 RES_DIR := $(HOME_DIR)/results
 EXT_DIR := $(HOME_DIR)/bin
 
@@ -42,16 +48,129 @@ export
 
 ##-- Template definition -----------------------------------------------
 
-define Map_Template
-# Template to make maps for targets
+define DoReduction
+# Template to reduce all observations in a single step
+#
+#  Parameter: 1- target
+#
+
+$(eval reduc_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf)
+$(eval snr_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf)
+
+
+$(reduc_file): $(wildcard $(CFG_DIR)/reduction/reduc-$(1).cfg)
+	. $(BIN_DIR)/reduce_raw.sh $(CFG_DIR)/reduction/reduc-$(1).cfg
+
+
+$(snr_file): $(reduc_file) 
+	$(BIN_DIR)/post_scuba2.sh \
+		-a snr  \
+		-d $(RES_DIR)/$(1)  \
+		-i $(SNAME)-$(1)-reduc
+
+
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf: $(reduc_file)
+	$(BIN_DIR)/post_scuba2.sh  \
+		-a crop  \
+		-d $(RES_DIR)/$(1) \
+		-p $(CFG_DIR)/reduction/recipe-$(1).cfg  \
+		-i $(SNAME)-$(1)-reduc
+
+$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf: $(snr_file) 
+	$(BIN_DIR)/post_scuba2.sh  \
+		-a crop  \
+		-d $(RES_DIR)/$(1) \
+		-p $(CFG_DIR)/reduction/recipe-$(1).cfg  \
+		-i $(SNAME)-$(1)-reduc_snr
+
+
+map-$(1) : $(reduc_file)
+.PHONY: map-$(1)
+
+snr-$(1): $(snr_file)
+.PHONY: snr-$(1)
+
+crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
+.PHONY: crop-S(1)
+
+snrcrop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
+.PHONY: snrcrop-$(1)
+
+reduce-$(1): map-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
+.PHONY: reduce-$(1)
+
+
+clean-map-$(1):
+	@rm -vf $(reduc_file)
+.PHONY: clean-map-$(1)
+
+clean-snr-$(1):
+	@rm -vf $(snr_file)
+.PHONY: clean-snr-$(1)
+
+clean-crop-$(1):
+	@rm -vf $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
+.PHONY: clean-crop-$(1)
+
+clean-snrcrop-$(1):
+	@rm -vf $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
+.PHONY: clean-snrcrop-$(1)
+
+clean-reduce-$(1): clean-map-$(1) clean-snr-$(1) clean-crop-$(1)
+clean-reduce-$(1): clean-snrcrop-$(1)
+
+.PHONY: clean-reduce-$(1)
+
+clean-reduce: clean-reduce-$(1)
+.PHONY: clean-reduce
+
+endef
+
+
+
+
+define PlotMaps
+# Template to plot maps for targets
 #
 # Parameter: 1- target
 #
 $(eval map_dir := $(RES_DIR)/analysis_maps)
 
-$(eval tgt_dir := $(RES_DIR)/analysis_maps)
+$(eval reduc_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf)
+$(eval reduc_snrfile := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf)
 
-$(eval orig_file := $(tgt_dir)/$(SNAME)-$(1).fits)
+$(eval fits_reducfile := $(map_dir)/$(SNAME)-$(1)-reduc.fits)
+$(eval fits_reducsnrfile := $(map_dir)/$(SNAME)-$(1)-reduc_snr.fits)
+
+$(fits_reducfile): $(reduc_file)
+	@ $(BIN_DIR)/prepare_maps.sh \
+                 -f $(reduc_file) \
+                 -o $(fits_reducfile) \
+                 -t "tofits" 
+
+$(fits_reducsnrfile): $(reduc_snrfile)
+	@ $(BIN_DIR)/prepare_maps.sh \
+                 -f $(reduc_snrfile) \
+                 -o $(fits_reducsnrfile) \
+                 -t "tofits"
+
+tofits-$(1): $(fits_reducfile) $(fits_reducsnrfile)
+.PHONY: tofits-$(1)
+
+tofits: tofits-$(1)
+.PHONY: tofits
+
+clean-fits_datasets-$(1):
+	@rm -fv $(fits_origfile)
+	@rm -fv $(fits_origsnrfile)
+.PHONY: clean-fits_datasets-$(1)
+
+clean-fits_datasets: clean-fits_datasets-$(1)
+.PHONY: clean-fits_datasets
+
+
+
+$(eval orig_file := $(RES_DIR)/analysis_maps/$(SNAME)-$(1).fits)
 
 $(eval map_file := $(map_dir)/$(SNAME)-$(1)-map.pdf)
 $(eval cfg_file := $(CFG_DIR)/figures/$(SNAME)-$(1)-map.yml)
@@ -67,32 +186,32 @@ $(map_file): $(orig_file) $$(wildcard $$(cfg_file))
              echo -e "    No cfg file $(cfg_file)" ;\
          fi
 
-map-$(1): $(map_file)
-.PHONY: map-$(1)
+plotmap-$(1): $(map_file)
+.PHONY: plotmap-$(1)
 
-maps: map-$(1)
-.PHONY: maps
+plotmaps: plotmap-$(1)
+.PHONY: plotmaps
 
-clean-map-$(1):
+clean-plotmap-$(1):
 	@rm -fv $(map_file)
-.PHONY: clean-map-$(1)
+.PHONY: clean-plotmap-$(1)
 
-clean-maps: clean-map-$(1)
-.PHONY: clean-maps
+clean-plotmaps: clean-plotmap-$(1)
+.PHONY: clean-plotmaps
 
 endef
 
 
 
 
-define Target_Template
-# Template to process rules for targets
+define PrepareDataset
+# Template to prepare data files for further processing
 #
 #  Parameter: 1- target
 #
 $(eval out_dir := $(RES_DIR)/analysis_maps)
 
-$(eval tgt_dir := $(DATA_DIR)/$(1))
+$(eval tgt_dir := $(RES_DIR)/$(1))
 
 $(eval orig_file := $(tgt_dir)/$(SNAME)-$(1)-reduc.sdf)
 $(eval orig_snrfile := $(tgt_dir)/$(SNAME)-$(1)-reduc_snr.sdf)
@@ -117,28 +236,6 @@ strip-$(1): $(strip_file) $(strip_snrfile)
 
 .PHONY: strip
 strip: strip-$(1)
-
-
-$(eval fits_origfile := $(out_dir)/$(SNAME)-$(1)-reduc.fits)
-$(eval fits_origsnrfile := $(out_dir)/$(SNAME)-$(1)-reduc_snr.fits)
-
-$(fits_origfile): $(orig_file)
-	@ $(BIN_DIR)/prepare_maps.sh \
-                 -f $(orig_file) \
-                 -o $(fits_origfile) \
-                 -t "tofits" 
-
-$(fits_origsnrfile): $(orig_snrfile)
-	@ $(BIN_DIR)/prepare_maps.sh \
-                 -f $(orig_snrfile) \
-                 -o $(fits_origsnrfile) \
-                 -t "tofits"
-
-tofits-$(1): $(fits_origfile) $(fits_origsnrfile)
-.PHONY: tofits-$(1)
-
-tofits: tofits-$(1)
-.PHONY: tofits
 
 
 
@@ -176,31 +273,23 @@ clean-strip-$(1):
 clean-strip: clean-strip-$(1)
 
 
-clean-fits_datasets-$(1):
-	@rm -fv $(fits_origfile)
-	@rm -fv $(fits_origsnrfile)
-	@rm -fv $(fits_stripfile)
-	@rm -fv $(fits_stripsnrfile)
-.PHONY: clean-fits_datasets-$(1)
-
-clean-fits_datasets: clean-fits_datasets-$(1)
-.PHONY: clean-fits_datasets
 
 endef
 
 
 
 
-define FindClumps_Template
+define Findclumps
 # Template to find clumps in continuum maps
 #
 #  Parameters: 1- target; 2- findclump tag
 #
-$(eval analysis_dir := $(DATA_DIR)/analysis_maps)
+$(eval analysis_dir := $(RES_DIR)/analysis_maps)
 $(eval findclumps_dir := $(RES_DIR)/findclumps)
 
 
 $(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2).cfg)
+$(eval par_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2).par)
 
 $(eval in_fc := $(analysis_dir)/$(SNAME)-$(1).sdf)
 $(eval insnr_fc := $(analysis_dir)/$(SNAME)-$(1)-snr.sdf)
@@ -209,7 +298,7 @@ $(eval out_fc := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.sdf)
 $(eval out_fc_fits := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.fits)
 
 
-$(out_fc): $$(wildcard $$(cfg_file)) $(in_fc) $(insnr_fc)
+$(out_fc): $$(wildcard $$(cfg_file) $$(par_file)) $(in_fc) $(insnr_fc)
 	@if [ -f $(cfg_file) ]; then \
 	     sh $(BIN_DIR)/findclumps.sh \
                  -c $(cfg_file) \
@@ -260,7 +349,7 @@ clean-findclumps: clean-findclumps-$(1)
 
 $(eval out_shapes := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-shapes.dat)
 $(eval out_catalog := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-catalog.fits)
-$(out_shapes): $$(wildcard $$(out_catalog))
+$(out_shapes): $$(wildcard $$(out_catalog) $$(out_fc))
 	@if [ -f $(out_catalog) ];then \
 	     sh $(BIN_DIR)/catalog_to_polygonfile.sh \
                  $(out_catalog) $(out_shapes);\
@@ -291,7 +380,7 @@ $(eval map_file := $(analysis_dir)/$(SNAME)-$(1).fits)
 $(eval cfg_mapfile := $(CFG_DIR)/figures/$(SNAME)-$(1)-$(2)-clumps-map.yml)
 $(eval cl_mapfile := $(analysis_dir)/$(SNAME)-$(1)-$(2)-clumps-map.pdf)
 
-$(cl_mapfile): $(map_file) $$(wildcard $$(cfg_mapfile))
+$(cl_mapfile): $(map_file) $$(wildcard $$(cfg_mapfile) $$(out_shapes))
 	@if [ -f $(cfg_mapfile) ]; then \
 	     $(EXT_DIR)/dbxmap.py \
                  -c $(cfg_mapfile) \
@@ -327,14 +416,15 @@ endef
 
 
 
-define Align_Template
-#
+define Align_Dataset
+# Template to align one dataset to the grid of another one
+# 
 # 1- combined string
 
 $(eval ref_tgt := $(firstword $(subst __, ,$(1))))
 $(eval sec_tgt := $(lastword $(subst __, ,$(1))))
 
-$(eval outdir := $(DATA_DIR)/analysis_maps)
+$(eval outdir := $(RES_DIR)/analysis_maps)
 
 
 $(eval align_ref := $(outdir)/$(SNAME)-$(ref_tgt).sdf)
@@ -401,14 +491,15 @@ endef
 
 
 
-define CalcPhys_Template
+define CalcPhysParam
+# Template to calculate the physical parameters from the datasets
 #
 # 1- combined string, 2- findclump_id
 
 $(eval ref_tgt := $(firstword $(subst __, ,$(1))))
 $(eval sec_tgt := $(lastword $(subst __, ,$(1))))
 
-$(eval outdir := $(DATA_DIR)/analysis_maps)
+$(eval outdir := $(RES_DIR)/analysis_maps)
 
 
 $(eval aligned_fits := $(outdir)/$(SNAME)-$(sec_tgt)-aligned_to-$(ref_tgt).fits)
@@ -422,7 +513,7 @@ $(eval aligned_snrfits :=    \
 
 $(eval ffile := $(outdir)/$(SNAME)-$(ref_tgt).fits)
 $(eval ffile_snr := $(outdir)/$(SNAME)-$(ref_tgt)-snr.fits)
-$(eval clfile := $(DATA_DIR)/findclumps/$(SNAME)-$(ref_tgt)-$(2)-clumps.fits)
+$(eval clfile := $(RES_DIR)/findclumps/$(SNAME)-$(ref_tgt)-$(2)-clumps.fits)
 
 $(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)-phys_calc.yaml)
 
@@ -475,8 +566,8 @@ endef
 
 
 
-define MapPhysParam_Template
-# Template to make maps of the calculated physical parameter
+define MapPhysParam
+# Template to plot maps of the calculated physical parameter
 #
 # Arguments: 1- tgt, 2- findclump id, 3- parameter
 #
@@ -534,29 +625,36 @@ endef
 ##-- End of template definition ----------------------------------------
 
 
+# define rules for reductions
+#
+$(foreach reduction, $(targets),\
+    $(eval $(call DoReduction,$(reduction)))\
+)
+
+
 # define rules for targets
 #
 $(foreach tgt, $(targets),\
-    $(eval $(call Map_Template,$(tgt)))\
-    $(eval $(call Target_Template,$(tgt)))\
+    $(eval $(call PlotMaps,$(tgt)))\
+    $(eval $(call PrepareDataset,$(tgt)))\
 )
 
 # define rules for findclumps
 #
 $(foreach tgt, $(targets),\
     $(foreach fc, $(fcs),\
-        $(eval $(call FindClumps_Template,$(tgt),$(fc)))\
+        $(eval $(call Findclumps,$(tgt),$(fc)))\
     ) \
 )
 
 # define rules for combined and findclumps_id
 #
 $(foreach tgt, $(combined),\
-    $(eval $(call Align_Template,$(tgt)))\
+    $(eval $(call Align_Dataset,$(tgt)))\
     $(foreach fc, $(fcs),\
-        $(eval $(call CalcPhys_Template,$(tgt),$(fc)))\
+        $(eval $(call CalcPhysParam,$(tgt),$(fc)))\
         $(foreach mp, $(comb_maps),\
-           $(eval $(call MapPhysParam_Template,$(tgt),$(fc),$(mp)))\
+           $(eval $(call MapPhysParam,$(tgt),$(fc),$(mp)))\
         )\
     ) \
 )
@@ -565,8 +663,9 @@ $(foreach tgt, $(combined),\
 
 # other rules
 #
-clean_list := clean-strip clean-align clean-findclumps clean-calcs clean-maps
-clean_list += clean-maps_physpar clean-clumps-map
+clean_list := clean-reduce clean-fits_datasets clean-plotmaps clean-strip
+clean_list += clean-findclumps clean-polygonfiles clean-clumps-map
+clean_list += clean-align clean-calcs clean-maps-physpar
 
 clean:	$(clean_list)
 .PHONY: clean
@@ -574,8 +673,8 @@ clean:	$(clean_list)
 
 
 help:
-	@echo;echo  "Makefile to analyse the data of $(PRJ_NAME)"
-	@echo "-------------------------------------------"
+	@echo;echo  "Makefile to reduce and analyse the data of $(PRJ_NAME)"
+	@echo "-----------------------------------------------------------"
 	@echo "  pre-defined variables:"
 	@echo "             Project Name : $(PRJ_NAME)"
 	@echo "              File prefix : $(SNAME)"
@@ -609,10 +708,11 @@ help_rules:
 	@echo "  Defined rules"
 	@echo "-----------------"
 	@echo;echo "  (Warning: not all the following rules may be available."
-	@echo "   It will depend on the definition of the corresponding"
-	@echo "   configuration files)"
+	@echo "   In many cases, it will depend on the definition of the"
+	@echo "   corresponding configuration files)"
 	@echo;echo " The general actions are:"
-	@echo;echo "    make maps  --  plot maps of targets"
+	@echo;echo "    make reduce -- do the reduction of the targets"
+	@echo;echo "    make plotmaps  --  plot maps of targets"
 	@echo "    make strip  --  strip third axis from sdf files of targets"
 	@echo "    make tofits  --  transform .sdf files of targets to .fits"
 	@echo "    make tofits-strip  --  transform stripped files to .fits "
@@ -622,19 +722,24 @@ help_rules:
 	@echo "    make clumps-map  --  plot overlay of clumps on emission map"
 	@echo "    [ make calcs ] -- calculate physical parameters from emission and clumps"
 	@echo "    make maps-physpar  -- plot map of physical parameters"
-	@echo "   clean options: clean-maps clean-strip clean-fits_datasets clean-findclumps"
-	@echo "        clean-clumps-map clean-align clean-maps-physpar clean-calcs"
+	@echo "   clean options: clean-reduce clean-plotmaps clean-strip clean-fits_datasets"
+	@echo "        clean-findclumps clean-clumps-map clean-align clean-maps-physpar clean-calcs"
 	@echo;echo " In more detail:"
 	@echo;echo " + rules depending on the target"
 	@echo "    (targets: $(targets))"
-	@echo "     make map-[target]"
+	@echo;echo "     make reduce-[target] -- includes the following:"
+	@echo "       make map-[target]  --  get the reduced map"
+	@echo "       make snr-[target]  --  get the snr map"
+	@echo "       make crop-[target]  -- get the cropped map"
+	@echo "       make snrcrop-[target]  -- get the cropped snr map"
+	@echo;echo "     make plotmap-[target]"
 	@echo "     make strip-[target]"
 	@echo "     make tofits-[target]"
 	@echo "     make tofits_strip-[target]"
 	@echo "     make findclumps_snr-[target]"
 	@echo "     make polygonfiles-[target]"
 	@echo "     make clumps-map-[target]"
-	@echo "    clean options: clean-map-[target] clean-strip-[target]"
+	@echo "    clean options: clean-plotmap-[target] clean-strip-[target]"
 	@echo "         clean-fits_datasets-[target] clean-findclumps-[target]"
 	@echo "         clean-clumps-map-[target] clean-calcs"
 	@echo;echo " + rules depending on the target and findclumps_id"
