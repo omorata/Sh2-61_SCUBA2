@@ -1,0 +1,81 @@
+page:
+  name: 'Sh2-61 j850r1_mb__j450r0_mb-N'
+  outfile: 'Sh2_61-j850r1_mb__j450r0_mb-fw_01-N-map.pdf'
+  dpi: 100
+  size: [9,9]
+
+panels:
+  yx: [1,1]
+  view:
+    type: 'radius'
+    radius: '11arcmin'
+    
+  font: {family: 'Nimbus Roman'}
+
+  axes:
+    axes_labels:
+      font: {size: 'xx-large'}
+
+    tick_labels:
+      font: {size: 'large'}
+      
+  labels:
+    color: 'purple'
+    label_A: { text: Sh2-61, relative: True,
+               position: [0.15, 0.92], size: 24 }
+    label_B: { text: '850r1_mb', relative: True,
+                position: [0.17, 0.87], size: 20, color: 'blue' }
+    label_C: { text: 'fw_01', relative: True,
+                position: [0.17, 0.82], size: 20, color: 'blue' }
+    label_D: { text: 'N', relative: True, position: [0.17, 0.77],
+                     size: 20, color: 'blue'} 
+
+  
+  colorbar:
+    width: 0.20
+    pad: 0.02
+    label_text: '$N$ (cm$^{-2}$)'
+  
+  contours:
+    colors: 'darkgreen'
+    base: 1e22
+    linewidth: 0.8
+
+  pixrange:
+    colormap: 'afmhot_r'
+    #base: 2.048
+    range: [1e21, 8e23, 'asinh']
+
+  panel_01:
+    axes:
+      ticks: { #xspacing: 0.083333, yspacing: 0.066667,
+               #xminor_freq: 4, yminor_freq: 5,
+               direction: in, 
+               color: 'purple', length: 6, linewidth: 0.8,
+               hide: False, xhide: False, yhide: False}
+        
+
+    labels:
+      color: 'blue'
+      #label_6: { text: 'fw_01', relative: True, position: [0.17, 0.79],
+      #               size: 12, family: 'Nimbus Roman', }
+                     
+    dataset_01:
+      filename: 'Sh2_61-j850r1_mb__j450r0_mb-fw_01-N.fits'
+      dims: [0,1]
+      type: 'pixel'
+
+      beam:
+        bmaj : '17.5461arcsec'
+        corner : 'bottom right'
+        frame: True
+      
+    dataset_02:
+      filename: 'Sh2_61-j850r1_mb__j450r0_mb-fw_01-N.fits'
+      dims: [0,1]
+      type: 'cntr'
+      
+      contours:
+        levels: [2,5,10,20,40]
+
+      
