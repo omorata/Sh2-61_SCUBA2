@@ -23,10 +23,12 @@ panels:
     color: 'purple'
     label_A: { text: Sh2-61, relative: True,
                position: [0.15, 0.92], size: 24 }
-    label_B: { text: 'combined fw_01b2', relative: True,
+    label_B: { text: '850r0_co_mb', relative: True,
                 position: [0.17, 0.87], size: 20, color: 'blue' }
-    label_C: { text: 'T dust', relative: True, position: [0.17, 0.83],
-                     size: 16, color: 'blue'} 
+    label_C: { text: 'fw_01b2', relative: True,
+                position: [0.17, 0.82], size: 20, color: 'blue' }
+    label_D: { text: 'T dust', relative: True, position: [0.17, 0.77],
+                     size: 20, color: 'blue'} 
 
   
   colorbar:

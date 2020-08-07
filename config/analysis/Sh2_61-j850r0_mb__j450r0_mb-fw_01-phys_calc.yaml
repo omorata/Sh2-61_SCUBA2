@@ -24,12 +24,13 @@ data_params:
   type_cutM : 'snr'
   cut_M : 2
   #
-  manual_Tdust : 15.
+  manual_Tdust : 10.
   manual_varTdust : 30.
 
 outfiles:
   ratio : analysis_maps/Sh2_61-j850r0_mb__j450r0_mb-fw_01-ratio.fits
   temperature : analysis_maps/Sh2_61-j850r0_mb__j450r0_mb-fw_01-tdust.fits
+  #tempgood : analysis_maps/Sh2_61-j850r0_mb__j450r0_mb-fw_01-tdustgood.fits
   mass : analysis_maps/Sh2_61-j850r0_mb__j450r0_mb-fw_01-mass.fits
   N : analysis_maps/Sh2_61-j850r0_mb__j450r0_mb-fw_01-N.fits
   clumptable: analysis_maps/Sh2_61-j850r0_mb__j450r0_mb-fw_01-clump_table.fits
