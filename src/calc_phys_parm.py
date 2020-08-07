@@ -353,8 +353,9 @@ fname = get_values(cnfg, 'infiles', status='required',
                             'clumpdef'])
 
 fout = get_values(cnfg, 'outfiles', 
-                  names = ['ratio', 'temperature', 'mass', 'N', 'clumptable'])
-
+                  names = ['ratio', 'temperature', 'mass', 'N', 'clumptable',
+                           'tempgood'])
+print(fout)
 
 pr = par.Param.from_cfgfile(cnfg, 'phys_params')
 
@@ -468,8 +469,26 @@ maptemp_filter = maps.filtermap(maptemp, typecut['Td'], cuts['Td'])
 mapnotemp_filter = maptemp.masked_where(~maptemp_filter.getmask())
 mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnotemp_filter)
 
-if fout['temperature'] :
+
+# save only calculated temperatures, if requested
+#
+if fout['tempgood'] :
     ok = maptemp_filter.save_fitsfile(
+        fname=wdir+fout['tempgood'], hdr_type='tdust',
+        oldheader=map850.header, append=False, overwrite=True)
+
+
+print("  >>\n  >> processing fixed dust temperature pixels...")
+
+mapf850_notemp = mapclumpshi850.masked_where(mapmanual_temp.getmask())
+
+mapmanual_Tdust = maps.full_like(mapf850_notemp,
+                                 (defaults['Td'], defaults['varTd']))
+
+temptotal = maps.merge_maps(maptemp_filter, mapmanual_Tdust)
+
+if fout['temperature'] :
+    ok =temptotal.save_fitsfile(
         fname=wdir+fout['temperature'], hdr_type='tdust',
         oldheader=map850.header, append=False, overwrite=True)
 
@@ -500,17 +519,14 @@ mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnot_filtermass)
 print("   ...done")
 
 
-print("  >>\n  >> processing fixed dust temperature pixels...")
 
-mapf850_notemp = mapclumpshi850.masked_where(mapmanual_temp.getmask())
 
-mapmanual_Tdust = maps.full_like(mapf850_notemp,
-                                 (defaults['Td'], defaults['varTd']))
 
 mapS850_notemp = mapf850_notemp.cmult(pr.flux_factor)
 
 
 mapmass_notemp = calc_mapmass(mapS850_notemp, mapmanual_Tdust, pr)
+
 
 
 #print(np.nansum(mapmass_notemp.data[0]), "+-",
