@@ -90,19 +90,39 @@ def get_temp_variance(temp, ratio_var, trmA, trmB, pre_fct):
 
 
 
-def calc_mapmass(flux, temp, par):
-    """Calculate the masses in the map."""
+def calc_mapmass(flux, temp, par, calc_type='thin', solangle=0.):
+    """Calculate the masses in the map.
+
+       If calc_type = 'thin', follow the optically thin approximation. 
+       If calc_type = 'tau', calculate opacity of the emission and then
+       calculate column densities and masses.
+    """
     
     flux_mask = flux.masked_where(temp.getmask())
 
     bnu = planck_u(par.nu, temp.data[0])
     
     knu = absorption_coefficient("freq", par.nu, par.beta) / par.dtogas
-    
-    mpmass = mapmass_h2_thin(flux_mask, temp, (par.d).to(u.m), knu, bnu,
-                             par.hk850)
 
-    return mpmass
+    
+    if calc_type == 'thin' :
+#        mpmass = mapmass_h2_thin(flux_mask, temp, (par.d).to(u.m), knu, bnu,
+        mpmass = mapmass_h2_thin(flux_mask, temp, par.d, knu, bnu,
+                                 par.hk850)
+        return mpmass
+    
+    elif calc_type == 'tau' :
+        mass_tau, tau, cd_tau = mapmass_h2_tau(flux_mask, solangle, bnu, knu,
+                                               par)
+        
+        return mass_tau, tau, cd_tau
+        
+    else :
+        print(" >> ERROR: wrong mass calculation type", calc_type)
+        sys.exit(1)
+        
+
+
 
 
 
@@ -126,6 +146,21 @@ def mapmass_h2_thin(flux, temp, d, k, Bnu, hk) :
     mass.data[1] = fct * fct * term_var
 
     return mass
+
+
+
+def mapmass_h2_tau(flux, solangle, bnu, knu, par) :
+    """ Calculates the pixel opacity, column density and mass."""
+    
+    tau = maps.Map.empty()
+    cd = maps.Map.empty()
+    mass = maps.Map.empty()
+        
+    tau.data[0] = dust_opacity(flux.data[0], solangle, bnu)
+    cd.data[0] = col_h2(tau.data[0], knu, par.mu, par.mH)
+    mass.data[0] =  mass_h2(cd.data[0], par, solangle)
+    
+    return mass, tau, cd
 
 
 
@@ -160,6 +195,8 @@ def col_h2(tau, k, mu, mH):
     """Calculate the H2 column density, N(H2)."""
     
     colh2 = tau / mu / mH / k
+    # convert to cm-2
+    colh2 /= 10000.
 
     return colh2
 
@@ -168,7 +205,7 @@ def col_h2(tau, k, mu, mH):
 def absorption_coefficient(valtype, val, beta) :
     """calculate k_lambda using Clarke et al. 2016 values
 
-    IMPORTANT: Frequencies or wavelenghts should have units
+    IMPORTANT: Frequencies or wavelengths should have units
     """  
 
     if valtype == "freq" :
@@ -187,12 +224,13 @@ def absorption_coefficient(valtype, val, beta) :
 
 
 
-def mass_h2(N_h2, d, solangle, mu, mH):
-    """Calculate H2 mass."""
+def mass_h2(N_h2, par, solangle):
+    """Calculate H2 mass from the tau determined H_2 column density."""
     
-    M_h2 = mu * mH * d * d * N_h2 *  solangle / const.M_sun
+    fct = get_col_factor(par, solangle)
+    M_h2 = N_h2 / fct
 
-    return M_h2.value
+    return M_h2
 
 
 
@@ -201,7 +239,7 @@ def show_values(msk_arr, txt):
     
     print("values for" , txt)
     print(msk_arr[324:326,300:325])
-    print(txt, msk_arr.count())
+    #print(txt, msk_arr.count())
     print("  max:", np.nanmax(msk_arr))
     print("  min:", np.nanmin(msk_arr))
 
@@ -221,7 +259,7 @@ def show_values(msk_arr, txt):
 def get_col_factor(par, solangle):
 
     dist = (pr.d).to(u.cm)
-    col_factor = const.M_sun / pr.mu / pr.mH / dist / dist /solangle
+    col_factor = const.M_sun / pr.mu / pr.mH / dist / dist / solangle
     col_factor *= u.cm * u.cm * u.rad * u.rad
     return col_factor
 
@@ -519,8 +557,16 @@ mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnot_filtermass)
 print("   ...done")
 
 
+mass_tau, taus, coldns_tau = calc_mapmass(mapS_850, maptemp_filter, pr,
+                                          calc_type='tau',
+                                          solangle=pixsolangle)
 
 
+
+show_values(mapmass.data[0], "thin")
+show_values(mass_tau.data[0], "tau")
+show_values(taus.data[0], "taus")
+show_values(coldns_tau.data[0], "taus")
 
 mapS850_notemp = mapf850_notemp.cmult(pr.flux_factor)
 
