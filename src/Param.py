@@ -22,7 +22,7 @@ class Param(object):
         self.mu = mu
         self.mH = 1.6733e-27 * u.kg
         self.dtogas = dtogas
-        self.d = d
+        self.d = d.to(u.m)
         self.beta = beta
         self.l450 = l450
         self.l850 = l850
