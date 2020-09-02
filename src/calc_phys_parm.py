@@ -231,14 +231,14 @@ def mass_h2(N_h2, par, solangle):
 
 
 
-def show_values(msk_arr, txt):
-    """Show some values of the msk_arr array."""
-    
-    print("values for" , txt)
-    print(msk_arr[324:326,300:325])
-    print(txt, msk_arr.count())
-    print("  max:", np.nanmax(msk_arr))
-    print("  min:", np.nanmin(msk_arr))
+#def show_values(msk_arr, txt):
+#    """Show some values of the msk_arr array."""
+#    
+#    print("values for" , txt)
+#    print(msk_arr[324:326,300:325])
+#    print(txt, msk_arr.count())
+#    print("  max:", np.nanmax(msk_arr))
+#    print("  min:", np.nanmin(msk_arr))
 
 
 
@@ -393,6 +393,9 @@ def set_outdefaults(opt):
         
 ##-- End of functions --------------------------------------------------
 
+range1 = (324,326,None,300,325,None)
+range2 = (324,327,None,299,324,None)
+
 print(" ++ Start")
 
 
@@ -414,7 +417,7 @@ fname = get_values(cnfg, 'infiles', status='required',
 fout = get_values(cnfg, 'outfiles', 
                   names = ['ratio', 'temperature', 'mass', 'N', 'clumptable',
                            'tempgood'])
-print(fout)
+#print(fout)
 
 pr = par.Param.from_cfgfile(cnfg, 'phys_params')
 
@@ -498,13 +501,20 @@ mapdblf_cl850 = mapclumpshi850.masked_where(ma.getmask(test))
 sf_cl850_idx = ma.masked_where(~mapdblf_cl850.getmask(), inclumps)
 mapsf_cl850 = map850.masked_where(ma.getmask(sf_cl850_idx))
 
+#print(mapdblf_cl850.count())
+#print(mapdblf_cl850.show(range1))
+#print(mapsf_cl850.count())
+#print(mapsf_cl850.show(range1))
 
 
 
 # definition of array to hold pixels where WE fix Tdust
 #
 
-mapmanual_temp = mapsf_cl850.copy()
+maskmanual = mapsf_cl850.copy()
+#print("maskmanual")
+#print(maskmanual.count())
+#print(maskmanual.show(range1))
 
 
 print("  >> calculating flux ratios...")
@@ -512,6 +522,10 @@ if logg:
     logging.info('+ calculating flux ratios')
 
 map_ratio = maps.divide(mapclumpshi450, mapdblf_cl850)
+
+#print("map_ratio")
+#print(map_ratio.count())
+#print(map_ratio.show(range1))
 
 
 if fout['ratio']:
@@ -528,79 +542,80 @@ ini_array = np.full_like(map_ratio.data[0], defaults['iniTd'])
 
 with np.errstate(invalid='ignore'):
     maptemp = get_maptemperature(map_ratio, ini_array, pre, pr)
-
+    
 mapnotemp = map_ratio.masked_where(~maptemp.getmask())
-mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnotemp)
+
+maskmanual = maps.merge_maps(maskmanual, mapnotemp)
+
+#print("maskmanual")
+#print(maskmanual.count())
+#print(maskmanual.show(range1))
 
 
 maptemp_filter = maps.filtermap(maptemp, typecut['Td'], cuts['Td'])
 mapnotemp_filter = maptemp.masked_where(~maptemp_filter.getmask())
-mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnotemp_filter)
+maskmanual = maps.merge_maps(maskmanual, mapnotemp_filter)
 
 
-# save only calculated temperatures, if requested
-#
-if fout['tempgood'] :
-    ok = maptemp_filter.save_fitsfile(
-        fname=wdir+fout['tempgood'], hdr_type='tdust',
-        oldheader=map850.header, append=False, overwrite=True)
 
 
-print("  >>\n  >> processing fixed dust temperature pixels...")
+#print("  >>\n  >> processing fixed dust temperature pixels...")
 
-mapf850_notemp = mapclumpshi850.masked_where(mapmanual_temp.getmask())
+#mapf850_notemp = mapclumpshi850.masked_where(maskmanual.getmask())
 
-mapmanual_Tdust = maps.full_like(mapf850_notemp,
-                                 (defaults['Td'], defaults['varTd']))
+#mapmanual_Tdust = maps.full_like(mapf850_notemp,
+#                                 (defaults['Td'], defaults['varTd']))
 
-temptotal = maps.merge_maps(maptemp_filter, mapmanual_Tdust)
+#temptotal = maps.merge_maps(maptemp_filter, mapmanual_Tdust)
 
 
-if fout['temperature'] :
-    ok =temptotal.save_fitsfile(
-        fname=wdir+fout['temperature'], hdr_type='tdust',
-        oldheader=map850.header, append=False, overwrite=True)
+#if fout['temperature'] :
+#    ok =temptotal.save_fitsfile(
+#        fname=wdir+fout['temperature'], hdr_type='tdust',
+#        oldheader=map850.header, append=False, overwrite=True)
 
-print("   ...done")
+#print("   ...done")
 
 
 #
 # flux was in mJy, all still in SI
 #
-print("  >> convert flux to SI...")
+#print("  >> convert flux to SI...")
 
 mapS_850 = mapdblf_cl850.cmult(pr.flux_factor)
-mapS850_notemp = mapf850_notemp.cmult(pr.flux_factor)
+#mapS850_notemp = mapf850_notemp.cmult(pr.flux_factor)
 
-print("   ...done")
+#print("   ...done")
 
 
 
 if out_opts['tau_opt'] == 'thin' :
 
-    print("  >> calculating masses...")
+    print("  >> calculating masses, optically thin approximation...")
 
-    mapmass = calc_mapmass(mapS_850, maptemp_filter, pr)
+    mass_thin = calc_mapmass(mapS_850, maptemp_filter, pr)
 
-    mapmass_filter = maps.filtermap(mapmass, typecut['M'], cuts['M'])
+    mass_calc = maps.filtermap(mass_thin, typecut['M'], cuts['M'])
 
-    maptemp_filtermass = maptemp_filter.masked_where(mapmass_filter.getmask())
+    Tdust_calc = maptemp_filter.masked_where(mass_calc.getmask())
 
-    mapnot_filtermass = maptemp_filter.masked_where(~maptemp_filtermass.getmask())
-    mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnot_filtermass)
-
-    print("   ...done")
+    mapnot_filtermass = maptemp_filter.masked_where(~Tdust_calc.getmask())
+    maskmanual = maps.merge_maps(maskmanual, mapnot_filtermass)
 
 
-    mapmass_notemp = calc_mapmass(mapS850_notemp, mapmanual_Tdust, pr)
+    f850_manual = mapclumpshi850.masked_where(maskmanual.getmask())
+
+    # convert fluxes to SI
+    #
+    S850_manual = f850_manual.cmult(pr.flux_factor)
+
+    Tdust_manual = maps.full_like(f850_manual, (defaults['Td'],
+                                                defaults['varTd']))
+
+    mass_manual = calc_mapmass(S850_manual, Tdust_manual, pr)
     
 
-    mapmass_total = maps.merge_maps(mapmass_filter, mapmass_notemp)
-
-    if fout['mass'] :
-        ok = mapmass_total.save_fitsfile(
-            fname=wdir+fout['mass'], hdr_type='mass', oldheader=map850.header,
-            append=False, overwrite=True)
+    mass_total = maps.merge_maps(mass_calc, mass_manual)
 
     print("   ...done")
 
@@ -610,13 +625,9 @@ if out_opts['tau_opt'] == 'thin' :
     #
     column_factor = get_col_factor(pr, pixsolangle)
 
-    coldens_total = mapmass_total.copy()
+    coldens_total = mass_total.copy()
     coldens_total = coldens_total.cmult(column_factor)
 
-    if fout['N']:
-        ok = coldens_total.save_fitsfile(
-            fname=wdir+fout['N'], hdr_type='column', oldheader=map850.header,
-            append=False, overwrite=True)
 
         
 elif out_opts['tau_opt'] == 'thick' :
@@ -635,11 +646,11 @@ elif out_opts['tau_opt'] == 'thick' :
     # todo: calculate variances of mass_tau, taus & coldns_tau
 
     
-    #mapmass_total = maps.merge_maps(mass_tau, mapmass_notemp)
-    #print("+++= mapmass_total", mapmass_total.count())
+    #mass_total = maps.merge_maps(mass_tau, mapmass_notemp)
+    #print("+++= mass_total", mass_total.count())
 
     if fout['mass'] :
-        ok = mapmass_total.save_fitsfile(
+        ok = mass_total.save_fitsfile(
             fname=wdir+fout['mass'], hdr_type='mass', oldheader=map850.header,
             append=False, overwrite=True)
 
@@ -652,13 +663,50 @@ else:
     sys.exit(1)
     
 
+
+Tdust_total = maps.merge_maps(Tdust_calc, Tdust_manual)
+
+
+# save only calculated temperatures, if requested
+#
+if fout['tempgood'] :
+    ok = maptemp_filter.save_fitsfile(
+        fname=wdir+fout['tempgood'], hdr_type='tdust',
+        oldheader=map850.header, append=False, overwrite=True)
+
+# save temperature
+#
+if fout['temperature'] :
+    ok =Tdust_total.save_fitsfile(
+        fname=wdir+fout['temperature'], hdr_type='tdust',
+        oldheader=map850.header, append=False, overwrite=True)
+
+print("   ...done")
+
+
+
+if fout['mass'] :
+    ok = mass_total.save_fitsfile(
+        fname=wdir+fout['mass'], hdr_type='mass', oldheader=map850.header,
+        append=False, overwrite=True)
+
+print("   ...done")
+
+
+
+if fout['N']:
+    ok = coldens_total.save_fitsfile(
+        fname=wdir+fout['N'], hdr_type='column', oldheader=map850.header,
+        append=False, overwrite=True)
+
+
     
 if args.clumps :
     print("  >> clump calculations")
 
     mapclumpcat = cl.ClumpCatalog.from_calcphys(
         idxs=clump_idxs, fluxes=[mapclumpshi850,mapclumpshi450,mapclumps450],
-        temps=[maptemp_filtermass], mass=[mapmass_filter, mapmass_total],
+        temps=[Tdust_calc], mass=[mass_calc, mass_total],
         params=pr)
 
     if fout['clumptable']:
