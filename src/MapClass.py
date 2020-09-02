@@ -197,8 +197,9 @@ class Map (object):
         new.data[1] = self.data[1].filled(fill)
 
         return new
-    
-    
+
+
+
 def divide(a, b):
     """Divides one map by another.
 

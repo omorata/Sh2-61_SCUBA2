@@ -38,13 +38,13 @@ panels:
   
   contours:
     colors: 'darkgreen'
-    base: 2e22
+    base: 1e22
     linewidth: 0.8
 
   pixrange:
     colormap: 'afmhot_r'
     #base: 2.048
-    range: [1e21, 2e24, 'asinh']
+    range: [2e22, 1e24, 'asinh']
 
   panel_01:
     axes:
@@ -76,6 +76,6 @@ panels:
       type: 'cntr'
       
       contours:
-        levels: [2,5,10,15,20,25,30]
+        levels: [10,25,50,80]
 
       

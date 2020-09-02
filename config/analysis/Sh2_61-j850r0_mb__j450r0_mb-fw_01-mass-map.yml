@@ -44,7 +44,7 @@ panels:
   pixrange:
     colormap: 'afmhot_r'
     #base: 2.048
-    range: [0.13, 16, 'sqrt']
+    range: [0.1, 30, 'sqrt']
 
   panel_01:
     axes:
@@ -76,6 +76,6 @@ panels:
       type: 'cntr'
       
       contours:
-        levels: [2,5,10]
+        levels: [0.8,2,4,12,16,24]
 
       

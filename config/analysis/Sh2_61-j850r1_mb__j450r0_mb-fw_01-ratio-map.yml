@@ -44,7 +44,7 @@ panels:
   pixrange:
     colormap: 'afmhot'
     #base: 2.048
-    range: [2, 12, 'linear']
+    range: [1, 12, 'linear']
 
   panel_01:
     axes:
