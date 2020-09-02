@@ -198,6 +198,21 @@ class Map (object):
 
         return new
 
+    
+
+    def count(self):
+        """ Count elements in the data array"""
+        
+        return self.data[0].count()
+
+    
+
+    def show(self, slice):
+        """ Show a slice of the data array """
+        
+        v = self.data[0]
+        return v[slice[0]:slice[1]:slice[2],slice[3]:slice[4]:slice[5]]
+
 
 
 def divide(a, b):
