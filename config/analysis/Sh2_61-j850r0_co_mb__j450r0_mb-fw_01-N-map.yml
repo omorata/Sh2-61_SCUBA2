@@ -65,17 +65,17 @@ panels:
       dims: [0,1]
       type: 'pixel'
 
-      beam:
-        bmaj : '17.5461arcsec'
-        corner : 'bottom right'
-        frame: True
+      #beam:
+      #  bmaj : '17.5461arcsec'
+      #  corner : 'bottom right'
+      #  frame: True
       
-    dataset_02:
-      filename: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-N.fits'
-      dims: [0,1]
-      type: 'cntr'
+    #dataset_02:
+    #  filename: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-N.fits'
+    #  dims: [0,1]
+    #  type: 'cntr'
       
-      contours:
-        levels: [2,5,10,20,40]
+    #  contours:
+    #    levels: [2,5,10,20,40]
 
       

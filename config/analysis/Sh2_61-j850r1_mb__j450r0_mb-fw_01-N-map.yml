@@ -44,7 +44,7 @@ panels:
   pixrange:
     colormap: 'afmhot_r'
     #base: 2.048
-    range: [1e21, 8e23, 'asinh']
+    range: [1e22, 7e23, 'asinh']
 
   panel_01:
     axes:
