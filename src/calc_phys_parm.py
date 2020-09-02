@@ -95,7 +95,7 @@ def calc_mapmass(flux, temp, par, calc_type='thin', solangle=0.):
 
        If calc_type = 'thin', follow the optically thin approximation. 
        If calc_type = 'tau', calculate opacity of the emission and then
-       calculate column densities and masses.
+                             calculate column densities and masses.
     """
     
     flux_mask = flux.masked_where(temp.getmask())
@@ -121,9 +121,6 @@ def calc_mapmass(flux, temp, par, calc_type='thin', solangle=0.):
         print(" >> ERROR: wrong mass calculation type", calc_type)
         sys.exit(1)
         
-
-
-
 
 
 def mapmass_h2_thin(flux, temp, d, k, Bnu, hk) :
@@ -239,7 +236,7 @@ def show_values(msk_arr, txt):
     
     print("values for" , txt)
     print(msk_arr[324:326,300:325])
-    #print(txt, msk_arr.count())
+    print(txt, msk_arr.count())
     print("  max:", np.nanmax(msk_arr))
     print("  min:", np.nanmin(msk_arr))
 
@@ -336,7 +333,13 @@ def read_configfile(fname):
 
 
 def cfgval(cfg, section, key, status=''):
+    """ Read key, value pair from section in cfg file"""
 
+    if not section in cfg:
+        print("\n  WARNING: section \'", section, "\' not found\n")
+        return None
+
+    
     if key in cfg[section] :
         return cfg[section][key]
     else :
@@ -344,9 +347,10 @@ def cfgval(cfg, section, key, status=''):
             print(" >> ERROR: missing required key", key)
             sys.exit(1)
         else :
-            return ''
+          #  return ''
+            return None
 
-
+        
         
 def get_values(cfg, section, names=None, status='', type='str', altnames=None):
     """Read the values from the configuration file sections and keys."""
@@ -370,6 +374,23 @@ def get_values(cfg, section, names=None, status='', type='str', altnames=None):
     return vv
 
 
+
+def set_outdefaults(opt):
+    """ Sets the default values for opt"""
+    
+    if opt['tdust'] == None:
+        opt['tdust'] = 'all'
+    if opt['mass'] == None:
+        opt['mass'] = 'all'
+    if opt['N'] == None:
+        opt['N'] = 'all'
+    if opt['tau_opt'] == None:
+        opt['tau_opt'] = 'thin'
+    if opt['tau'] == None:
+        opt['tau'] = 'all'
+
+
+        
 ##-- End of functions --------------------------------------------------
 
 print(" ++ Start")
@@ -408,7 +429,12 @@ typecut = get_values(cnfg, 'data_params', names=['type_cutTd', 'type_cutM'],
 cuts = get_values(cnfg, 'data_params', names=['snr_450', 'cut_Td', 'cut_M'],
                   altnames=['snr450', 'Td', 'M'], type='float')
 
+out_opts = get_values(cnfg, 'output_options',
+                      names=['tdust', 'mass', 'N', 'tau_opt', 'tau'],
+                      type='str')
 
+set_outdefaults(out_opts)
+# show settings for output
 
 if logg: 
     logging.basicConfig(filename=args.logfile, filemode='w',
@@ -424,6 +450,8 @@ pixsolangle = pixsize_rad * pixsize_rad
 pre = (850. / 450.)**(3.+ pr.beta)
 
 
+
+
 print("  >> reading input files...")
 
 if logg:
@@ -434,7 +462,7 @@ mapsnr = maps.Map.from_fitsfile(wdir+fname['snr850'], name="SNR 850micron")
 map450 = maps.Map.from_fitsfile(wdir+fname['data450'], name="450micron")
 mapsnr450 = maps.Map.from_fitsfile(wdir+fname['snr450'], name="SNR 450micron")
 
-header850 = map850.header
+#header850 = map850.header
 
 
 pr.get_flux_factor(map850)
@@ -469,6 +497,8 @@ mapclumpshi850 = map850.masked_where(ma.getmask(inclumps))
 mapdblf_cl850 = mapclumpshi850.masked_where(ma.getmask(test))
 sf_cl850_idx = ma.masked_where(~mapdblf_cl850.getmask(), inclumps)
 mapsf_cl850 = map850.masked_where(ma.getmask(sf_cl850_idx))
+
+
 
 
 # definition of array to hold pixels where WE fix Tdust
@@ -525,6 +555,7 @@ mapmanual_Tdust = maps.full_like(mapf850_notemp,
 
 temptotal = maps.merge_maps(maptemp_filter, mapmanual_Tdust)
 
+
 if fout['temperature'] :
     ok =temptotal.save_fitsfile(
         fname=wdir+fout['temperature'], hdr_type='tdust',
@@ -539,71 +570,87 @@ print("   ...done")
 print("  >> convert flux to SI...")
 
 mapS_850 = mapdblf_cl850.cmult(pr.flux_factor)
-print("   ...done")
-
-
-print("  >> calculating masses...")
-
-mapmass = calc_mapmass(mapS_850, maptemp_filter, pr)
-
-
-mapmass_filter = maps.filtermap(mapmass, typecut['M'], cuts['M'])
-
-maptemp_filtermass = maptemp_filter.masked_where(mapmass_filter.getmask())
-
-mapnot_filtermass = maptemp_filter.masked_where(~maptemp_filtermass.getmask())
-mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnot_filtermass)
-
-print("   ...done")
-
-
-mass_tau, taus, coldns_tau = calc_mapmass(mapS_850, maptemp_filter, pr,
-                                          calc_type='tau',
-                                          solangle=pixsolangle)
-
-
-
-show_values(mapmass.data[0], "thin")
-show_values(mass_tau.data[0], "tau")
-show_values(taus.data[0], "taus")
-show_values(coldns_tau.data[0], "taus")
-
 mapS850_notemp = mapf850_notemp.cmult(pr.flux_factor)
 
-
-mapmass_notemp = calc_mapmass(mapS850_notemp, mapmanual_Tdust, pr)
-
-
-
-#print(np.nansum(mapmass_notemp.data[0]), "+-",
-#      ma.sqrt(np.nansum(mapmass_notemp.data[1])) )
-
-#print(np.nansum(mapmass_filter.data[0]), "+-",
-#      ma.sqrt(np.nansum(mapmass_filter.data[1])) )
-
-mapmass_total = maps.merge_maps(mapmass_filter, mapmass_notemp)
-
-if fout['mass'] :
-    ok = mapmass_total.save_fitsfile(
-        fname=wdir+fout['mass'], hdr_type='mass', oldheader=map850.header,
-        append=False, overwrite=True)
-
 print("   ...done")
 
 
 
-# calculate array of column densities
-#
-column_factor = get_col_factor(pr, pixsolangle)
+if out_opts['tau_opt'] == 'thin' :
 
-coldens_total = mapmass_total.copy()
-coldens_total = coldens_total.cmult(column_factor)
+    print("  >> calculating masses...")
 
-if fout['N']:
-    ok = coldens_total.save_fitsfile(
-        fname=wdir+fout['N'], hdr_type='column', oldheader=map850.header,
-        append=False, overwrite=True)
+    mapmass = calc_mapmass(mapS_850, maptemp_filter, pr)
 
+    mapmass_filter = maps.filtermap(mapmass, typecut['M'], cuts['M'])
+
+    maptemp_filtermass = maptemp_filter.masked_where(mapmass_filter.getmask())
+
+    mapnot_filtermass = maptemp_filter.masked_where(~maptemp_filtermass.getmask())
+    mapmanual_temp = maps.merge_maps(mapmanual_temp, mapnot_filtermass)
+
+    print("   ...done")
+
+
+    mapmass_notemp = calc_mapmass(mapS850_notemp, mapmanual_Tdust, pr)
+    
+
+    mapmass_total = maps.merge_maps(mapmass_filter, mapmass_notemp)
+
+    if fout['mass'] :
+        ok = mapmass_total.save_fitsfile(
+            fname=wdir+fout['mass'], hdr_type='mass', oldheader=map850.header,
+            append=False, overwrite=True)
+
+    print("   ...done")
+
+
+
+    # calculate array of column densities
+    #
+    column_factor = get_col_factor(pr, pixsolangle)
+
+    coldens_total = mapmass_total.copy()
+    coldens_total = coldens_total.cmult(column_factor)
+
+    if fout['N']:
+        ok = coldens_total.save_fitsfile(
+            fname=wdir+fout['N'], hdr_type='column', oldheader=map850.header,
+            append=False, overwrite=True)
+
+        
+elif out_opts['tau_opt'] == 'thick' :
+
+    mass_tau, taus, coldns_tau = calc_mapmass(mapS_850, maptemp_filter, pr,
+                                              calc_type='tau',
+                                              solangle=pixsolangle)
+
+    print("+++= mass_tau", mass_tau.count())
+    print("+++= taus", taus.count())
+    print("+++= coldns_tau", coldns_tau.count())
+    
+    #opac calc mass, tau, coldns manual_Tdust
+    #
+    # save all files at the end
+    # todo: calculate variances of mass_tau, taus & coldns_tau
+
+    
+    #mapmass_total = maps.merge_maps(mass_tau, mapmass_notemp)
+    #print("+++= mapmass_total", mapmass_total.count())
+
+    if fout['mass'] :
+        ok = mapmass_total.save_fitsfile(
+            fname=wdir+fout['mass'], hdr_type='mass', oldheader=map850.header,
+            append=False, overwrite=True)
+
+    print("   ...done")
+
+    
+else:
+    print(" >>> ERROR: the value of tau_opt", out_opts['tau_opt'],
+          "is unknown")
+    sys.exit(1)
+    
 
     
 if args.clumps :
