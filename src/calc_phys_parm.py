@@ -621,12 +621,18 @@ if out_opts['tau_opt'] == 'thin' :
 
 
 
-    # calculate array of column densities
+    # calculate arrays of column densities
     #
-    column_factor = get_col_factor(pr, pixsolangle)
+    pixel_column_factor = get_col_factor(pr, pixsolangle)
 
+    coldens_calc = mass_calc.copy()
+    coldens_calc = coldens_calc.cmult(pixel_column_factor)
+
+    coldens_manual = mass_manual.copy()
+    coldens_manual = coldens_manual.cmult(pixel_column_factor)
+    
     coldens_total = mass_total.copy()
-    coldens_total = coldens_total.cmult(column_factor)
+    coldens_total = coldens_total.cmult(pixel_column_factor)
 
 
         
