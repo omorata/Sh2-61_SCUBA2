@@ -393,8 +393,6 @@ def set_outdefaults(opt):
         
 ##-- End of functions --------------------------------------------------
 
-range1 = (324,326,None,300,325,None)
-range2 = (324,327,None,299,324,None)
 
 print(" ++ Start")
 
@@ -461,9 +459,9 @@ if logg:
     logging.info('+ reading input files')
 
 map850 = maps.Map.from_fitsfile(wdir+fname['data850'], name="850micron")
-mapsnr = maps.Map.from_fitsfile(wdir+fname['snr850'], name="SNR 850micron")
+snr850 = maps.Map.from_fitsfile(wdir+fname['snr850'], name="SNR 850micron")
 map450 = maps.Map.from_fitsfile(wdir+fname['data450'], name="450micron")
-mapsnr450 = maps.Map.from_fitsfile(wdir+fname['snr450'], name="SNR 450micron")
+snr450 = maps.Map.from_fitsfile(wdir+fname['snr450'], name="SNR 450micron")
 
 #header850 = map850.header
 
@@ -485,51 +483,36 @@ clump_idxs = clump_def.view(ma.MaskedArray)
 clump_idxs_invalid = ma.masked_invalid(clump_idxs)
 inclumps = ma.masked_less(clump_idxs_invalid, 1)
 
-maphi450 = mapsnr450.masked_less(cuts['snr450'])
+clumps_hi850 = map850.masked_where(ma.getmask(inclumps))
 
 
-test = ma.masked_where(maphi450.getmask(), inclumps)
-
-mapclumpshi450 = map450.masked_where(ma.getmask(test))
-
-mapclumps450 = map450.masked_where(ma.getmask(inclumps))
-
-
-mapclumpshi850 = map850.masked_where(ma.getmask(inclumps))
-
-mapdblf_cl850 = mapclumpshi850.masked_where(ma.getmask(test))
-sf_cl850_idx = ma.masked_where(~mapdblf_cl850.getmask(), inclumps)
-mapsf_cl850 = map850.masked_where(ma.getmask(sf_cl850_idx))
-
-#print(mapdblf_cl850.count())
-#print(mapdblf_cl850.show(range1))
-#print(mapsf_cl850.count())
-#print(mapsf_cl850.show(range1))
+high_snr450 = snr450.masked_less(cuts['snr450'])
+clumps_high_snr450 = ma.masked_where(high_snr450.getmask(), inclumps)
+clumps_hi450 = map450.masked_where(ma.getmask(clumps_high_snr450))
+clumps_450 = map450.masked_where(ma.getmask(inclumps))
 
 
-
-# definition of array to hold pixels where WE fix Tdust
+# calculations are done on pixels with two detected frequencies
 #
+clumps_hihi850 = clumps_hi850.masked_where(ma.getmask(clumps_high_snr450))
 
-maskmanual = mapsf_cl850.copy()
-#print("maskmanual")
-#print(maskmanual.count())
-#print(maskmanual.show(range1))
+# all the single detected frequency pixels are manual by default
+#
+clumps_lowhi850_idx = ma.masked_where(~clumps_hihi850.getmask(), inclumps)
+maskmanual = map850.masked_where(ma.getmask(clumps_lowhi850_idx))
+
 
 
 print("  >> calculating flux ratios...")
 if logg:
     logging.info('+ calculating flux ratios')
 
-map_ratio = maps.divide(mapclumpshi450, mapdblf_cl850)
+flux_ratio = maps.divide(clumps_hi450, clumps_hihi850)
 
-#print("map_ratio")
-#print(map_ratio.count())
-#print(map_ratio.show(range1))
 
 
 if fout['ratio']:
-    ok = map_ratio.save_fitsfile(
+    ok = flux_ratio.save_fitsfile(
         fname=wdir+fout['ratio'], hdr_type='fluxratio', oldheader=map850.header,
         append=False, overwrite=True)
 
@@ -538,54 +521,28 @@ print("  ...done")
 
 print("  >> calculating temperatures...")
 
-ini_array = np.full_like(map_ratio.data[0], defaults['iniTd'])
+Tdust_init = np.full_like(flux_ratio.data[0], defaults['iniTd'])
 
 with np.errstate(invalid='ignore'):
-    maptemp = get_maptemperature(map_ratio, ini_array, pre, pr)
+    Td = get_maptemperature(flux_ratio, Tdust_init, pre, pr)
     
-mapnotemp = map_ratio.masked_where(~maptemp.getmask())
+noTd = flux_ratio.masked_where(~Td.getmask())
 
-maskmanual = maps.merge_maps(maskmanual, mapnotemp)
-
-#print("maskmanual")
-#print(maskmanual.count())
-#print(maskmanual.show(range1))
+maskmanual = maps.merge_maps(maskmanual, noTd)
 
 
-maptemp_filter = maps.filtermap(maptemp, typecut['Td'], cuts['Td'])
-mapnotemp_filter = maptemp.masked_where(~maptemp_filter.getmask())
-maskmanual = maps.merge_maps(maskmanual, mapnotemp_filter)
-
-
-
-
-#print("  >>\n  >> processing fixed dust temperature pixels...")
-
-#mapf850_notemp = mapclumpshi850.masked_where(maskmanual.getmask())
-
-#mapmanual_Tdust = maps.full_like(mapf850_notemp,
-#                                 (defaults['Td'], defaults['varTd']))
-
-#temptotal = maps.merge_maps(maptemp_filter, mapmanual_Tdust)
-
-
-#if fout['temperature'] :
-#    ok =temptotal.save_fitsfile(
-#        fname=wdir+fout['temperature'], hdr_type='tdust',
-#        oldheader=map850.header, append=False, overwrite=True)
-
-#print("   ...done")
-
-
+# apply filter to Td
 #
+Tdust_filter = maps.filtermap(Td, typecut['Td'], cuts['Td'])
+noTdust_filter = Td.masked_where(~Tdust_filter.getmask())
+maskmanual = maps.merge_maps(maskmanual, noTdust_filter)
+
+
+
+
 # flux was in mJy, all still in SI
 #
-#print("  >> convert flux to SI...")
-
-mapS_850 = mapdblf_cl850.cmult(pr.flux_factor)
-#mapS850_notemp = mapf850_notemp.cmult(pr.flux_factor)
-
-#print("   ...done")
+mapS_850 = clumps_hihi850.cmult(pr.flux_factor)
 
 
 
@@ -593,17 +550,17 @@ if out_opts['tau_opt'] == 'thin' :
 
     print("  >> calculating masses, optically thin approximation...")
 
-    mass_thin = calc_mapmass(mapS_850, maptemp_filter, pr)
+    mass_thin = calc_mapmass(mapS_850, Tdust_filter, pr)
 
     mass_calc = maps.filtermap(mass_thin, typecut['M'], cuts['M'])
 
-    Tdust_calc = maptemp_filter.masked_where(mass_calc.getmask())
+    Tdust_calc = Tdust_filter.masked_where(mass_calc.getmask())
 
-    mapnot_filtermass = maptemp_filter.masked_where(~Tdust_calc.getmask())
-    maskmanual = maps.merge_maps(maskmanual, mapnot_filtermass)
+    nomass_calc = Tdust_filter.masked_where(~Tdust_calc.getmask())
+    maskmanual = maps.merge_maps(maskmanual, nomass_calc)
 
 
-    f850_manual = mapclumpshi850.masked_where(maskmanual.getmask())
+    f850_manual = clumps_hi850.masked_where(maskmanual.getmask())
 
     # convert fluxes to SI
     #
@@ -638,7 +595,7 @@ if out_opts['tau_opt'] == 'thin' :
         
 elif out_opts['tau_opt'] == 'thick' :
 
-    mass_tau, taus, coldns_tau = calc_mapmass(mapS_850, maptemp_filter, pr,
+    mass_tau, taus, coldns_tau = calc_mapmass(mapS_850, Tdust_filter, pr,
                                               calc_type='tau',
                                               solangle=pixsolangle)
 
@@ -676,7 +633,7 @@ Tdust_total = maps.merge_maps(Tdust_calc, Tdust_manual)
 # save only calculated temperatures, if requested
 #
 if fout['tempgood'] :
-    ok = maptemp_filter.save_fitsfile(
+    ok = Tdust_filter.save_fitsfile(
         fname=wdir+fout['tempgood'], hdr_type='tdust',
         oldheader=map850.header, append=False, overwrite=True)
 
@@ -711,7 +668,7 @@ if args.clumps :
     print("  >> clump calculations")
 
     mapclumpcat = cl.ClumpCatalog.from_calcphys(
-        idxs=clump_idxs, fluxes=[mapclumpshi850,mapclumpshi450,mapclumps450],
+        idxs=clump_idxs, fluxes=[clumps_hi850,clumps_hi450,clumps_450],
         temps=[Tdust_calc], mass=[mass_calc, mass_total],
         params=pr)
 
