@@ -214,6 +214,13 @@ class Map (object):
         return v[slice[0]:slice[1]:slice[2],slice[3]:slice[4]:slice[5]]
 
 
+    
+    def nansumdata(self, fld):
+        """ apply np.nansum to fld data field"""
+        
+        return np.nansum(self.data[fld])
+
+    
 
 def divide(a, b):
     """Divides one map by another.
