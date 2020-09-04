@@ -65,10 +65,12 @@ class Param(object):
         map_units = map.header[0]['BUNIT']
         
         if map_units == 'mJy/beam' :
-            self.flux_factor = 1e-26 / self.pixelsbeam / 1000.
+            self.flxunits = 1e-29
+            self.flux_factor = self.flxunits / self.pixelsbeam 
 
         elif map_units == 'Jy/beam' :
-            self.flux_factor = 1e-26 / self.pixelsbeam
+            self.flxunits = 1e-26
+            self.flux_factor = self.flxunits / self.pixelsbeam
 
         else :
             print("ERROR: undefined flux units in input map")

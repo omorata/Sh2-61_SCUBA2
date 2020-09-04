@@ -242,17 +242,6 @@ def mass_h2(N_h2, par, solangle):
 
 
 
-#def flux450(f850, td, h850, h450, pre) :
-#    """Calculate the flux at 450micron from the flux at 850 micron and a
-#        given dust temperature
-#    """
-#    
-#    x = np.exp( 1. / td)
-#    f = pre * f850 * (x**h850 - 1) / (x**h450 - 1)
-#    return f
-
-
-
 def get_col_factor(par, solangle):
 
     dist = (pr.d).to(u.cm)
@@ -452,7 +441,6 @@ pre = (850. / 450.)**(3.+ pr.beta)
 
 
 
-
 print("  >> reading input files...")
 
 if logg:
@@ -466,6 +454,8 @@ snr450 = maps.Map.from_fitsfile(wdir+fname['snr450'], name="SNR 450micron")
 #header850 = map850.header
 
 
+# set the pixel flux_factor for the main map
+#
 pr.get_flux_factor(map850)
 
     
@@ -669,9 +659,9 @@ if args.clumps :
 
     mapclumpcat = cl.ClumpCatalog.from_calcphys(
         idxs=clump_idxs, fluxes=[clumps_hi850,clumps_hi450,clumps_450],
-        temps=[Tdust_calc], mass=[mass_calc, mass_total],
-        params=pr)
-
+        temps=[Tdust_total], mass=[mass_total],
+        coldens=[coldens_total], tpix=Tdust_calc, params=pr)
+    
     if fout['clumptable']:
         mapclumpcat.save_catalog(wdir+fout['clumptable'], overwrite=True,
                                  ctype='phys')
