@@ -290,3 +290,23 @@ def filtermap(pmap, type_filter, cut):
         sys.exit(1)
         
     return new
+
+
+
+def get_outmap(maps, keys, opt):
+
+    n_maps = np.shape(maps)[0]
+    n_keys = np.shape(keys)[0]
+
+    if n_maps != n_keys :
+        print(">> ERROR: the numbers of output maps and keys are not equal")
+        sys.exit(1)
+        
+    for i in range(n_maps):
+        if keys[i] == opt :
+            map_out = maps[i].copy()
+            return map_out
+    
+    print(" >> ERROR: output option for Tdust is not valid",
+          out_opts[fld])
+    sys.exit(1)
