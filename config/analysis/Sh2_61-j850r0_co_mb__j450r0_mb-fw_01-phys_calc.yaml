@@ -32,11 +32,14 @@ outfiles:
   temperature : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-tdust.fits
   mass : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-mass.fits
   N : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-N.fits
-  tau : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-tau.fits
+  #tau : analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-tau.fits
   clumptable:  analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-clump_table.fits
 
 output_options:
   tau_opt: thin
+  #tdust: calc_only
+  #mass: calc_only
+  #N: calc_only
 #  tdust: [all], calc_only, manual_only
 #  mass: [all], calc_only, manual_only
 #  N: [all], calc_only, manual_only

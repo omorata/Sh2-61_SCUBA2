@@ -551,6 +551,7 @@ clean-calcs-$(1)-$(2):
 	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)-ratio.fits
 	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)-tdust.fits
 	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)-mass.fits
+	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)-N.fits
 	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)-clump_table.fits
 
 .PHONY: clean-calcs-$(1)
