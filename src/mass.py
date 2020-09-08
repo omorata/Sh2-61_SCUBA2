@@ -4,23 +4,13 @@
 import sys
 
 import numpy as np
-#import numpy.ma as ma
 
-#from astropy.io import fits
 from astropy import units as u
 from astropy import constants as const
-
-#import math
-
-#import argparse as ap
-#import yaml
-
-#import logging
 
 # definition of the custom classes
 #
 import Param as par
-#import ClumpCatalog as cl
 import MapClass as maps
 
 

@@ -202,6 +202,7 @@ class ClumpCatalog (object):
         ctype:
            - 'all' the fields
            - 'phys' calc_phys fields
+           - 'findclumps' clumps from findclumps
            - 'custom' custom set of fields (to finish)
         """
         ##print units
