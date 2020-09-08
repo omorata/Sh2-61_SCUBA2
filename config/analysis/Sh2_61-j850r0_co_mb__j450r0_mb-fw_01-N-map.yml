@@ -8,7 +8,12 @@ panels:
   yx: [1,1]
   view:
     type: 'radius'
+    #type: 'box'
+    #center: ???
     radius: '11arcmin'
+    #coords: 'off'
+    coords: 'abs'
+    #box: ['7arcmin', '7arcmin']
     
   font: {family: 'Nimbus Roman'}
 
@@ -50,7 +55,7 @@ panels:
     axes:
       ticks: { #xspacing: 0.083333, yspacing: 0.066667,
                #xminor_freq: 4, yminor_freq: 5,
-               direction: in, 
+               direction: in,
                color: 'purple', length: 6, linewidth: 0.8,
                hide: False, xhide: False, yhide: False}
         
@@ -70,12 +75,12 @@ panels:
       #  corner : 'bottom right'
       #  frame: True
       
-    #dataset_02:
-    #  filename: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-N.fits'
-    #  dims: [0,1]
-    #  type: 'cntr'
+    dataset_02:
+      filename: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-N.fits'
+      dims: [0,1]
+      type: 'cntr'
       
-    #  contours:
-    #    levels: [2,5,10,20,40]
+      contours:
+        levels: [2,5,10,20,40]
 
       

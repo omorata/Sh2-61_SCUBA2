@@ -21,25 +21,28 @@ class Clump(object):
     phys_names = [
         'id', 'npix', 'nTpix', 'area', 'eff_radius', 'deconv_radius',
         'flux850', 'flux450hi', 'flux450',
-        'mass', 'var_mass', 'masstot', 'var_masstot',
-        'N', 'varN', 'maxT', 'minT', 'meanT', 'medianT', 'weightT']
+        'mass', 'var_mass',
+        'N', 'var_N',
+        'maxT', 'minT', 'meanT', 'medianT', 'weightT']
 
     phys_formats = [
         'i4', 'i4' , 'i4', 'f8', 'f8', 'f8',
         'f8', 'f8', 'f8',
-        'f8', 'f8', 'f8', 'f8',
-        'f8', 'f8', 'f4', 'f4', 'f4', 'f4', 'f4']
+        'f8', 'f8',
+        'f8', 'f8',
+        'f4', 'f4', 'f4', 'f4', 'f4']
     
     phys_units = [
         '', '', '', 'arcsec^2', 'arcsec', 'arcsec',
         'mJy', 'mJy', 'mJy',
-        'Msol', 'Msol', 'Msol', 'Msol',
-        'cm-2', 'cm-2', 'K', 'K', 'K', 'K', 'K' ]
+        'Msol', 'Msol',
+        'cm-2', 'cm-2',
+        'K', 'K', 'K', 'K', 'K' ]
 
     phys_prfmt = [
         '2d', '4d', '4d', '7.1f', '8.2f', '8.2f',
         '7.3f', '7.3f', '7.3f',
-        '8.2f', '6.2f', '8.2f', '6.2f',
+        '8.2f', '6.2f',
         '9.3e', '9.3e',
         '6.1f', '6.1f', '6.1f', '6.1f', '6.1f' ]
 
@@ -107,15 +110,17 @@ class Clump(object):
 
 
             
-    def calc_phys(self, id, idxs='', fluxes='', temps='', mass='', params=''):
+    def calc_phys(self, id, idxs='', fluxes='', temps='', mass='',
+                  coldens='', tpix='', params=''):
         """Fill a Clump Object from calcphys.
 
-        fluxes, temps, and mass are suposed to be lists of type Maps()
-        objects
+        fluxes, temps, mass, coldens are suposed to be lists of type
+        Maps() objects
         """
         
         fluxflds = ['flux850', 'flux450hi', 'flux450'] 
-        massflds = ['mass', 'var_mass', 'masstot', 'var_masstot']
+        massflds = ['mass', 'var_mass']
+        coldensflds = ['N', 'var_N']
 
         cl = id + 1
         mskcl = ma.masked_not_equal(idxs, cl)
@@ -139,34 +144,47 @@ class Clump(object):
             S = S.filled(np.nan)
 
             field = fluxflds[flx]
-            self.record[field] = np.nansum(S.data[0]) / 1e-26
+            self.record[field] = S.nansumdata(0) / 1e-26
 
-                
+            
+        if tpix :
+            tpx = tpix.masked_where(ma.getmask(mskcl))
+            self.record['nTpix'] = tpx.count()
+        else:
+            self.record['nTpix'] = -99
+
+            
         numasses = np.shape(mass)[0]
         for mss in range(numasses) :
 
             cl_m = mass[mss].masked_where(ma.getmask(mskcl))
 
-            if mss == 0 :
-                self.record['nTpix'] = cl_m.data[0].count()
-
             cl_m = cl_m.filled(np.nan)
                 
-
-            m = np.nansum(cl_m.data[0])
             var_m = np.nansum(cl_m.data[1])
-            self.record[massflds[mss*2]] = m
-            self.record[massflds[mss*2+1]] = var_m
+            self.record['mass'] = cl_m.nansumdata(0)
+            self.record['var_mass'] = cl_m.nansumdata(1)
 
-            if mss == 1 :
+            #if mss == 1 :
                 # column density ad-hoc
                 #
-                clump_N, clump_varN = self.columndensity(
-                    m, var_m, area, params.d, params.mu, params.mH)
 
-                self.record['N'] = clump_N
-                self.record['varN'] = clump_varN
+            #    clump_N, clump_varN = self.columndensity(
+            #        m, var_m, area, params.d, params.mu, params.mH)
 
+            #    self.record['N'] = clump_N
+            #    self.record['varN'] = clump_varN
+
+
+        numcoldens = np.shape(coldens)[0]
+        for dc in range(numcoldens):
+            cl_N = coldens[dc].masked_where(ma.getmask(mskcl))
+
+            cl_N = cl_N.filled(np.nan)
+
+            self.record['N'] = cl_N.nansumdata(0) / npix
+            self.record['var_N'] = cl_N.nansumdata(1) / npix / npix
+            
                     
         numtemps = np.shape(temps)[0]
         for t in range(numtemps) :

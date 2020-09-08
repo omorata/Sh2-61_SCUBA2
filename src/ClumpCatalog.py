@@ -133,8 +133,8 @@ class ClumpCatalog (object):
     def fillfrom_calcphys(self, idxs=None, **kwargs):
         """Fill a ClumpCatalog Object from calcphys.
 
-        fluxes, temps, and mass are suposed to be lists of type Maps()
-        objects
+        fluxes, temps, mass, and coldens are suposed to be lists of type
+        Maps() objects
         """
         
         n_clumps = np.int(np.nanmax(idxs))
@@ -202,6 +202,7 @@ class ClumpCatalog (object):
         ctype:
            - 'all' the fields
            - 'phys' calc_phys fields
+           - 'findclumps' clumps from findclumps
            - 'custom' custom set of fields (to finish)
         """
         ##print units
