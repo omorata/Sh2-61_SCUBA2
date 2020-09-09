@@ -92,7 +92,7 @@ snr-$(1): $(snr_file)
 .PHONY: snr-$(1)
 
 crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
-.PHONY: crop-S(1)
+.PHONY: crop-$(1)
 
 snrcrop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
 .PHONY: snrcrop-$(1)
@@ -535,6 +535,7 @@ $(calc_log):  $$(wildcard $$(cfg_file)) $(calc_refs)
              echo -e "    No cfg file $(cfg_file)" ;\
          fi
 
+
 .PHONY: calcs-$(1)-$(2)
 calcs-$(1)-$(2) : $(calc_log)
 
@@ -562,6 +563,38 @@ clean-calcs: clean-calcs-$(1)
 
 .PHONY: clean-calcs-$(ref_tgt)
 clean-calcs-$(ref_tgt): clean-calcs-$(1)
+
+
+# print catalog of physical parameters of clumps
+#
+$(eval table_name := $(outdir)/$(SNAME)-$(1)-$(2)-clump_table)
+$(table_name).txt: $$(wilcard $$(table_name).fits)
+	$(BIN_DIR)/print_catalog.py \
+                  -t 'phys' \
+                  -i $(table_name).fits \
+                  -o $(table_name).txt
+
+.PHONY: print_physcatg-$(1)-$(2)
+print_physcatg-$(1)-$(2): $(table_name).txt
+
+.PHONY: print_physcatg-$(1)
+print_physcatg-$(1): print_physcatg-$(1)-$(2)
+
+.PHONY: print_physcatg-$(ref_tgt)
+print_physcatg-$(ref_tgt): print_physcatg-$(1)
+
+.PHONY: clean-physcatg-$(1)-$(2)
+clean-physcatg-$(1)-$(2):
+	@rm -fv $(table_name).txt
+
+.PHONY: clean-physcatg-$(1)
+clean-physcatg-$(1): clean-physcatg-$(1)-$(2)
+
+.PHONY: clean-physcatg
+clean-physcatg: clean-physcatg-$(1)
+
+.PHONY: clean-physcatg-$(ref_tgt)
+clean-physcatg-$(ref_tgt): clean-physcatg-$(1)
 
 endef
 
