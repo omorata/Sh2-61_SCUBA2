@@ -96,13 +96,17 @@ def read_plot_configuration(cfg):
     plot_cfg['title'] = set_cnfgvalue(cfg, 'title', '')
     plot_cfg['colors'] = set_cnfgvalue(cfg, 'colors', ['skyblue', 'red',
                                                       'green'])
+    plot_cfg['dpi'] = set_cnfgvalue(cfg, 'dpi', 100)
 
     return plot_cfg
 
 
+
 def read_histo_configuration(cfg):
+    """ Read the configuration for astropy histo"""
 
     hcfg = {}
+    
     hcfg['meth'] = set_cnfgvalue(cfg, 'method', 'scott')
     hcfg['httype'] = set_cnfgvalue(cfg, 'type', 'stepfilled')
     hcfg['alpha'] = set_cnfgvalue(cfg, 'alpha', 0.8)
@@ -110,12 +114,25 @@ def read_histo_configuration(cfg):
     hcfg['stack'] = set_cnfgvalue(cfg, 'stacked', True)
     hcfg['cumul'] = set_cnfgvalue(cfg, 'cumulative', False)
     hcfg['ylog'] = set_cnfgvalue(cfg, 'log', False)
+    hcfg['outfile'] = set_cnfgvalue(cfg, 'outfile', 'out_histo.pdf')
 
     return hcfg
 
 
 
-def plot_histo(data, cfg, plcfg, outf):
+def read_xyplot(cfg):
+    """ Read the configuration for xy plot"""
+
+    xycfg = {}
+
+    xycfg['symbols'] = set_cnfgvalue(cfg, 'symbols', ['.', '.', '.', '.'])
+    xycfg['outfile'] = set_cnfgvalue(cfg, 'outfile', 'out_xyplot.pdf')
+
+    return xycfg
+
+
+    
+def plot_histo(data, cfg, plcfg, outd):
     """Plot histogram of data
 
     Using configuration in cfg, and output to outf.
@@ -159,9 +176,39 @@ def plot_histo(data, cfg, plcfg, outf):
                       log=histocfg['ylog'],
                       color=plcfg['colors'][ds])
  
-    fig.savefig(outf)
+    fig.savefig(outd+cfg['outfile'], dpi=plcfg['dpi'])
 
     return outbin
+
+
+
+def plot_xy(data, cfg, plcfg, outd):
+    """ Plot an x,y plot"""
+
+    xycfg = read_xyplot(cfg)
+    
+    fig = plt.figure(figsize=plcfg['size'])
+
+    if plcfg['xlog'] :
+        plt.xscale('log')
+
+    if plcfg['ylog'] :
+        plt.yscale('log')
+        
+    if plcfg['xlabel']:
+        plt.xlabel(plcfg['xlabel'])
+    if plcfg['ylabel'] :
+        plt.ylabel(plcfg['ylabel'])
+    if plcfg['title']:
+        plt.title(plcfg['title'])
+
+    datasets = np.shape(vdata)[0]
+
+    for d in range(datasets):
+        plt.plot(vdata[d][1], vdata[d][0], xycfg['symbols'][d],
+                  color=plcfg['colors'][d])
+
+    fig.savefig(outd+cfg['outfile'], dpi=plcfg['dpi'])
 
 
 
@@ -423,172 +470,36 @@ else :
 
 
 
-#if not 'infile' in cnfg:
-#    print("  ++ ERROR: No input file. Nothing to do\n     Bye!")
-#    sys.exit(1)
-
-#varmap, ifiles = read_infile(cnfg, wdir) 
 
 
-
-#if 'clumpfile' in cnfg:
-#
-#    cldefs = wdir+cnfg['clumpfile']
-#
-#    print("  > reading clump definitions in", cldefs)
-#    inclumps = read_clump_definition(cldefs)
-#
-#    if 'clumpcut' in cnfg:
-#        if len(cnfg['clumpcut']) % 2 != 0 :
-#            print("  ++ERROR: the filter in clumps does not have an even",
-#            "number of elements")
-#            sys.exit(1)
-#        
-#        clumpconds = cnfg['clumpcut']
-#
-#    else:
-#        clumpconds = []
-#else:
-#    cldefs = None
-
-
-
-#if 'auxfiles' in cnfg:
-#    auxf = cnfg['auxfiles']
-#    numaux = len(auxf)
-#
-#    if 'mask_aux' in cnfg :
-#        conds = cnfg['mask_aux']
-#        numcond = len(conds)
-#
-#        if numcond != 3 * numaux:
-#            print("  ++ ERROR: wrong number of conditions for filters")
-#            sys.exit(1)
-#else:
-#    numaux  = 0
-
-
-outfile = set_cnfgvalue(cnfg, 'outfile', 'out_histo.pdf')
 outbins = set_cnfgvalue(cnfg, 'outbins', '')
 
-# use data in clumps (if needed)
-#
-#if cldefs:
-#
-#    mapinclumps = np.empty(ifiles, dtype=maps.Map)
-#    for i in range(ifiles) :
-#        mapinclumps[i] = varmap[i].masked_where(ma.getmask(inclumps))
-#        print("  >>> number of valid pixels in clumps:", i, "=>",
-#              mapinclumps[i].count())
-#
-#
-#    while len(clumpconds) > 0 :
-#
-#        cond = clumpconds.pop(0)
-#        val = clumpconds.pop(0)
-#
-#        if cond == ">" :
-#            mskcl = ma.masked_greater(inclumps, val)
-#        elif cond == "=" :
-#            mskcl = ma.masked_not_equal(inclumps, val)
-#        elif cond == "<" :
-#            mskcl = ma.masked_less(inclumps, val)
-#        else:
-#            print("  ++ wrong condition in filter clumps", cond)
-#            sys.exit(1)
-#
-#
-#        
-#        for i in range(ifiles) :
-#            mapinclumps[i] = mapinclumps[i].masked_where(ma.getmask(mskcl))
-#            print("  >>> number of valid pixels after clump filter:", i, "=>",
-#                  mapinclumps[i].count())
-#
-#else :
-#    mapinclumps = np.empty(ifiles, dtype=maps.Map)
-#    for i in range(ifiles) :
-#        mapinclumps[i] = varmap[i].copy()
-
-
-# filter using aux files
-#
-#var_aux = np.empty(ifiles, dtype=maps.Map)
-#for i in range(ifiles) :
-#    var_aux[i] = mapinclumps[i].copy()
-#
-#if numaux :
-#
-#    for aux in auxf:
-#
-#        dataset = conds.pop(0)
-#        cond = conds.pop(0)
-#        cut = conds.pop(0)
-#    
-#        auxfile = maps.Map.from_fitsfile(wdir+aux, name='aux file'+aux)
-#
-#        if dataset == 'data':
-#            auxdata = auxfile.data[0]
-#        elif dataset == 'var' :
-#            auxdata = auxfile.data[1]
-#        else :
-#            print("  ++ ERROR: wrong definition of aux data set")
-#            sys.exit(1)
-#
-#        if cond == ">" :
-#            mask_aux = ma.masked_greater(auxdata, cut)
-#        elif cond == "=" :
-#            mask_aux = ma.masked_values(auxdata, cut)
-#        elif cond == "<" :
-#            mask_aux = ma.masked_less(auxdata, cut)
-#        else:
-#            print("  ++ wrong condition in filter clumps", cond)
-#            sys.exit(1)
-#
-#        for i in range(ifiles) :
-#            var_aux[i] = var_aux[i].masked_where(ma.getmask(mask_aux))
-#            print("  >>> number of valid pixels after filter aux:", i, "=>",
-#                  var_aux[i].count())
-
-
-#test = cnfg['test']
-#print("test", test)
-
-#for n in test:
-#    print("k", n)
-            
-#sys.exit(0)
-
-#print(np.shape(vdata))
-#print(outfile)
 if 'plot' in cnfg:
     plcf = read_plot_configuration(cnfg['plot'])
-
-
     
-if plcf['type'] == 'histo' and 'histo' in cnfg:
+if plcf['type'] == 'histo':
+    if 'histo' in cnfg:
     
-    outb = plot_histo(vdata, cnfg['histo'], plcf, outdir+outfile)
+        outb = plot_histo(vdata, cnfg['histo'], plcf, outdir)
 
-    if outbins :
-        save_bins(outdir+outbins, outb)
+        if outbins :
+            save_bins(outdir+outbins, outb)
  
-else:
-    print("\n  ++ histogram not defined")
-    
+    else:
+        print("\n  ++ ERROR: histogram not defined")
+        sys.exit(1)
+
+elif plcf['type'] == 'xyplot':
+    if 'xyplot' in cnfg:
+        plot_xy(vdata, cnfg['xyplot'], plcf, outdir)
+
+    else :
+        print("\n  ++ ERROR: xyplot not defined")
+        sys.exit(1)
 
 print("....Done")
 
 
-#vvv = var_aux[1].data[0]
-#vvdata = vvv[vvv.mask == False]
-
-fig = plt.figure(figsize=(7,7))
-plt.xscale('log')
-#plt.yscale('log')
-plt.plot(vdata[0][1], vdata[0][0], '.', color='skyblue')
-plt.plot(vdata[1][1], vdata[1][0], '.', color='red')
-plt.plot(vdata[2][1], vdata[2][0], '.', color='green')
-fig.savefig("t.pdf")
 sys.exit(0)
 
 
