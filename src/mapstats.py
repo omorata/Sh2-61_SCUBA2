@@ -8,48 +8,61 @@
   Things to do:
 
    - output results:
-     - x,y plots
      - KDEs
 
 """
+
 import numpy as np
 import numpy.ma as ma
 
+import astropy
 from astropy.io import fits
+from astropy.visualization import hist
+import matplotlib.pyplot as plt
+
+
+import argparse
+import os
+import sys
+import yaml
 
 import MapClass as maps
 
-import matplotlib.pyplot as plt
-from astropy.visualization import hist
-import astropy
-
-import argparse as ap
-import sys
-import yaml
 
 ##-- Functions ---------------------------------------------------------
 
 def read_command_line() :
     """ Read command line arguments."""
     
-    parser = ap.ArgumentParser()
+    parser = argparse.ArgumentParser()
 
     parser.add_argument(
         '-c', dest='cfgfile',  help='configuration file', 
-        default='config.yml', metavar='list')
+        default='config.yml', metavar='var')
 
     parser.add_argument(
         '-w', dest='wkdir',  help='working directory', 
-        default='.', metavar='FILE')
+        default='.', metavar='DIR')
 
     parser.add_argument(
         '-o', dest='odir',  help='output directory',
-        default='.', metavar='FILE')
+        default='.', metavar='DIR')
 
     
     return parser.parse_args()
 
 
+
+def check_dir(tdir):
+    """Check that directory tdir exists """
+    
+    if os.path.isdir(tdir) :
+        return(tdir+'/')
+    else:
+        print("  +++ ERROR:", tdir, "is not found")
+        sys.exit(1)
+
+        
 
 def read_configfile(fname):
     """ Read the YAML configuration file."""
@@ -120,7 +133,7 @@ def read_histo_configuration(cfg):
 
 
 
-def read_xyplot(cfg):
+def read_xyplot_configuration(cfg):
     """ Read the configuration for xy plot"""
 
     xycfg = {}
@@ -185,7 +198,7 @@ def plot_histo(data, cfg, plcfg, outd):
 def plot_xy(data, cfg, plcfg, outd):
     """ Plot an x,y plot"""
 
-    xycfg = read_xyplot(cfg)
+    xycfg = read_xyplot_configuration(cfg)
     
     fig = plt.figure(figsize=plcfg['size'])
 
@@ -275,7 +288,6 @@ def read_dataset(cfg, wkdir):
 
     vdata = unmask(var_aux)
 
-
     return vdata
 
 
@@ -363,7 +375,6 @@ def filter_clumps(varmap, ifiles, defs, conds, inclumps):
             print("  >>> number of valid pixels in clumps:", i, "=>",
                   mapinclumps[i].count())
 
-
         while len(conds) > 0 :
                 
             cond = conds.pop(0)
@@ -378,7 +389,6 @@ def filter_clumps(varmap, ifiles, defs, conds, inclumps):
             else:
                 print("  ++ wrong condition in filter clumps", cond)
                 sys.exit(1)
-
 
         
             for i in range(ifiles) :
@@ -436,13 +446,15 @@ def filter_auxfiles(mapinclumps, ifiles, auxf, conds):
 
     return var_aux
 
+
+
 ##-- End of functions --------------------------------------------------
 
 args = read_command_line()
 
 
-wdir = args.wkdir+'/'
-outdir = args.odir+'/'
+wdir = check_dir(args.wkdir)
+outdir = check_dir(args.odir)
 
 
 cnfg = read_configfile(args.cfgfile)
@@ -462,41 +474,43 @@ if ds_str :
     vdata = []
     for ds in ds_str:
         vdata.append(read_dataset(cnfg[ds], wdir))
-        
     
 else :
     print("  ++ ERROR: no dataset definition found")
     sys.exit(1)
 
 
-
-
-
 outbins = set_cnfgvalue(cnfg, 'outbins', '')
+
 
 if 'plot' in cnfg:
     plcf = read_plot_configuration(cnfg['plot'])
-    
-if plcf['type'] == 'histo':
-    if 'histo' in cnfg:
-    
-        outb = plot_histo(vdata, cnfg['histo'], plcf, outdir)
 
-        if outbins :
-            save_bins(outdir+outbins, outb)
+    
+    if plcf['type'] == 'histo':
+        if 'histo' in cnfg:
+    
+            outb = plot_histo(vdata, cnfg['histo'], plcf, outdir)
+
+            if outbins :
+                save_bins(outdir+outbins, outb)
  
-    else:
-        print("\n  ++ ERROR: histogram not defined")
-        sys.exit(1)
+        else:
+            print("\n  ++ ERROR: histogram not defined")
+            sys.exit(1)
+        
+    elif plcf['type'] == 'xyplot':
+        if 'xyplot' in cnfg:
+            plot_xy(vdata, cnfg['xyplot'], plcf, outdir)
 
-elif plcf['type'] == 'xyplot':
-    if 'xyplot' in cnfg:
-        plot_xy(vdata, cnfg['xyplot'], plcf, outdir)
+        else :
+            print("\n  ++ ERROR: xyplot not defined")
+            sys.exit(1)
 
-    else :
-        print("\n  ++ ERROR: xyplot not defined")
-        sys.exit(1)
+else:
+    print(" ++  No plot defined")
 
+    
 print("....Done")
 
 
