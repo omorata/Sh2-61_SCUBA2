@@ -95,7 +95,6 @@ def plot_histo(data, cfg, plcfg, outd):
     if plcfg['title']:
         plt.title(plcfg['title'])
 
-
     plmin = np.min(data[0][0])
     plmax = np.max(data[0][0])
 
