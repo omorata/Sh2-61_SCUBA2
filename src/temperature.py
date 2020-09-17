@@ -111,34 +111,7 @@ def fill_temperature(calc, manual, incl, Tdefault):
         n[~n.mask] = -99
         a[~n.mask] = n[~n.mask]
 
-        # get pixel positions of peak of the clump
-        #
-        maxpos = np.unravel_index(np.argmax(a, axis=None), a.shape)
-
-        # get positions of pixels in the clump
-        #
-        valpos = ma.where(n)
-        szarr = np.shape(valpos)[1]
-
-        if a[maxpos[0],maxpos[1]] < 0 :
-            a[maxpos[0],maxpos[1]] = Tdefault
-
-        idx = 0
-        sequ = []
-        for i in range(szarr):
-            x,y = (valpos[0][i],valpos[1][i])
-            dx = maxpos[0] - x
-            dy = maxpos[1] - y
-            
-            d = np.sqrt(dx*dx + dy*dy)
-            if d < 1e-5 :
-                continue
-            
-            sequ.append((x, y, d))
-            idx += 1
-            
-        seqarr = np.array(sequ, dtype)
-        sortedarr = np.sort(seqarr, order='dist')
+        sortedarr = get_pixels_sorted_by_distance(a, n, dtype, Tdefault, 1e-5)
 
         interpolated_values = []
         sizesorted = np.shape(sortedarr)[0]
@@ -198,3 +171,37 @@ def nn_func(a, weights):
     a = np.sum(a) / np.sum(c)
 
     return a
+
+
+
+def get_pixels_sorted_by_distance(data, mask, dtype, tdef, tol):
+    
+    # get pixel positions of peak of the clump
+    #
+    peak = np.unravel_index(np.argmax(data, axis=None), data.shape)
+    
+    # get positions of pixels in the clump
+    #
+    clump_pixel = ma.where(mask)
+
+    num_pixels = np.shape(clump_pixel)[1]
+
+    if data[peak[0],peak[1]] < 0 :
+        data[peak[0],peak[1]] = tdef
+
+    idx = 0
+    position_and_distance = []
+    for i in range(num_pixels):
+        x,y = (clump_pixel[0][i], clump_pixel[1][i])
+        dx = peak[0] - x
+        dy = peak[1] - y
+            
+        d = np.sqrt(dx*dx + dy*dy)
+        if d < tol :
+            continue
+            
+        position_and_distance.append((x, y, d))
+        idx += 1
+            
+    pd_arr = np.array(position_and_distance, dtype)
+    return np.sort(pd_arr, order='dist')
