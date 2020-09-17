@@ -139,9 +139,8 @@ def read_catgvar(cfg, wkdir) :
         catlg = cl.ClumpCatalog.from_file([infile])
 
         size = np.shape(catlg.clumps)[0]
-        #parms = np.shape(par)[0]
+
         var_array = np.empty([size])
-        #print(np.shape(var_array))
 
         for j in range(size):
             var_array[j] = catlg.clumps[j].record[cfg['params'][i]]

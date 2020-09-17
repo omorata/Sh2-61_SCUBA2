@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 #
 
-#import sys
-
 import numpy as np
 import numpy.ma as ma
 
@@ -10,6 +8,7 @@ from astropy.io import fits
 from astropy import units as u
 
 import argparse as ap
+import sys
 import yaml
 
 import logging
@@ -22,6 +21,7 @@ import MapClass as maps
 
 import temperature as t
 import mass as m
+
 
 ##-- Functions ---------------------------------------------------------
 
@@ -155,7 +155,9 @@ def print_outputsettings(opt):
         print("         tau: ", opt['tau'])
     print("     -----------------")
 
-        
+
+
+
 ##-- End of functions --------------------------------------------------
 
 
@@ -336,6 +338,10 @@ if out_opts['tau_opt'] == 'thin' :
 
     Tdust_manual = maps.full_like(f850_manual, (defaults['Td'],
                                                 defaults['varTd']))
+
+    # if fill_temp == 'extrapolate':
+    Tdust_manual = t.fill_temperature(Tdust_calc, Tdust_manual, inclumps,
+                                      defaults['Td'])
 
     mass_manual = m.calc_mapmass(S850_manual, Tdust_manual, pr)
     

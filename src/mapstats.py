@@ -24,6 +24,7 @@ import yaml
 
 import MapClass as maps
 import varplot 
+import matplotlib.pyplot as plt
 
 ##-- Functions ---------------------------------------------------------
 
@@ -130,7 +131,7 @@ def read_dataset(cfg, wkdir):
         print("  ++ ERROR: No input file. Nothing to do\n     Bye!")
         sys.exit(1)
 
-    varmap, ifiles = read_infile(cfg, wkdir) 
+    varmap, ifiles = read_infile(cfg, wkdir)
 
     cldefs, clumpconds, inclumps = read_clump_conds(cfg, wkdir)
 
@@ -140,22 +141,30 @@ def read_dataset(cfg, wkdir):
 
     var_aux = filter_auxfiles(mapinclumps, ifiles, auxfiles, auxcond)
 
-    vdata = unmask(var_aux)
+    #vdata = unmask(var_aux)
 
-    return vdata
+    #return vdata, inclumps
 
+    return var_aux, inclumps
 
 
 def unmask(var) :
+    """Unmask map data"""
+    
+    new_vdata = []
+    for ds in range(len(var)):
 
-    var_unmask = []
-                          
-    for v in range(len(var)):
-        v_tmp  = var[v].data[0]
-        v_tmp = v_tmp[v_tmp.mask == False]
-        var_unmask.append(v_tmp)
+        new_fdata = []
+        fmap = var[ds]
 
-    return var_unmask
+        for v in range(len(fmap)):
+            v_tmp  = fmap[v].data[0]
+            v_tmp = v_tmp[v_tmp.mask == False]
+            new_fdata.append(v_tmp)
+
+        new_vdata.append(new_fdata)
+
+    return new_vdata
         
 
 
@@ -302,6 +311,94 @@ def filter_auxfiles(mapinclumps, ifiles, auxf, conds):
 
 
 
+def plot_vsdist(data, cfg, inclumps):
+
+
+    maxcl = varplot.set_cnfgvalue(cfg, 'max_clumps', 100)
+    pixsize = varplot.set_cnfgvalue(cfg, 'pixel_size', 1.)
+    
+    vmsk = ma.masked_greater(inclumps, maxcl)
+    arr_size = vmsk.count()
+    #print("size max:", arr_size)
+
+    print(np.shape(data))
+    fig = plt.figure(figsize=(7,7))
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.xlim(0.9,150)
+    plt.ylim(2e21,1e24)
+
+    
+    for ds in range(np.shape(data)[0]) :
+        varpl = data[ds][0]
+
+        dist = np.empty((2,arr_size))
+        ct = 0
+
+        print("DS:", ds)
+        for cl in range(maxcl):
+
+            vmsk = ma.masked_not_equal(inclumps, cl+1)
+        
+            v_inclump = varpl.masked_where(ma.getmask(vmsk))
+        
+            data_v = v_inclump.data[0]
+            #print(data_v)
+            #print(zz.count())
+            maxpos = np.unravel_index(np.argmax(data_v, axis=None),
+                                   data_v.shape)
+
+            valpos = ma.where(data_v)
+
+            n_pix = np.shape(valpos)[1]
+            print("npix", n_pix)
+            if n_pix == 0 :
+                continue
+
+            dbins = {}
+            for i in range(n_pix):
+                x = valpos[0][i]
+                y = valpos[1][i]
+                dx = maxpos[0]-x
+                dy = maxpos[1]-y
+                dist[0][ct] = pixsize * np.sqrt(dx * dx + dy * dy)
+                dist[1][ct] = data_v[x][y]
+
+
+                k_d = int(dist[0][ct]/6) * 6
+                #print(k_d)
+                #k_d = int(dist[0][ct])
+                if k_d in dbins :
+                    dbins[k_d].append(data_v[x][y])
+                else:
+                    dbins[k_d] = [data_v[x][y]]
+
+                ct += 1
+                
+            ks = sorted(dbins.keys())
+            npt = len(ks)
+            avg = np.zeros((3,npt))
+            cpt =0
+            #print(ks)
+            for key in ks:
+                narr = np.asarray(dbins[key])
+                #print(narr)
+                avg[0][cpt] = key 
+                avg[1][cpt] = np.average(narr)
+                avg[2][cpt] = np.std(narr)
+                #print(avg[0][ct], avg[1][ct], avg[2][ct])
+                cpt +=1
+    
+    
+            plt.plot(dist[0], dist[1], '.', color='black')
+            #plt.plot(avg[0], avg[1], '.', color='red')
+            #plt.errorbar(avg[0], avg[1], avg[2], color='blue')
+    #plt.plot(avg[0], avg[1]+avg[2], color='blue')
+    #plt.plot(avg[0], avg[1]-avg[2], color='blue')
+    outfile = varplot.set_cnfgvalue(cfg, 'outfile', 'plotvsdist.pf')
+    fig.savefig(outfile)
+
+
 ##-- End of functions --------------------------------------------------
 
 args = read_command_line()
@@ -327,7 +424,9 @@ if ds_str :
 
     vdata = []
     for ds in ds_str:
-        vdata.append(read_dataset(cnfg[ds], wdir))
+        #vdata.append(read_dataset(cnfg[ds], wdir))
+        vd, inclumps = read_dataset(cnfg[ds], wdir)
+        vdata.append(vd)
     
 else :
     print("  ++ ERROR: no dataset definition found")
@@ -344,7 +443,8 @@ if 'plot' in cnfg:
     if plcf['type'] == 'histo':
         if 'histo' in cnfg:
     
-            outb = varplot.plot_histo(vdata, cnfg['histo'], plcf, outdir)
+            outb = varplot.plot_histo(unmask(vdata), cnfg['histo'], plcf,
+                                      outdir)
 
             if outbins :
                 save_bins(outdir+outbins, outb)
@@ -352,14 +452,22 @@ if 'plot' in cnfg:
         else:
             print("\n  ++ ERROR: histogram not defined")
             sys.exit(1)
-        
+
+            
     elif plcf['type'] == 'xyplot':
+
         if 'xyplot' in cnfg:
-            varplot.plot_xy(vdata, cnfg['xyplot'], plcf, outdir)
+            varplot.plot_xy(unmask(vdata), cnfg['xyplot'], plcf, outdir)
 
         else :
             print("\n  ++ ERROR: xyplot not defined")
             sys.exit(1)
+
+            
+    elif plcf['type'] == 'vsdist' :
+        if 'vsdist' in cnfg:
+
+            plot_vsdist(vdata, cnfg['vsdist'], inclumps)
 
 else:
     print(" ++  No plot defined")
