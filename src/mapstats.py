@@ -219,6 +219,7 @@ def read_aux_files(cfg, wkdir):
         #numaux  = 0
         auxf = None
         numcond = None
+        conds = None
 
     return auxf, conds
 
@@ -274,7 +275,7 @@ def filter_auxfiles(mapinclumps, ifiles, auxf, conds):
     for i in range(ifiles) :
         var_aux[i] = mapinclumps[i].copy()
 
-    if len(auxf) :
+    if auxf :
 
         for aux in auxf:
 

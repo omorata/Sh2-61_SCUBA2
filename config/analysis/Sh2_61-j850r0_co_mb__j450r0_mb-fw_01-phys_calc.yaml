@@ -36,6 +36,8 @@ outfiles:
   clumptable:  analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-clump_table.fits
 
 output_options:
+  #fill_tmp: 'extrapolate' 'fixed'
+  fill_Tdust: 'extrapolate'
   tau_opt: thin
   #tdust: calc_only
   #mass: calc_only
