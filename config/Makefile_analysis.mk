@@ -18,9 +18,9 @@ targets += j850r0_co_mb
 
 fcs := fw_01 fw_02 cf_01
 # the next three lines should be commented out when all is fixed
-fcs += fw_01t1 fw_01t2 fw_01t3
-fcs += fw_01b1 fw_01b2 fw_01b3
-fcs += fw_01Tcalc fw_01Tfix fw_01Tffx
+#fcs += fw_01t1 fw_01t2 fw_01t3
+#fcs += fw_01b1 fw_01b2 fw_01b3
+#fcs += fw_01Tcalc fw_01Tfix fw_01Tffx
 
 combined := j850r0_co_mb__j450r0_mb j850r0_mb__j450r0_mb
 combined += j850r1_mb__j450r0_mb
@@ -508,10 +508,8 @@ endef
 define CalcPhysParam
 # Template to calculate the physical parameters from the datasets
 #
-# 1- combined string, 2- findclump_id
-#
-#  we need to add 3- physcalc tag, make changes and test
-#  it shoud go as $(2)_$(3) !!!
+# 1- combined string, 2- findclump_id, 3- physical parameters
+# calculation variant
 #
 
 $(eval ref_tgt := $(firstword $(subst __, ,$(1))))
@@ -534,9 +532,9 @@ $(eval ffile := $(outdir)/$(SNAME)-$(ref_tgt).fits)
 $(eval ffile_snr := $(outdir)/$(SNAME)-$(ref_tgt)-snr.fits)
 $(eval clfile := $(RES_DIR)/findclumps/$(SNAME)-$(ref_tgt)-$(2)-clumps.fits)
 
-$(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)-phys_calc.yaml)
+$(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-phys_calc.yaml)
 
-$(eval calc_log := $(outdir)/calcs-$(1)-$(2).log)
+$(eval calc_log := $(outdir)/calcs-$(1)-$(2)_$(3).log)
 
 $(eval calc_refs :=    \
     $(ffile) $(ffile_snr) $(aligned_fits) $(aligned_snrfits) $(clfile))
@@ -554,24 +552,30 @@ $(calc_log):  $$(wildcard $$(cfg_file)) $(calc_refs)
          fi
 
 
+.PHONY: calcs-$(1)-$(2)_$(3)
+calcs-$(1)-$(2)_$(3) : $(calc_log)
+
 .PHONY: calcs-$(1)-$(2)
-calcs-$(1)-$(2) : $(calc_log)
+calcs-$(1)-$(2) : calcs-$(1)-$(2)_$(3)
 
 .PHONY: calcs-$(1)
-calcs-$(1) : calcs-$(1)-$(2)
+calcs-$(1): calcs-$(1)-$(2)
 
 .PHONY: calcs-$(ref_tgt)
 calcs-$(ref_tgt) : calcs-$(1)
 
 
-.PHONY: clean-calcs-$(1)-$(2)
-clean-calcs-$(1)-$(2):
+.PHONY: clean-calcs-$(1)-$(2)_$(3)
+clean-calcs-$(1)-$(2)_$(3):
 	@rm -fv $(calc_log)
-	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)-ratio.fits
-	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)-tdust.fits
-	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)-mass.fits
-	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)-N.fits
-	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)-clump_table.fits
+	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)_$(3)-ratio.fits
+	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)_$(3)-tdust.fits
+	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)_$(3)-mass.fits
+	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)_$(3)-N.fits
+	@rm -fv $(outdir)/$(SNAME)-$(1)-$(2)_$(3)-clump_table.fits
+
+.PHONY: clean-calcs-$(1)-$(2)
+clean-calcs-$(1)-$(2): clean-calcs-$(1)-$(2)_$(3)
 
 .PHONY: clean-calcs-$(1)
 clean-calcs-$(1): clean-calcs-$(1)-$(2)
@@ -585,15 +589,18 @@ clean-calcs-$(ref_tgt): clean-calcs-$(1)
 
 # print catalog of physical parameters of clumps
 #
-$(eval table_name := $(outdir)/$(SNAME)-$(1)-$(2)-clump_table)
+$(eval table_name := $(outdir)/$(SNAME)-$(1)-$(2)_$(3)-clump_table)
 $(table_name).txt: $$(wilcard $$(table_name).fits)
 	$(BIN_DIR)/print_catalog.py \
                   -t 'phys' \
                   -i $(table_name).fits \
                   -o $(table_name).txt
 
+.PHONY: print_physcatg-$(1)-$(2)_$(3)
+print_physcatg-$(1)-$(2)_$(3): $(table_name).txt
+
 .PHONY: print_physcatg-$(1)-$(2)
-print_physcatg-$(1)-$(2): $(table_name).txt
+print_physcatg-$(1)-$(2): print_physcatg-$(1)-$(2)_$(3)
 
 .PHONY: print_physcatg-$(1)
 print_physcatg-$(1): print_physcatg-$(1)-$(2)
@@ -601,9 +608,13 @@ print_physcatg-$(1): print_physcatg-$(1)-$(2)
 .PHONY: print_physcatg-$(ref_tgt)
 print_physcatg-$(ref_tgt): print_physcatg-$(1)
 
-.PHONY: clean-physcatg-$(1)-$(2)
-clean-physcatg-$(1)-$(2):
+
+.PHONY: clean-physcatg-$(1)-$(2)_$(3)
+clean-physcatg-$(1)-$(2)_$(3):
 	@rm -fv $(table_name).txt
+
+.PHONY: clean-physcatg-$(1)-$(2)
+clean-physcatg-$(1)-$(2): clean-physcatg-$(1)-$(2)_$(3)
 
 .PHONY: clean-physcatg-$(1)
 clean-physcatg-$(1): clean-physcatg-$(1)-$(2)
