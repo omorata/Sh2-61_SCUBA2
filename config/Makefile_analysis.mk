@@ -623,15 +623,16 @@ endef
 define MapPhysParam
 # Template to plot maps of the calculated physical parameter
 #
-# Arguments: 1- tgt, 2- findclump id, 3- parameter
+# Arguments: 1- tgt, 2- findclump id, 3- physparam calculation variant,
+#            4- parameter to map
 #
 $(eval tgt_dir := $(RES_DIR)/analysis_maps)
 $(eval out_dir := $(RES_DIR)/analysis_maps)
 
-$(eval orig_file := $(tgt_dir)/$(SNAME)-$(1)-$(2)-$(3).fits)
+$(eval orig_file := $(tgt_dir)/$(SNAME)-$(1)-$(2)_$(3)-$(4).fits)
 
-$(eval out_file := $(out_dir)/$(SNAME)-$(1)-$(2)-$(3)-map.pdf)
-$(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)-$(3)-map.yml)
+$(eval out_file := $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-$(4)-map.pdf)
+$(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-$(4)-map.yml)
 
 $(out_file): $(orig_file) $$(wildcard $$(cfg_file))
 	@if [ -f $(cfg_file) ]; then \
@@ -645,10 +646,13 @@ $(out_file): $(orig_file) $$(wildcard $$(cfg_file))
          fi
 
 
-map-physpar-$(1)-$(2)-$(3): $(out_file)
-.PHONY: map-physpar-$(1)-$(2)-$(3)
+map-physpar-$(1)-$(2)_$(3)-$(4): $(out_file)
+.PHONY: map-physpar-$(1)-$(2)_$(3)-$(4)
 
-maps-physpar-$(1)-$(2): map-physpar-$(1)-$(2)-$(3)
+maps-physpar-$(1)-$(2)_$(3): map-physpar-$(1)-$(2)_$(3)-$(4)
+.PHONY: maps-physpar-$(1)-$(2)_$(3)
+
+maps-physpar-$(1)-$(2): map-physpar-$(1)-$(2)_$(3)
 .PHONY: maps-physpar-$(1)-$(2)
 
 maps-physpar-$(1): map-physpar-$(1)-$(2)
@@ -658,12 +662,15 @@ maps-physpar: map-physpar-$(1)
 .PHONY: maps-physpar
 
 
-clean-map-physpar-$(1)-$(2)-$(3):
+clean-map-physpar-$(1)-$(2)_$(3)-$(4):
 	@rm -fv $(out_file)
-.PHONY: clean-map-physpar-$(1)-$(2)-$(3)
+.PHONY: clean-map-physpar-$(1)-$(2)_$(3)-$(4)
 
 
-clean-maps-physpar-$(1)-$(2): clean-map-physpar-$(1)-$(2)-$(3)
+clean-maps-physpar-$(1)-$(2)_$(3): clean-map-physpar-$(1)-$(2)_$(3)-$(4)
+.PHONY: clean-maps-physpar-$(1)-$(2)_$(3)
+
+clean-maps-physpar-$(1)-$(2): clean-map-physpar-$(1)-$(2)_$(3)
 .PHONY: clean-maps-physpar-$(1)-$(2)
 
 clean-maps-physpar-$(1): clean-map-physpar-$(1)-$(2)
@@ -745,9 +752,17 @@ $(foreach tgt, $(targets),\
 $(foreach tgt, $(combined),\
     $(eval $(call Align_Dataset,$(tgt)))\
     $(foreach fc, $(fcs),\
-        $(eval $(call CalcPhysParam,$(tgt),$(fc)))\
-        $(foreach mp, $(comb_maps),\
-           $(eval $(call MapPhysParam,$(tgt),$(fc),$(mp)))\
+        $(foreach phyvr, $(physcalc_tags),\
+            $(eval $(call CalcPhysParam,$(tgt),$(fc),$(phyvr)))\
+            $(foreach mp, $(comb_maps),\
+                $(eval $(call MapPhysParam,$(tgt),$(fc),$(phyvr),$(mp)))\
+            )\
+            $(foreach ht, $(histo_tags),\
+                $(eval $(call HistoPlots,$(tgt),$(fc),$(phyvr),$(ht)))\
+            )\
+            $(foreach xy, $(xyplots_tags),\
+                $(eval $(call XYPlots,$(tgt),$(fc),$(phyvr),$(xy)))\
+            )\
         )\
     ) \
 )
@@ -792,6 +807,7 @@ help:
 
 
 
+#include $(CFG_DIR)/help.mk
 help_dirs:
 	@echo
 	@echo " ---------------------------------------------------------"
