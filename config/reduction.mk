@@ -57,6 +57,9 @@ snrcrop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
 reduce-$(1): map-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
 .PHONY: reduce-$(1)
 
+reduction: reduce-$(1)
+.PHONY: reduction
+
 
 clean-map-$(1):
 	@rm -vf $(reduc_file)
