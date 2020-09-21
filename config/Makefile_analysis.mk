@@ -53,88 +53,16 @@ MAKEFLAFS += --no-builtin_rules
 export
 
 
+# include function to define rules for reduction
+#
+include $(CFG_DIR)/reduction.mk
+
+#include $(CFG_DIR)/????.mk
+#include $(CFG_DIR)/findclumps.mk
+#include $(CFG_DIR)/physparam.mk
+#include $(CFG_DIR)/physplots.mk
+
 ##-- Template definition -----------------------------------------------
-
-define DoReduction
-# Template to reduce all observations in a single step
-#
-#  Parameter: 1- target
-#
-
-$(eval reduc_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc.sdf)
-$(eval snr_file := $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr.sdf)
-
-
-$(reduc_file): $(wildcard $(CFG_DIR)/reduction/reduc-$(1).cfg)
-	. $(BIN_DIR)/reduce_raw.sh $(CFG_DIR)/reduction/reduc-$(1).cfg
-
-
-$(snr_file): $(reduc_file) 
-	$(BIN_DIR)/post_scuba2.sh \
-		-a snr  \
-		-d $(RES_DIR)/$(1)  \
-		-i $(SNAME)-$(1)-reduc
-
-
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf: $(reduc_file)
-	$(BIN_DIR)/post_scuba2.sh  \
-		-a crop  \
-		-d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/reduction/recipe-$(1).cfg  \
-		-i $(SNAME)-$(1)-reduc
-
-$(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf: $(snr_file) 
-	$(BIN_DIR)/post_scuba2.sh  \
-		-a crop  \
-		-d $(RES_DIR)/$(1) \
-		-p $(CFG_DIR)/reduction/recipe-$(1).cfg  \
-		-i $(SNAME)-$(1)-reduc_snr
-
-
-map-$(1) : $(reduc_file)
-.PHONY: map-$(1)
-
-snr-$(1): $(snr_file)
-.PHONY: snr-$(1)
-
-crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
-.PHONY: crop-$(1)
-
-snrcrop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
-.PHONY: snrcrop-$(1)
-
-reduce-$(1): map-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
-.PHONY: reduce-$(1)
-
-
-clean-map-$(1):
-	@rm -vf $(reduc_file)
-.PHONY: clean-map-$(1)
-
-clean-snr-$(1):
-	@rm -vf $(snr_file)
-.PHONY: clean-snr-$(1)
-
-clean-crop-$(1):
-	@rm -vf $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
-.PHONY: clean-crop-$(1)
-
-clean-snrcrop-$(1):
-	@rm -vf $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
-.PHONY: clean-snrcrop-$(1)
-
-clean-reduce-$(1): clean-map-$(1) clean-snr-$(1) clean-crop-$(1)
-clean-reduce-$(1): clean-snrcrop-$(1)
-
-.PHONY: clean-reduce-$(1)
-
-clean-reduce: clean-reduce-$(1)
-.PHONY: clean-reduce
-
-endef
-
-
-
 
 define PlotMaps
 # Template to plot maps for targets
@@ -732,6 +660,7 @@ endef
 ##-- End of template definition ----------------------------------------
 
 
+
 # define rules for reductions
 #
 $(foreach reduction, $(targets),\
@@ -746,6 +675,7 @@ $(foreach tgt, $(targets),\
     $(eval $(call PrepareDataset,$(tgt)))\
 )
 
+
 # define rules for findclumps
 #
 $(foreach tgt, $(targets),\
@@ -753,6 +683,7 @@ $(foreach tgt, $(targets),\
         $(eval $(call Findclumps,$(tgt),$(fc)))\
     ) \
 )
+
 
 # define rules for combined and findclumps_id
 #
@@ -778,12 +709,18 @@ $(foreach tgt, $(combined),\
 
 # other rules
 #
-clean_list := clean-reduce clean-fits_datasets clean-plotmaps clean-strip
+clean_list := clean-reduction clean-fits_datasets clean-plotmaps clean-strip
 clean_list += clean-findclumps clean-polygonfiles clean-clumps-map
-clean_list += clean-align clean-calcs clean-maps-physpar
+clean_list += clean-align clean-calcs clean-maps-physpar clean-physcatg
 
 clean:	$(clean_list)
 .PHONY: clean
+
+
+#clean_all
+#clean_analysis  <=> clean
+#clean_reduction (deactivate)
+#clean_outputs
 
 
 # include help rules
