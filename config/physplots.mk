@@ -16,20 +16,20 @@ define MapPhysParam
 $(eval tgt_dir := $(RES_DIR)/analysis_maps)
 $(eval out_dir := $(RES_DIR)/analysis_maps)
 
-$(eval orig_file := $(tgt_dir)/$(SNAME)-$(1)-$(2)_$(3)-$(4).fits)
+$(eval orig_file := $(tgt_dir)/calcs-$(1)-$(2)_$(3).log)
 
 $(eval out_file := $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-$(4)-map.pdf)
 $(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-$(4)-map.yml)
 
-$(out_file): $(orig_file) $$(wildcard $$(cfg_file))
+$(out_file): $$(wildcard $$(cfg_file)) $(orig_file)
 	@if [ -f $(cfg_file) ]; then \
 	     $(EXT_DIR)/dbxmap.py \
                  -c $(cfg_file) \
                  -o $(out_dir) \
                  -w $(tgt_dir) ;\
          else \
-             echo -e "\n++ Ignoring rule $(out_file)" ;\
-             echo -e "    No cfg file $(cfg_file)" ;\
+             echo -e "\n++ Ignoring rule:\n      $(out_file)" ;\
+             echo -e "    No cfg file:\n      $(cfg_file)" ;\
          fi
 
 
@@ -39,13 +39,13 @@ map-physpar-$(1)-$(2)_$(3)-$(4): $(out_file)
 maps-physpar-$(1)-$(2)_$(3): map-physpar-$(1)-$(2)_$(3)-$(4)
 .PHONY: maps-physpar-$(1)-$(2)_$(3)
 
-maps-physpar-$(1)-$(2): map-physpar-$(1)-$(2)_$(3)
+maps-physpar-$(1)-$(2): maps-physpar-$(1)-$(2)_$(3)
 .PHONY: maps-physpar-$(1)-$(2)
 
-maps-physpar-$(1): map-physpar-$(1)-$(2)
+maps-physpar-$(1): maps-physpar-$(1)-$(2)
 .PHONY: maps-physpar-$(1)
 
-maps-physpar: map-physpar-$(1)
+maps-physpar: maps-physpar-$(1)
 .PHONY: maps-physpar
 
 
@@ -57,13 +57,13 @@ clean-map-physpar-$(1)-$(2)_$(3)-$(4):
 clean-maps-physpar-$(1)-$(2)_$(3): clean-map-physpar-$(1)-$(2)_$(3)-$(4)
 .PHONY: clean-maps-physpar-$(1)-$(2)_$(3)
 
-clean-maps-physpar-$(1)-$(2): clean-map-physpar-$(1)-$(2)_$(3)
+clean-maps-physpar-$(1)-$(2): clean-maps-physpar-$(1)-$(2)_$(3)
 .PHONY: clean-maps-physpar-$(1)-$(2)
 
-clean-maps-physpar-$(1): clean-map-physpar-$(1)-$(2)
+clean-maps-physpar-$(1): clean-maps-physpar-$(1)-$(2)
 .PHONY: clean-maps-physpar-$(1)
 
-clean-maps-physpar: clean-map-physpar-$(1)
+clean-maps-physpar: clean-maps-physpar-$(1)
 .PHONY: clean-maps-physpar-$(1)
 
 endef
@@ -91,7 +91,7 @@ $(eval orig_calc := $(outdir)/calcs-$(1)-$(2)_$(3).log)
 $(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-histo-$(4).yml)
 $(eval histo_file := $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-histo-$(4).pdf)
 
-$(histo_file): $$(wildcard $$(cfg_file)) $(orig_calc) 
+$(histo_file): $$(wildcard $$(cfg_file)) $$(wildcard $$(orig_calc)) 
 	@if [ -f $(cfg_file) ]; then \
 	     $(BIN_DIR)/mapststs.py \
                  -c $(cfg_file) \
@@ -180,7 +180,7 @@ $(eval orig_calc := $(outdir)/calcs-$(1)-$(2)_$(3).log)
 $(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-xyplot-$(4).yml)
 $(eval xyplot_file := $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-xyplot-$(4).pdf)
 
-$(xyplot_file): $$(wildcard $$(cfg_file)) $(orig_calc) 
+$(xyplot_file): $$(wildcard $$(cfg_file)) $$(wildcard $$(orig_calc)) 
 	@if [ -f $(cfg_file) ]; then \
 	     $(BIN_DIR)/mapststs.py \
                  -c $(cfg_file) \
