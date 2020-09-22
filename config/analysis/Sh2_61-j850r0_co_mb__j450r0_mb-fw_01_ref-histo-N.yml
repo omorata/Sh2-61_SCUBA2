@@ -20,7 +20,7 @@ histo:
   stacked: True
   cumulative: False
   log: True
-  outfile: 'test_histo.pdf'
+  outfile: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-histo-N.pdf'
 
 
 dataset_1:
@@ -29,16 +29,16 @@ dataset_1:
   #'analysis_maps/Sh2_61-j850r0_co_mb.fits',
 #           'analysis_maps/Sh2_61-j450r0_mb-aligned_to-j850r0_co_mb.fits']
 #         'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-tdust.fits']
-  clumpfile: findclumps/Sh2_61-j850r0_co_mb-fw_01_ref-clumps.fits
+  clumpfile: findclumps/Sh2_61-j850r0_co_mb-fw_01-clumps.fits
   #clumpcut: [ '>', 20]
   #auxfiles: ['analysis_maps/Sh2_61-j450r0_mb-snr-aligned_to-j850r0_co_mb.fits']
   #auxfiles: ['analysis_maps/Sh2_61-j850r0_co_mb-snr.fits']
   #mask_aux: [ 'data', "<" , .]
 #
-dataset_2:
-  infile: [ 'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_refTcalc-N.fits']
+#dataset_2:
+#  infile: [ 'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_refTcalc-N.fits']
 #           'analysis_maps/Sh2_61-j450r0_mb-aligned_to-j850r0_co_mb.fits']
-  clumpfile: findclumps/Sh2_61-j850r0_co_mb-fw_01_ref-clumps.fits
+#  clumpfile: findclumps/Sh2_61-j850r0_co_mb-fw_01-clumps.fits
 #  clumpcut: [ '>', 10]
 #  auxfiles: ['analysis_maps/Sh2_61-j450r0_mb-snr-aligned_to-j850r0_co_mb.fits']
 #  #           'analysis_maps/Sh2_61-j850r0_co_mb-snr.fits']
