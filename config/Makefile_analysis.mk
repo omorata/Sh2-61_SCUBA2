@@ -295,25 +295,37 @@ $(out_shapes): $$(wildcard $$(out_catalog) $$(out_fc))
                 $(out_catalog) $(out_shapes);\
         fi
 
+
 polygonfile-$(1)-$(2): $(out_shapes)
+
 .PHONY: polygonfile-$(1)-$(2)
 
+
 polygonfiles-$(1): polygonfile-$(1)-$(2)
+
 .PHONY: polygonfiles-$(1)
 
+
 polygonfiles: polygonfiles-$(1)
+
 .PHONY: polygonfiles
 
 
 clean-polygonfile-$(1)-$(2):
 	@rm -fv $(out_shapes)
+
 .PHONY: clean-polygonfile-$(1)-$(2)
 
+
 clean-polygonfiles-$(1): clean-polygonfile-$(1)-$(2)
+
 .PHONY: clean-polygonfiles-$(1)
 
+
 clean-polygonfiles: clean-polygonfiles-$(1)
+
 .PHONY: polygonfiles
+
 
 
 $(eval map_file := $(analysis_dir)/$(SNAME)-$(1).fits)
@@ -518,40 +530,65 @@ clean-calcs-$(ref_tgt): clean-calcs-$(1)
 # print catalog of physical parameters of clumps
 #
 $(eval table_name := $(outdir)/$(SNAME)-$(1)-$(2)_$(3)-clump_table)
-$(table_name).txt: $$(wilcard $$(table_name).fits)
-	$(BIN_DIR)/print_catalog.py \
-                  -t 'phys' \
-                  -i $(table_name).fits \
-                  -o $(table_name).txt
 
-.PHONY: print_physcatg-$(1)-$(2)_$(3)
+$(table_name).txt: $$(wilcard $$(table_name).fits)
+	@if [ -f $(table_name).fits ]; then \
+            $(BIN_DIR)/print_catalog.py \
+                -t 'phys' \
+                -i $(table_name).fits \
+                -o $(table_name).txt; \
+        fi
+
 print_physcatg-$(1)-$(2)_$(3): $(table_name).txt
 
-.PHONY: print_physcatg-$(1)-$(2)
+.PHONY: print_physcatg-$(1)-$(2)_$(3)
+
+
 print_physcatg-$(1)-$(2): print_physcatg-$(1)-$(2)_$(3)
 
-.PHONY: print_physcatg-$(1)
+.PHONY: print_physcatg-$(1)-$(2)
+
+
 print_physcatg-$(1): print_physcatg-$(1)-$(2)
 
-.PHONY: print_physcatg-$(ref_tgt)
+.PHONY: print_physcatg-$(1)
+
+
+print_physcatg: print_physcatg-$(1)
+
+.PHONY: print_physcatg
+
+
 print_physcatg-$(ref_tgt): print_physcatg-$(1)
 
+.PHONY: print_physcatg-$(ref_tgt)
 
-.PHONY: clean-physcatg-$(1)-$(2)_$(3)
+
+
 clean-physcatg-$(1)-$(2)_$(3):
 	@rm -fv $(table_name).txt
 
-.PHONY: clean-physcatg-$(1)-$(2)
+.PHONY: clean-physcatg-$(1)-$(2)_$(3)
+
+
 clean-physcatg-$(1)-$(2): clean-physcatg-$(1)-$(2)_$(3)
 
-.PHONY: clean-physcatg-$(1)
+.PHONY: clean-physcatg-$(1)-$(2)
+
+
 clean-physcatg-$(1): clean-physcatg-$(1)-$(2)
 
-.PHONY: clean-physcatg
+.PHONY: clean-physcatg-$(1)
+
+
 clean-physcatg: clean-physcatg-$(1)
 
-.PHONY: clean-physcatg-$(ref_tgt)
+.PHONY: clean-physcatg
+
+
 clean-physcatg-$(ref_tgt): clean-physcatg-$(1)
+
+.PHONY: clean-physcatg-$(ref_tgt)
 
 
 endef

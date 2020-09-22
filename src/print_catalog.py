@@ -87,6 +87,6 @@ else:
 
     
 
-print(" >> Printing shapes to file:", fout,"\n")
+print(" >> Printing catalog to file:", fout,"\n")
 catlg.print_catalog(ctype=out_type, fields=fields, filename=fout)
 
