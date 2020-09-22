@@ -632,7 +632,7 @@ list_tasks := reduction
 list_tasks += tofits plotmaps
 list_tasks += findclumps_snr polygonfiles clumps-map
 list_tasks += strip tofits_strip
-list_tasks += maps_physpar
+list_tasks += maps_physpar histo xyplot
 
 #all: $(list_tasks)
 #.PHONY: all
@@ -689,6 +689,7 @@ $(foreach tgt, $(combined),\
 clean_list := clean-reduction clean-fits_datasets clean-plotmaps clean-strip
 clean_list += clean-findclumps clean-polygonfiles clean-clumps-map
 clean_list += clean-align clean-calcs clean-maps-physpar clean-physcatg
+clean_list += clean-histo clean-xyplot
 
 clean:	$(clean_list)
 .PHONY: clean

@@ -16,11 +16,80 @@ define HistoPlots
 # The plots depend on calcs.log as a generic way  and on the wildcard of
 # a .yml file with the same stem as the pdf
 #
-# The output name must have histo between arg 3 and arg 4
-#
 # models
 #  Sh2_61-j850r0_co_mb__j450ro_mb-fw_01_ref-histo-N_all.pdf
 #
+
+$(eval tgt_dir := $(RES_DIR)/analysis_maps)
+$(eval out_dir := $(RES_DIR)/analysis_maps)
+
+$(eval orig_calc := $(outdir)/calcs-$(1)-$(2)_$(3).log)
+
+$(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-histo-$(4).yml)
+$(eval histo_file := $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-histo-$(4).pdf)
+
+$(histo_file): $$(wildcard $$(cfg_file)) $(orig_calc) 
+	@if [ -f $(cfg_file) ]; then \
+	     $(BIN_DIR)/mapststs.py \
+                 -c $(cfg_file) \
+                 -o $(out_dir) \
+                 -w $(tgt_dir) ;\
+         else \
+             echo -e "\n++ Ignoring rule\n   $(histo_file)" ;\
+             echo -e "    No cfg file\n   $(cfg_file)" ;\
+         fi
+
+
+histo-$(1)-$(2)_$(3)-$(4): $(histo_file)
+
+.PHONY: histo-$(1)-$(2)_$(3)-$(4)
+
+
+histo-$(1)-$(2)_$(3): histo-$(1)-$(2)_$(3)-$(4)
+
+.PHONY: histo-$(1)-$(2)_$(3)
+
+
+histo-$(1)-$(2): histo-$(1)-$(2)_$(3)
+
+.PHONY: histo-$(1)-$(2)
+
+
+histo-$(1): histo-$(1)-$(2)
+
+.PHONY: histo-$(1)
+
+
+histo: histo-$(1)
+
+.PHONY: histo
+
+
+clean-histo-$(1)-$(2)_$(3)-$(4):
+	@rm $(histo_file)
+
+.PHONY: clean-histo-$(1)-$(2)_$(3)-$(4)
+
+
+clean-histo-$(1)-$(2)_$(3): clean-histo-$(1)-$(2)_$(3)-$(4)
+
+.PHONY: clean-histo-$(1)-$(2)_$(3)
+
+
+clean-histo-$(1)-$(2): clean-histo-$(1)-$(2)_$(3)
+
+.PHONY: clean-histo-$(1)-$(2)
+
+
+clean-histo-$(1): clean-histo-$(1)-$(2)
+
+.PHONY: clean-histo-$(1)
+
+
+clean-histo: clean-histo-$(1)
+
+.PHONY: clean-histo
+
 endef
 
 
@@ -39,4 +108,76 @@ define XYPlots
 # models
 #  Sh2_61-j850r0_co_mb__j450ro_mb-fw_01_ref-xyplot-N_vs_tdust_all.pdf
 #
+
+$(eval tgt_dir := $(RES_DIR)/analysis_maps)
+$(eval out_dir := $(RES_DIR)/analysis_maps)
+
+$(eval orig_calc := $(outdir)/calcs-$(1)-$(2)_$(3).log)
+
+$(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-xyplot-$(4).yml)
+$(eval xyplot_file := $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-xyplot-$(4).pdf)
+
+$(xyplot_file): $$(wildcard $$(cfg_file)) $(orig_calc) 
+	@if [ -f $(cfg_file) ]; then \
+	     $(BIN_DIR)/mapststs.py \
+                 -c $(cfg_file) \
+                 -o $(out_dir) \
+                 -w $(tgt_dir) ;\
+         else \
+             echo -e "\n++ Ignoring rule\n   $(xyplot_file)" ;\
+             echo -e "    No cfg file\n   $(cfg_file)" ;\
+         fi
+
+
+xyplot-$(1)-$(2)_$(3)-$(4): $(xyplot_file)
+
+.PHONY: xyplot-$(1)-$(2)_$(3)-$(4)
+
+
+xyplot-$(1)-$(2)_$(3): xyplot-$(1)-$(2)_$(3)-$(4)
+
+.PHONY: xyplot-$(1)-$(2)_$(3)
+
+
+xyplot-$(1)-$(2): xyplot-$(1)-$(2)_$(3)
+
+.PHONY: xyplot-$(1)-$(2)
+
+
+xyplot-$(1): xyplot-$(1)-$(2)
+
+.PHONY: xyplot-$(1)
+
+
+xyplot: xyplot-$(1)
+
+.PHONY: xyplot
+
+
+clean-xyplot-$(1)-$(2)_$(3)-$(4):
+	@rm $(xyplot_file)
+
+.PHONY: clean-xyplot-$(1)-$(2)_$(3)-$(4)
+
+
+clean-xyplot-$(1)-$(2)_$(3): clean-xyplot-$(1)-$(2)_$(3)-$(4)
+
+.PHONY: clean-xyplot-$(1)-$(2)_$(3)
+
+
+clean-xyplot-$(1)-$(2): clean-xyplot-$(1)-$(2)_$(3)
+
+.PHONY: clean-xyplot-$(1)-$(2)
+
+
+clean-xyplot-$(1): clean-xyplot-$(1)-$(2)
+
+.PHONY: clean-xyplot-$(1)
+
+
+clean-xyplot: clean-xyplot-$(1)
+
+.PHONY: clean-xyplot
+
+
 endef
