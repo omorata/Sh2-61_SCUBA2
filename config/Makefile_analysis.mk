@@ -29,7 +29,7 @@ comb_maps := ratio tdust N mass
 
 physcalc_tags := ref td1 td2 td3 beta1 beta2 beta3 Tcalc Tfix Tffx
 histo_tags := N tdust N_superp tdust_superp
-xyplots_tags := N_vs_tdust
+xyplots_tags := N_vs_tdust N_vs_f850
 #
 ##-- End info ----------------------------------------------------------
 
@@ -117,8 +117,8 @@ $(map_file): $(orig_file) $$(wildcard $$(cfg_file))
                  -o $(map_dir) \
                  -w $(map_dir) ;\
          else \
-             echo -e "\n++ Ignoring rule $(out_fc)" ;\
-             echo -e "    No cfg file $(cfg_file)" ;\
+             echo -e "\n++ Ignoring rule:\n      $(out_fc)" ;\
+             echo -e "    No cfg file:\n      $(cfg_file)" ;\
          fi
 
 plotmap-$(1): $(map_file)

@@ -6,7 +6,6 @@
 #
 #  To be included by the main Makefile
 
-
 define MapPhysParam
 # Template to plot maps of the calculated physical parameter
 #
@@ -20,6 +19,7 @@ $(eval orig_file := $(tgt_dir)/calcs-$(1)-$(2)_$(3).log)
 
 $(eval out_file := $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-$(4)-map.pdf)
 $(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-$(4)-map.yml)
+
 
 $(out_file): $$(wildcard $$(cfg_file)) $(orig_file)
 	@if [ -f $(cfg_file) ]; then \
@@ -83,7 +83,6 @@ define HistoPlots
 #  Sh2_61-j850r0_co_mb__j450ro_mb-fw_01_ref-histo-N_all.pdf
 #
 
-$(eval tgt_dir := $(RES_DIR)/analysis_maps)
 $(eval out_dir := $(RES_DIR)/analysis_maps)
 
 $(eval orig_calc := $(outdir)/calcs-$(1)-$(2)_$(3).log)
@@ -91,15 +90,15 @@ $(eval orig_calc := $(outdir)/calcs-$(1)-$(2)_$(3).log)
 $(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-histo-$(4).yml)
 $(eval histo_file := $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-histo-$(4).pdf)
 
-$(histo_file): $$(wildcard $$(cfg_file)) $$(wildcard $$(orig_calc)) 
+$(histo_file): $$(wildcard $$(cfg_file)) $(orig_calc)
 	@if [ -f $(cfg_file) ]; then \
-	     $(BIN_DIR)/mapststs.py \
+	     $(BIN_DIR)/mapstats.py \
                  -c $(cfg_file) \
                  -o $(out_dir) \
-                 -w $(tgt_dir) ;\
+                 -w $(RES_DIR) ;\
          else \
-             echo -e "\n++ Ignoring rule\n   $(histo_file)" ;\
-             echo -e "    No cfg file\n   $(cfg_file)" ;\
+             echo -e "\n++ Ignoring rule\n      $(histo_file)" ;\
+             echo -e "    No cfg file\n      $(cfg_file)" ;\
          fi
 
 
@@ -129,7 +128,7 @@ histo: histo-$(1)
 
 
 clean-histo-$(1)-$(2)_$(3)-$(4):
-	@rm $(histo_file)
+	@rm -fv $(histo_file)
 
 .PHONY: clean-histo-$(1)-$(2)_$(3)-$(4)
 
@@ -172,7 +171,6 @@ define XYPlots
 #  Sh2_61-j850r0_co_mb__j450ro_mb-fw_01_ref-xyplot-N_vs_tdust_all.pdf
 #
 
-$(eval tgt_dir := $(RES_DIR)/analysis_maps)
 $(eval out_dir := $(RES_DIR)/analysis_maps)
 
 $(eval orig_calc := $(outdir)/calcs-$(1)-$(2)_$(3).log)
@@ -180,15 +178,15 @@ $(eval orig_calc := $(outdir)/calcs-$(1)-$(2)_$(3).log)
 $(eval cfg_file := $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-xyplot-$(4).yml)
 $(eval xyplot_file := $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-xyplot-$(4).pdf)
 
-$(xyplot_file): $$(wildcard $$(cfg_file)) $$(wildcard $$(orig_calc)) 
+$(xyplot_file): $$(wildcard $$(cfg_file)) $(orig_calc)
 	@if [ -f $(cfg_file) ]; then \
-	     $(BIN_DIR)/mapststs.py \
+	     $(BIN_DIR)/mapstats.py \
                  -c $(cfg_file) \
                  -o $(out_dir) \
-                 -w $(tgt_dir) ;\
+                 -w $(RES_DIR) ;\
          else \
-             echo -e "\n++ Ignoring rule\n   $(xyplot_file)" ;\
-             echo -e "    No cfg file\n   $(cfg_file)" ;\
+             echo -e "\n++ Ignoring rule\n      $(xyplot_file)" ;\
+             echo -e "    No cfg file\n      $(cfg_file)" ;\
          fi
 
 
@@ -218,7 +216,7 @@ xyplot: xyplot-$(1)
 
 
 clean-xyplot-$(1)-$(2)_$(3)-$(4):
-	@rm $(xyplot_file)
+	@rm -fv $(xyplot_file)
 
 .PHONY: clean-xyplot-$(1)-$(2)_$(3)-$(4)
 
