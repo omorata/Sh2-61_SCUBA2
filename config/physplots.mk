@@ -165,8 +165,6 @@ define XYPlots
 # the plots depend on calcs.log as a generic way  and on the wildcard of
 # a .yml file with the same stem as the pdf
 #
-# The output name must have xyplot between arg 3 and arg 4
-#
 # models
 #  Sh2_61-j850r0_co_mb__j450ro_mb-fw_01_ref-xyplot-N_vs_tdust_all.pdf
 #
