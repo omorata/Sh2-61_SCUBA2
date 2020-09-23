@@ -261,23 +261,3 @@ else:
 
     
 print("....Done")
-
-#plot_histo(vars[:,show], 'catg.pdf')
-
-#print("\n  ...done\n")
-
-#a = 4
-#b = 3
-#x = vars[:,a]
-#y = vars[:,b]
-
-#c = slice(0,10)
-#d = slice(30,100)
-
-#fig = plt.figure(figsize=(4,4))
-#plt.xscale('log')
-#plt.yscale('log')
-#plt.plot(x, y, '.', color='black')
-#plt.plot(vars[c,a], vars[c,b], '.', color='red')
-#plt.plot(vars[d,a], vars[d,b], '.', color='blue')
-#fig.savefig("t.pdf")

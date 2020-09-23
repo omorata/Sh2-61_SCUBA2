@@ -7,6 +7,7 @@
 ##
 
 ##-- Info --------------------------------------------------------------
+
 PRJ_NAME=Sh2_61-SCUBA2
 HOME_DIR := .
 SNAME := Sh2_61
@@ -18,17 +19,21 @@ targets += j850r0_co_mb
 
 findclump_tags := fw_01 fw_02 cf_01
 
-combined := j850r0_co_mb__j450r0_mb j850r0_mb__j450r0_mb
+combined := j850r0_co_mb__j450r0_mb
+combined += j850r0_mb__j450r0_mb
 combined += j850r1_mb__j450r0_mb
 
-comb_maps := ratio tdust N mass
+comb_maps := tdust N mass ratio
 
-physcalc_tags := ref Tcalc Tfix Tffx
-physcalc_tags += td1 td2 td3 beta1 beta2 beta3
+physcalc_tags := ref
+physcalc_tags += Tcalc Tfix Tffx
+physcalc_tags += td1 td2 td3
+physcalc_tags += beta1 beta2 beta3
 
-histo_tags := N tdust N_superp tdust_superp
+histo_tags := N tdust
 
 xyplots_tags := N_vs_tdust N_vs_f850
+
 #
 ##-- End info ----------------------------------------------------------
 
@@ -39,6 +44,7 @@ CFG_DIR := $(HOME_DIR)/config
 DATA_DIR := $(HOME_DIR)/data
 RES_DIR := $(HOME_DIR)/results
 EXT_DIR := $(HOME_DIR)/bin
+
 
 # defaults
 #
@@ -52,23 +58,23 @@ MAKEFLAFS += --no-builtin_rules
 export
 
 
-# include function to define rules for reduction
+# function to define rules for reduction
 #
 include $(CFG_DIR)/reduction.mk
 
 
-# functions to prepare daata for further processing and to plot the maps
-# of the reduced data
+# functions with rules to prepare the data for further processing and to
+# plot the maps of the reduced data
 #
 include $(CFG_DIR)/prepdata.mk
 
 
-# include function to include rules to look for clumps
+# function to include rules to look for clumps
 #
 include $(CFG_DIR)/findclumps.mk
 
 
-# include function to calculate the physical parameters of the data
+# function with rules to calculate the physical parameters of the data
 #
 include $(CFG_DIR)/physcalcs.mk
 

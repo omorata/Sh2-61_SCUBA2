@@ -1,0 +1,27 @@
+plot:
+  type: 'xyplot'
+  size: [6,6]
+  xlog: False
+  ylog: True
+  xlabel: '$T$ (K)'
+  ylabel: '$N$ (cm$^{-2}$)'
+  title: 'fw_01_ref clumps maxT'
+  colors: ['skyblue', 'red' , 'green', 'brown']
+  dpi: 30
+  #xlim: [a,b]
+  #ylim: [a,b]
+  
+  
+
+xyplot:
+  symbols : ['.', '.', '.']
+  outfile: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-xyplotclumps-N_vs_tdust.pdf'
+
+
+dataset_1:
+  infile: 'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-clump_table.fits'
+  params: ['N', 'maxT']
+  #auxfile: ['analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-clump_table.fits']
+  #auxpar: [['maxT']]
+  #conds: [['<', 16]]
+

@@ -6,12 +6,15 @@
 #
 #  To be included by the main Makefile
 
+
+
 define MapPhysParam
-# Template to plot maps of the calculated physical parameter
+#  Template to plot maps of the calculated physical parameter
 #
-# Arguments: 1- tgt, 2- findclump id, 3- physparam calculation variant,
-#            4- parameter to map
+#  Arguments: 1- tgt, 2- findclump id, 3- physparam calculation variant,
+#             4- parameter to map
 #
+
 $(eval tgt_dir := $(RES_DIR)/analysis_maps)
 $(eval out_dir := $(RES_DIR)/analysis_maps)
 
@@ -71,16 +74,16 @@ endef
 
 
 define HistoPlots
-# Template to plot histograms from the pixel maps of calculated physical
-# parameters
+#  Template to plot histograms from either the pixel maps of calculated
+#  physical parameters or the clumps extracted from them
 #
-# Arguments: 1- tgt, 2- findclump id, 3- physcalc tag, 4-histoplot tag
+#  Arguments: 1- tgt, 2- findclump id, 3- physcalc tag, 4-histoplot tag
 #
-# The plots depend on calcs.log as a generic way  and on the wildcard of
-# a .yml file with the same stem as the pdf
+#  The plots depend on calcs.log as a generic way  and on the wildcard of
+#  a .yml file with the same stem as the pdf
 #
-# models
-#  Sh2_61-j850r0_co_mb__j450ro_mb-fw_01_ref-histo-N_all.pdf
+#  models
+#   Sh2_61-j850r0_co_mb__j450ro_mb-fw_01_ref-histo-N_all.pdf
 #
 
 $(eval out_dir := $(RES_DIR)/analysis_maps)
@@ -151,6 +154,76 @@ clean-histo-$(1): clean-histo-$(1)-$(2)
 clean-histo: clean-histo-$(1)
 
 .PHONY: clean-histo
+
+
+
+$(eval clcfg_file := \
+    $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-histoclumps-$(4).yml)
+
+$(eval histocl_file := $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-histoclumps-$(4).pdf)
+
+$(histocl_file): $$(wildcard $$(clcfg_file)) $(orig_calc)
+	@if [ -f $(clcfg_file) ]; then \
+	     $(BIN_DIR)/catgstats.py \
+                 -c $(clcfg_file) \
+                 -o $(out_dir) \
+                 -w $(RES_DIR) ;\
+         fi
+         #else \
+             echo -e "\n++ Ignoring rule\n      $(histocl_file)" ;\
+             echo -e "    No cfg file\n      $(clcfg_file)" ;\
+         fi
+
+
+histo-clumps-$(1)-$(2)_$(3)-$(4): $(histocl_file)
+
+.PHONY: histo-clumps-$(1)-$(2)_$(3)-$(4)
+
+
+histo-clumps-$(1)-$(2)_$(3): histo-clumps-$(1)-$(2)_$(3)-$(4)
+
+.PHONY: histo-clumps-$(1)-$(2)_$(3)
+
+
+histo-clumps-$(1)-$(2): histo-clumps-$(1)-$(2)_$(3)
+
+.PHONY: histo-clumps-$(1)-$(2)
+
+
+histo-clumps-$(1): histo-clumps-$(1)-$(2)
+
+.PHONY: histo-clumps-$(1)
+
+
+histo-clumps: histo-clumps-$(1)
+
+.PHONY: histo-clumps
+
+
+clean-histo_clumps-$(1)-$(2)_$(3)-$(4):
+	@rm -fv $(histocl_file)
+
+.PHONY: clean-histo_clumps-$(1)-$(2)_$(3)-$(4)
+
+
+clean-histo_clumps-$(1)-$(2)_$(3): clean-histo_clumps-$(1)-$(2)_$(3)-$(4)
+
+.PHONY: clean-histo_clumps-$(1)-$(2)_$(3)
+
+
+clean-histo_clumps-$(1)-$(2): clean-histo_clumps-$(1)-$(2)_$(3)
+
+.PHONY: clean-histo_clumps-$(1)-$(2)
+
+
+clean-histo_clumps-$(1): clean-histo_clumps-$(1)-$(2)
+
+.PHONY: clean-histo_clumps-$(1)
+
+
+clean-histo_clumps: clean-histo_clumps-$(1)
+
+.PHONY: clean-histo_clumps
 
 endef
 
@@ -237,6 +310,77 @@ clean-xyplot-$(1): clean-xyplot-$(1)-$(2)
 clean-xyplot: clean-xyplot-$(1)
 
 .PHONY: clean-xyplot
+
+
+
+$(eval clcfg_file := \
+    $(CFG_DIR)/analysis/$(SNAME)-$(1)-$(2)_$(3)-xyplotclumps-$(4).yml)
+
+$(eval xyplotcl_file := \
+    $(out_dir)/$(SNAME)-$(1)-$(2)_$(3)-xyplotclumps-$(4).pdf)
+
+$(xyplotcl_file): $$(wildcard $$(clcfg_file)) $(orig_calc)
+	@if [ -f $(clcfg_file) ]; then \
+	    $(BIN_DIR)/catgstats.py \
+                -c $(clcfg_file) \
+                -o $(out_dir) \
+                -w $(RES_DIR) ;\
+        fi
+        #else \
+            echo -e "\n++ Ignoring rule\n      $(xyplotcl_file)" ;\
+            echo -e "    No cfg file\n      $(clcfg_file)" ;\
+        fi
+
+
+xyplot-clumps-$(1)-$(2)_$(3)-$(4): $(xyplotcl_file)
+
+.PHONY: xyplot-clumps-$(1)-$(2)_$(3)-$(4)
+
+
+xyplot-clumps-$(1)-$(2)_$(3): xyplot-clumps-$(1)-$(2)_$(3)-$(4)
+
+.PHONY: xyplot-clumps-$(1)-$(2)_$(3)
+
+
+xyplot-clumps-$(1)-$(2): xyplot-clumps-$(1)-$(2)_$(3)
+
+.PHONY: xyplot-clumps-$(1)-$(2)
+
+
+xyplot-clumps-$(1): xyplot-clumps-$(1)-$(2)
+
+.PHONY: xyplot-clumps-$(1)
+
+
+xyplot-clumps: xyplot-clumps-$(1)
+
+.PHONY: xyplot-clumps
+
+
+clean-xyplot_clumps-$(1)-$(2)_$(3)-$(4):
+	@rm -fv $(xyplotcl_file)
+
+.PHONY: clean-xyplot_clumps-$(1)-$(2)_$(3)-$(4)
+
+
+clean-xyplot_clumps-$(1)-$(2)_$(3): clean-xyplot_clumps-$(1)-$(2)_$(3)-$(4)
+
+.PHONY: clean-xyplot_clumps-$(1)-$(2)_$(3)
+
+
+clean-xyplot_clumps-$(1)-$(2): clean-xyplot_clumps-$(1)-$(2)_$(3)
+
+.PHONY: clean-xyplot_clumps-$(1)-$(2)
+
+
+clean-xyplot_clumps-$(1): clean-xyplot_clumps-$(1)-$(2)
+
+.PHONY: clean-xyplot_clumps-$(1)
+
+
+clean-xyplot_clumps: clean-xyplot_clumps-$(1)
+
+.PHONY: clean-xyplot_clumps
 
 
 endef
