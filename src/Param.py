@@ -22,7 +22,7 @@ class Param(object):
         self.mu = mu
         self.mH = 1.6733e-27 * u.kg
         self.dtogas = dtogas
-        self.d = d
+        self.d = d.to(u.m)
         self.beta = beta
         self.l450 = l450
         self.l850 = l850
@@ -31,9 +31,7 @@ class Param(object):
         
         self.pixarea = pixsize * pixsize
 
-        pixelsbeam = np.pi / 4. / np.log(2.) * beam * beam / pixsize / pixsize
-
-        self.flux_factor = 1e-26 / pixelsbeam / 1000.
+        self.pixelsbeam = np.pi / 4. / np.log(2.) * beam * beam / pixsize / pixsize
 
         hk = const.h * const.c / const.k_B
         self.hk850 = hk / l850 / u.K
@@ -58,3 +56,22 @@ class Param(object):
                pixsize=pixsize)
 
         return new
+
+
+    
+    def get_flux_factor(self, map) :
+        """Calculate flux factor from the header of the main map."""
+        
+        map_units = map.header[0]['BUNIT']
+        
+        if map_units == 'mJy/beam' :
+            self.flxunits = 1e-29
+            self.flux_factor = self.flxunits / self.pixelsbeam 
+
+        elif map_units == 'Jy/beam' :
+            self.flxunits = 1e-26
+            self.flux_factor = self.flxunits / self.pixelsbeam
+
+        else :
+            print("ERROR: undefined flux units in input map")
+            sys.exit(1)

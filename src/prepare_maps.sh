@@ -39,7 +39,21 @@ convert_tofits(){
     fitsfile=$2
     
     echo " >>> converting $sdffile to $fitsfile";echo
-    ${CONVERT_DIR}/ndf2fits $sdffile $fitsfile
+    str_fits=$fitsfile
+    
+    if [[ -f $fitsfile ]];then
+	echo " *** $fitsfile already exists"
+	echo "     Overwrite [x/n]"
+	read overwrite
+
+	if [[ $overwrite != "n" && $overwrite != "N" ]];then
+	    str_fits="!$fitsfile"
+	else
+	    echo -e "\n  Nothing to do, then\n"
+	    exit 0
+	fi
+    fi
+    ${CONVERT_DIR}/ndf2fits $sdffile $str_fits
 }
 
 

@@ -1,45 +1,13 @@
-##
-##  Makefile to run scripts to reduce the JCMT SCUBA2 data of Sh2-61
-##
-##  O. Morata
-##  2018-20
-##
-
-##-- Info --------------------------------------------------------------
-HOME_DIR=.
-SNAME=Sh2_61
-
-jointreductions = j850r0 j850r1 j450r0 j450r1
-jointreductions += j850r0_mb j850r1_mb j450r0_mb j450r1_mb
-jointreductions += j850r0_co j850r1_co
-jointreductions += j850r0_co_mb
-
+#  reduction.mk
+#  O. Morata 2020
 #
-##-- End info ----------------------------------------------------------
-
-# names of directories
+#  rules to reduce the JCMT SCUBA2 data of Sh2-61
 #
-BIN_DIR=$(HOME_DIR)/src
-CFG_DIR=$(HOME_DIR)/config
-DATA_DIR=$(HOME_DIR)/data
-RES_DIR=$(HOME_DIR)/results
-
-# defaults
+#  To be included by the main Makefile
 #
-SHELL := bash
-.DELETE_ON_ERROR:
-.SHELLFLAGS := -eu -o pipefail -c
-MAKEFLAGS += --warn-undefined-varibles
-MAKEFLAFS += --no-builtin_rules
-
-export
-
-
-##-- Template definition -----------------------------------------------
-
 
 define DoReduction
-# Template to process all observations in a single step
+# Template to reduce all observations in a single step
 #
 #  Parameter: 1- target
 #
@@ -81,13 +49,16 @@ snr-$(1): $(snr_file)
 .PHONY: snr-$(1)
 
 crop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_crop.sdf
-.PHONY: crop-S(1)
+.PHONY: crop-$(1)
 
 snrcrop-$(1): $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
 .PHONY: snrcrop-$(1)
 
 reduce-$(1): map-$(1) snr-$(1) crop-$(1) snrcrop-$(1)
 .PHONY: reduce-$(1)
+
+reduction: reduce-$(1)
+.PHONY: reduction
 
 
 clean-map-$(1):
@@ -106,24 +77,12 @@ clean-snrcrop-$(1):
 	@rm -vf $(RES_DIR)/$(1)/$(SNAME)-$(1)-reduc_snr_crop.sdf
 .PHONY: clean-snrcrop-$(1)
 
-clean-reduce-$(1): clean-map-$(1) clean-snr-$(1) clean-crop-$(1)
-clean-reduce-$(1): clean-snrcrop-$(1)
+clean-reduction-$(1): clean-map-$(1) clean-snr-$(1) clean-crop-$(1)
+clean-reduction-$(1): clean-snrcrop-$(1)
 
-.PHONY: clean-reduce-$(1)
+.PHONY: clean-reduction-$(1)
 
-clean: clean-reduce-$(1)
-.PHONY: clean
+clean-reduction: clean-reduction-$(1)
+.PHONY: clean-reduction
 
 endef
-
-
-##-- End of template definition ----------------------------------------
-
-
-# define rules for reductions
-#
-$(foreach reduction, $(jointreductions),\
-    $(eval $(call DoReduction,$(reduction)))\
-)
-
-

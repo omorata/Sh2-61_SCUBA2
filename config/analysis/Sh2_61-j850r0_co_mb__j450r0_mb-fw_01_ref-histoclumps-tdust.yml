@@ -1,0 +1,32 @@
+plot:
+  type: 'histo'
+  size: [6,6]
+  xlog: False
+  ylog: False
+  ylabel: 'num'
+  xlabel: '$T$ (K)'
+  title: 'fw_01_ref clumps maxT'
+  colors: ['skyblue', 'red' , 'green', 'brown']
+  dpi: 30
+  #xlim: [a,b]
+  #ylim: [a,b]
+  
+  
+histo:
+  method: 'scott'
+  type: 'stepfilled'
+  alpha: 0.8
+  density: False
+  stacked: True
+  cumulative: False
+  log: True
+  outfile: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-histoclumps-tdust.pdf'
+
+
+dataset_1:
+  infile: 'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-clump_table.fits'
+  params: ['maxT']
+  #auxfile: ['analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01-clump_table.fits']
+  #auxpar: [['maxT']]
+  #conds: [['<', 16]]
+

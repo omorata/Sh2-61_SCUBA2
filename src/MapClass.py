@@ -8,11 +8,14 @@
     Definition of the class Map 
 
 """
+
+import copy
+from datetime import datetime
 import sys
+
+from astropy.io import fits
 import numpy as np
 import numpy.ma as ma
-from astropy.io import fits
-from datetime import datetime
 
 
 
@@ -67,7 +70,8 @@ class Map (object):
         """Save Map object to a fitsfile."""
 
         if oldheader :
-            self.header = Map.modify_header(oldheader, hdr_type)
+            newheader = copy.deepcopy(oldheader)
+            self.header = Map.modify_header(newheader, hdr_type)
         else :
             return 3
 
@@ -154,7 +158,13 @@ class Map (object):
         mask = ma.getmask(self.data[0])
         return mask
 
+    def masked_invalid(self):
+        new = Map.empty()
 
+        new.data[0] = ma.masked_invalid(self.data[0])
+        new.data[1] = ma.masked_invalid(self.data[1])
+        return new
+    
     
     def masked_where(self, mask) :
         new = Map.empty()
@@ -171,7 +181,7 @@ class Map (object):
 
         new.data[0] = ma.copy(self.data[0])
         new.data[1] = ma.copy(self.data[1])
-        new.header = self.header.copy()
+        new.header = copy.deepcopy(self.header)
 
         return new
 
@@ -181,7 +191,7 @@ class Map (object):
         new = Map.empty()
         new.data[0] = self.data[0] * factor
         new.data[1] = self.data[1] * factor * factor
-        new.header = self.header.copy()
+        new.header = copy.deepcopy(self.header)
 
         return new
 
@@ -193,8 +203,31 @@ class Map (object):
         new.data[1] = self.data[1].filled(fill)
 
         return new
+
     
+
+    def count(self):
+        """ Count elements in the data array"""
+        
+        return self.data[0].count()
+
     
+
+    def show(self, slice):
+        """ Show a slice of the data array """
+        
+        v = self.data[0]
+        return v[slice[0]:slice[1]:slice[2],slice[3]:slice[4]:slice[5]]
+
+
+    
+    def nansumdata(self, fld):
+        """ apply np.nansum to fld data field"""
+        
+        return np.nansum(self.data[fld])
+
+    
+
 def divide(a, b):
     """Divides one map by another.
 
@@ -263,3 +296,23 @@ def filtermap(pmap, type_filter, cut):
         sys.exit(1)
         
     return new
+
+
+
+def get_outmap(maps, keys, opt):
+
+    n_maps = np.shape(maps)[0]
+    n_keys = np.shape(keys)[0]
+
+    if n_maps != n_keys :
+        print(">> ERROR: the numbers of output maps and keys are not equal")
+        sys.exit(1)
+        
+    for i in range(n_maps):
+        if keys[i] == opt :
+            map_out = maps[i].copy()
+            return map_out
+    
+    print(" >> ERROR: output option for Tdust is not valid",
+          out_opts[fld])
+    sys.exit(1)

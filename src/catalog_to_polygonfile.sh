@@ -19,9 +19,11 @@ fi
 catalog=$1
 outname=$2
 
-# print selected fields of catalog
+
+# print the ID and Shape fields of the findclumps catalog
 #
-${BIN_DIR}/print_catalog.py  -i $catalog  -o $outname
+${BIN_DIR}/print_catalog.py  -i $catalog  -o $outname  -t 'findclumps' \
+	  -f "['PIDENT', 'Shape']"
 
 
 # modify output file to the format needed by dbxmap
