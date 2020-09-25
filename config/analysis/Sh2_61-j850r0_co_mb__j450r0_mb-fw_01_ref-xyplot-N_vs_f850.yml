@@ -1,0 +1,29 @@
+plot:
+  type: 'xyplot'
+  size: [5,5]
+  xlog: True
+  ylog: True
+  xlabel: 'S$_{850}$ (Jy beam$^{-1}$)'
+  ylabel: 'N (cm$^{-2}$)'
+  title: 'fw_01_ref'
+  colors: ['skyblue', 'red' , 'green', 'brown']
+  dpi: 100
+  #xlim: [a,b]
+  #ylim: [a,b]
+  
+  
+xyplot:
+  symbols : ['.', '.', '.']
+  outfile: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-xyplot-N_vs_f850.pdf'
+
+
+dataset_1:
+  infile: [ 'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-N.fits',
+  'analysis_maps/Sh2_61-j850r0_co_mb.fits']
+  clumpfile: findclumps/Sh2_61-j850r0_co_mb-fw_01-clumps.fits
+  #clumpcut: [ '>', 10]
+  auxfiles: ['analysis_maps/Sh2_61-j850r0_co_mb-snr.fits']
+  mask_aux: [ 'data', "<" , 6.]
+#
+  
+  

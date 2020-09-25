@@ -5,7 +5,7 @@ import sys
 
 import ClumpCatalog as cl
 
-
+import numpy as np
 ##-- Functions ---------------------------------------------------------
 
 def read_command_line() :
@@ -49,6 +49,12 @@ if not infile :
 print("\n >> Reading catalog")
 catlg = cl.ClumpCatalog.from_file([infile])
 
+#size = np.shape(catlg.clumps)[0]
+#varr = np.arange(size)
+
+#for i in range(size):
+#    varr[i] = catlg.clumps[i].record['npix']
+
 # field definitions
 #
 phys_outfields = catlg.clumps[0].phys_names
@@ -81,6 +87,6 @@ else:
 
     
 
-print(" >> Printing shapes to file:", fout,"\n")
+print(" >> Printing catalog to file:", fout,"\n")
 catlg.print_catalog(ctype=out_type, fields=fields, filename=fout)
 

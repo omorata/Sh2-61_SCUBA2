@@ -1,0 +1,57 @@
+plot:
+  type: 'histo'
+  size: [5,5]
+  xlog: True
+  ylog: False
+  xlabel: 'N (cm$^{-2}$)'
+  ylabel: "num"
+  title: 'fw_01_ref'
+  colors: ['skyblue', 'red' , 'green', 'brown']
+  dpi: 100
+  #xlim: [a,b]
+  #ylim: [a,b]
+  
+  
+histo:
+  method: 'scott'
+  type: 'stepfilled'
+  alpha: 0.8
+  density: False
+  stacked: True
+  cumulative: False
+  log: True
+  outfile: 'Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-histo-N.pdf'
+
+
+dataset_1:
+  infile: [ 'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-N.fits']
+  #'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-tdust.fits']
+  #'analysis_maps/Sh2_61-j850r0_co_mb.fits',
+#           'analysis_maps/Sh2_61-j450r0_mb-aligned_to-j850r0_co_mb.fits']
+#         'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_ref-tdust.fits']
+  clumpfile: findclumps/Sh2_61-j850r0_co_mb-fw_01-clumps.fits
+  #clumpcut: [ '>', 20]
+  #auxfiles: ['analysis_maps/Sh2_61-j450r0_mb-snr-aligned_to-j850r0_co_mb.fits']
+  #auxfiles: ['analysis_maps/Sh2_61-j850r0_co_mb-snr.fits']
+  #mask_aux: [ 'data', "<" , .]
+#
+#dataset_2:
+#  infile: [ 'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_refTcalc-N.fits']
+#           'analysis_maps/Sh2_61-j450r0_mb-aligned_to-j850r0_co_mb.fits']
+#  clumpfile: findclumps/Sh2_61-j850r0_co_mb-fw_01-clumps.fits
+#  clumpcut: [ '>', 10]
+#  auxfiles: ['analysis_maps/Sh2_61-j450r0_mb-snr-aligned_to-j850r0_co_mb.fits']
+#  #           'analysis_maps/Sh2_61-j850r0_co_mb-snr.fits']
+#  mask_aux: [ 'data', "<" , 4.]
+#
+#dataset_3:
+#  infile: [ 'analysis_maps/Sh2_61-j850r0_co_mb__j450r0_mb-fw_01_refTfix-N.fits']
+#           'analysis_maps/Sh2_61-j450r0_mb-aligned_to-j850r0_co_mb.fits']
+#  clumpfile: findclumps/Sh2_61-j850r0_co_mb-fw_01_ref-clumps.fits
+#  clumpcut: [ '<', 30]
+#  auxfiles: ['analysis_maps/Sh2_61-j450r0_mb-snr-aligned_to-j850r0_co_mb.fits']
+#  #           'analysis_maps/Sh2_61-j850r0_co_mb-snr.fits']
+#  mask_aux: [ 'data', "<" , 4.]
+#
+  
+  

@@ -19,8 +19,8 @@ from astropy import constants as const
 class Clump(object):
 
     phys_names = [
-        'id', 'npix', 'nTpix', 'area', 'eff_radius', 'deconv_radius',
-        'flux850', 'flux450hi', 'flux450',
+        'id', 'npix', 'nTpix', 'area', 'R_eff', 'R_dcnv',
+        'f_850', 'f_450hi', 'f_450',
         'mass', 'var_mass',
         'N', 'var_N',
         'maxT', 'minT', 'meanT', 'medianT', 'weightT']
@@ -34,17 +34,24 @@ class Clump(object):
     
     phys_units = [
         '', '', '', 'arcsec^2', 'arcsec', 'arcsec',
-        'mJy', 'mJy', 'mJy',
+        'Jy', 'Jy', 'Jy',
         'Msol', 'Msol',
         'cm-2', 'cm-2',
         'K', 'K', 'K', 'K', 'K' ]
 
     phys_prfmt = [
-        '2d', '4d', '4d', '7.1f', '8.2f', '8.2f',
+        '3d', '4d', '5d', '10.1f', '8.2f', '8.2f',
         '7.3f', '7.3f', '7.3f',
-        '8.2f', '6.2f',
-        '9.3e', '9.3e',
+        '8.2f', '8.2f',
+        '10.3e', '10.3e',
         '6.1f', '6.1f', '6.1f', '6.1f', '6.1f' ]
+
+    phys_hdrfmt = [
+        '2s', '4s', '5s', '10s', '8s', '8s',
+        '7s', '7s', '7s',
+        '8s', '8s',
+        '10s', '10s',
+        '6s', '6s', '6s', '6s', '6s' ]
 
     
     findclumps_names = [
@@ -60,8 +67,13 @@ class Clump(object):
         'mJy/beam', 'arcsec.arcsec', '' ]
 
     findclumps_prfmt = [
-        '3d', '11.6f', '11.6f', '11.6f', '11.6f',  '11.6f', '11.6f', '14.6f',
+        '4d', '11.6f', '11.6f', '11.6f', '11.6f',  '11.6f', '11.6f', '14.6f',
         '12.6f', '14.6f', 's'
+        ]
+
+    findclumps_hdrfmt = [
+        '3s', '11s', '11s', '11s', '11s',  '11s', '11s', '14s',
+        '12s', '14s', 's'
         ]
 
 
@@ -72,7 +84,7 @@ class Clump(object):
     list_formats = []
     list_formats.extend(findclumps_formats)
     list_formats.extend(phys_formats)
- 
+
     ddtype = { 'names' : list_names, 'formats' : list_formats}
     dtype_phys = { 'names' : phys_names, 'formats' : phys_formats}
    
@@ -118,7 +130,7 @@ class Clump(object):
         Maps() objects
         """
         
-        fluxflds = ['flux850', 'flux450hi', 'flux450'] 
+        fluxflds = ['f_850', 'f_450hi', 'f_450'] 
         massflds = ['mass', 'var_mass']
         coldensflds = ['N', 'var_N']
 
@@ -133,8 +145,8 @@ class Clump(object):
             npix, params.pixsize, params.beam)
         
         self.record['area'] = area / u.arcsec / u.arcsec
-        self.record['eff_radius'] = eff_radius / u.arcsec
-        self.record['deconv_radius'] = deconv_r / u.arcsec
+        self.record['R_eff'] = eff_radius / u.arcsec
+        self.record['R_dcnv'] = deconv_r / u.arcsec
 
         numflux = np.shape(fluxes)[0]
         for flx in range(numflux):
@@ -215,12 +227,15 @@ class Clump(object):
         if ctype == 'phys' :
             header, out = self.extract_values(
                 self.record, names=self.phys_names, fields=fields,
-                print_formats=self.phys_prfmt)
+                print_formats=self.phys_prfmt, hdr_format=self.phys_hdrfmt,
+                units_format=self.phys_units)
 
         elif ctype == 'findclumps' :
             header, out = self.extract_values(
                 self.record, names=self.findclumps_names, fields=fields,
-                print_formats=self.findclumps_prfmt)
+                print_formats=self.findclumps_prfmt,
+                hdr_format=self.findclumps_hdrfmt,
+                units_format=self.findclumps_units)
 
         elif ctype == 'all' :
             all_prfmt = self.findclumps_prfmt.copy()
@@ -235,9 +250,11 @@ class Clump(object):
 
 
     @staticmethod
-    def extract_values(record, names=None, fields=None, print_formats=None):
+    def extract_values(record, names=None, fields=None, print_formats=None,
+                       hdr_format=None, units_format=None):
 
         header = ""
+        units = ""
         out = ""
         ct = 0
 
@@ -252,10 +269,19 @@ class Clump(object):
             prfmt = print_formats[ct]
             strfmt = '{0} {1:'+str(prfmt)+'}'
             out = strfmt.format(out, (record[ff])[0])
-            header = '{0}  {1}'.format(header, ff)
+
+            hdrfmt = '{0} {1:^'+hdr_format[ct]+'}'
+            header = hdrfmt.format(header, ff)
+
+            if units_format[ct] :
+                upar = '('+units_format[ct]+')'
+            else:
+                upar = ''
+            units = hdrfmt.format(units, upar)
             
             ct += 1
 
+        header = '#'+header+'\n#'+units
         return header, out
 
 

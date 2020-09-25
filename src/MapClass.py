@@ -158,7 +158,13 @@ class Map (object):
         mask = ma.getmask(self.data[0])
         return mask
 
+    def masked_invalid(self):
+        new = Map.empty()
 
+        new.data[0] = ma.masked_invalid(self.data[0])
+        new.data[1] = ma.masked_invalid(self.data[1])
+        return new
+    
     
     def masked_where(self, mask) :
         new = Map.empty()
