@@ -121,15 +121,16 @@ $(eval calc_refs :=    \
 
 $(calc_log):  $$(wildcard $$(cfg_file)) $(calc_refs)
 	@if [ -f $(cfg_file) ]; then \
-	     $(BIN_DIR)/calc_phys_parm.py \
-                 -c $(cfg_file) \
-                 --clumps \
-                 -l $(calc_log) \
-                 -w $(RES_DIR);\
-          else \
-             echo -e "\n++ Ignoring rule $(out_fc)" ;\
-             echo -e "    No cfg file $(cfg_file)" ;\
-         fi
+	    $(BIN_DIR)/calc_phys_parm.py \
+                -c $(cfg_file) \
+                --clumps \
+                -l $(calc_log) \
+                -w $(RES_DIR);\
+        fi
+          #else \
+          #   echo -e "\n++ Ignoring rule $(out_fc)" ;\
+          #   echo -e "    No cfg file $(cfg_file)" ;\
+          #fi
 
 
 .PHONY: calcs-$(1)-$(2)_$(3)
@@ -171,7 +172,7 @@ clean-calcs-$(ref_tgt): clean-calcs-$(1)
 #
 $(eval table_name := $(outdir)/$(SNAME)-$(1)-$(2)_$(3)-clump_table)
 
-$(table_name).txt: $$(wilcard $$(table_name).fits)
+$(table_name).txt: $$(wilcard $$(table_name).fits) $(calc_log)
 	@if [ -f $(table_name).fits ]; then \
             $(BIN_DIR)/print_catalog.py \
                 -t 'phys' \
