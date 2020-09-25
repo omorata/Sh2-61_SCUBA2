@@ -29,12 +29,13 @@ $(eval out_fc_fits := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-clumps.fits)
 
 $(out_fc): $$(wildcard $$(cfg_file) $$(par_file)) $(in_fc) $(insnr_fc)
 	@if [ -f $(cfg_file) ]; then \
-	     sh $(BIN_DIR)/findclumps.sh \
-                 -c $(cfg_file) \
-                 -o $(findclumps_dir) \
-                 -i $(analysis_dir) \
-                 -d $(CFG_DIR)/analysis; \
-         else \
+	    sh $(BIN_DIR)/findclumps.sh \
+                -c $(cfg_file) \
+                -o $(findclumps_dir) \
+                -i $(analysis_dir) \
+                -d $(CFG_DIR)/analysis; \
+        fi
+        #else \
              echo -e "\n++ Ignoring rule $(out_fc)" ;\
              echo -e "    No cfg file $(cfg_file)" ;\
              touch $(out_fc);\
@@ -43,11 +44,12 @@ $(out_fc): $$(wildcard $$(cfg_file) $$(par_file)) $(in_fc) $(insnr_fc)
 
 $(out_fc_fits): $$(wildcard $$(cfg_file)) $(out_fc)
 	@if [ -f $(cfg_file) ]; then \
-             $(BIN_DIR)/prepare_maps.sh \
-                 -f $(out_fc) \
-                 -o $(out_fc_fits) \
-                 -t "tofits" ;\
-         else \
+            $(BIN_DIR)/prepare_maps.sh \
+                -f $(out_fc) \
+                -o $(out_fc_fits) \
+                -t "tofits" ;\
+        fi
+        #else \
              echo -e "\n++ Ignoring rule $(out_fc)" ;\
              echo -e "    No cfg file $(cfg_file)" ;\
              touch $(out_fc_fits);\
@@ -156,5 +158,67 @@ clean-clumps-map-$(1): clean-clumps-map-$(1)-$(2)
 
 clean-clumps-map: clean-clumps-map-$(1)
 .PHONY: clean-clumps-map
+
+
+
+
+
+# print catalog of findclumps parameters 
+#
+$(eval table_name := $(findclumps_dir)/$(SNAME)-$(1)-$(2)-catalog)
+
+$(table_name).txt: $$(wilcard $$(table_name).fits)
+	@if [ -f $(table_name).fits ]; then \
+            $(BIN_DIR)/print_catalog.py \
+                -t 'findclumps' \
+                -i $(table_name).fits \
+                -o $(table_name).txt \
+                -f "['PIDENT', 'Peak1', 'Peak2', 'Cen1', 'Cen2', 'Size1', \
+                    'Size2', 'Sum', 'Peak', 'Volume']"; \
+        fi
+
+
+print-clumpcatg-$(1)-$(2): $(table_name).txt
+
+.PHONY: print-clumpcatg-$(1)-$(2)
+
+
+print-clumpcatg-$(1): print-clumpcatg-$(1)-$(2)
+
+.PHONY: print-clumpcatg-$(1)
+
+
+print-clumpcatg: print-clumpcatg-$(1)
+
+.PHONY: print-clumpcatg
+
+
+print-clumpcatg-$(ref_tgt): print-clumpcatg-$(1)
+
+.PHONY: print-clumpcatg-$(ref_tgt)
+
+
+
+clean-clumpcatg-$(1)-$(2):
+	@rm -fv $(table_name).txt
+
+.PHONY: clean-clumpcatg-$(1)-$(2)
+
+
+clean-clumpcatg-$(1): clean-clumpcatg-$(1)-$(2)
+
+.PHONY: clean-clumpcatg-$(1)
+
+
+clean-clumpcatg: clean-clumpcatg-$(1)
+
+.PHONY: clean-clumpcatg
+
+
+clean-clumpcatg-$(ref_tgt): clean-clumpcatg-$(1)
+
+.PHONY: clean-clumpcatg-$(ref_tgt)
+
+
 
 endef

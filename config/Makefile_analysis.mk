@@ -88,7 +88,7 @@ include $(CFG_DIR)/physplots.mk
 
 list_tasks := reduction
 list_tasks += tofits plotmaps
-list_tasks += findclumps_snr polygonfiles clumps-map
+list_tasks += findclumps_snr polygonfiles clumps-map print-clumpcatg
 list_tasks += strip tofits_strip
 list_tasks += maps_physpar histo xyplot
 
@@ -146,6 +146,7 @@ $(foreach tgt, $(combined),\
 #
 clean_list := clean-reduction clean-fits_datasets clean-plotmaps clean-strip
 clean_list += clean-findclumps clean-polygonfiles clean-clumps-map
+clean_list += clean-clumpcatg
 clean_list += clean-align clean-calcs clean-physcatg
 clean_list += clean-maps-physpar clean-histo clean-xyplot
 
