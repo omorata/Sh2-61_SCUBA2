@@ -241,9 +241,16 @@ class Clump(object):
             all_prfmt = self.findclumps_prfmt.copy()
             all_prfmt.extend(self.phys_prfmt)
 
+            all_hdrfmt = self.findclumps_hdrfmt.copy()
+            all_hdrfmt.extend(self.phys_hdrfmt)
+
+            all_unitsfmt = self.findclumps_units.copy()
+            all_unitsfmt.extend(self.physt_units)
+            
             header, out = self.extract_values(
                 self.record, names=self.list_names, fields=fields,
-                print_formats=all_prfmt)
+                print_formats=all_prfmt, hdr_format=all_hdrfmt,
+                units_format=all_unitsfmt)
 
         return header, out
 
